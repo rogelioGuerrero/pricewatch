@@ -52,8 +52,10 @@
   .tag.oferta { background:#1e3a8a; color:#93c5fd }
   .tag.agotado { background:#3f3f46; color:#d4d4d8 }
   .tag.reaparecio { background:#422006; color:var(--warn) }
+  .tag.regreso { background:#3b0764; color:#c4b5fd }
   .tag.nuevo { background:#14532d; color:#86efac }
   .tag.salio_del_catalogo { background:#374151; color:#9ca3af }
+  .tag.oferta_termino { background:#374151; color:#9ca3af }
   .pr { font-weight:700 } .old { color:var(--mut); text-decoration:line-through; font-weight:400 }
   .spark { height:30px; margin-top:4px; min-width:120px }
   perspective-viewer { display:block; width:100%; height:70vh }
@@ -108,8 +110,10 @@ const byType = t => ev.filter(e=>e.type===t);
 const TABS = [
   ["cambios","Cambios de precio", byType("bajo").length + byType("subio").length],
   ["ofertas","Ofertas", D.ofertas.length],
-  ["stock","Stock", byType("agotado").length + byType("reaparecio").length],
-  ["nuevos","Nuevos / salidos", byType("nuevo").length + byType("salio_del_catalogo").length],
+  ["stock","Se acabó / Volvió",
+   byType("agotado").length + byType("reaparecio").length
+   + byType("salio_del_catalogo").length + byType("regreso").length],
+  ["nuevos","Nuevos", byType("nuevo").length],
   ["explorar","Explorar catálogo", D.n_products],
 ];
 $("#tabs").innerHTML = TABS.map(([id,n,nr]) =>
@@ -131,18 +135,26 @@ $("#kpis").innerHTML = [
   [byType("subio").length,"subidas"],
 ].map(([b,s])=>`<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join("");
 
-function card(e, tagTxt){
+const LABEL = {agotado:"se acabó", reaparecio:"volvió",
+  salio_del_catalogo:"salió del catálogo", regreso:"regresó al catálogo",
+  nuevo:"nuevo", oferta_termino:"terminó oferta"};
+function card(e){
   const p = D.products[e.sku]||{};
-  const price = e.type==="bajo"||e.type==="subio"
-    ? `<span class="old">${fmt(e.from)}</span> → <span class="pr">${fmt(e.to)}</span>
-       <span class="tag ${e.type}">${e.pct}%</span>`
-    : e.type==="oferta" ? `<span class="pr">${fmt(e.price)}</span> <span class="tag oferta">ahorra $${(+e.saving).toFixed(2)}</span>`
-    : `<span class="pr">${fmt(e.price)}</span> <span class="tag ${e.type}">${tagTxt||e.type}</span>`;
+  let price;
+  if (e.from != null && e.to != null)
+    price = `<span class="old">${fmt(e.from)}</span> → <span class="pr">${fmt(e.to)}</span>
+      <span class="tag ${e.type}">${e.pct>0?"+":""}${e.pct}%</span>
+      ${["reaparecio","regreso"].includes(e.type)?`<span class="tag ${e.type}">${LABEL[e.type]}</span>`:""}`;
+  else if (e.type==="oferta")
+    price = `<span class="pr">${fmt(e.price)}</span> <span class="tag oferta">ahorra $${(+e.saving).toFixed(2)}</span>`;
+  else
+    price = `<span class="pr">${fmt(e.price)}</span> <span class="tag ${e.type}">${LABEL[e.type]||e.type}</span>`;
+  const dias = e.days_out != null ? ` · ${e.days_out}d fuera` : "";
   return `<div class="card" onclick="openProd('${e.sku}')">
     ${img(e.sku)?`<img src="${img(e.sku)}" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
       <div class="t">${e.title||p.title||e.sku}</div><div>${price}</div>
-      <div class="meta">${e.date||""} · ${p.category||""}</div>
+      <div class="meta">${e.date||""}${dias} · ${p.category||""}</div>
       <div class="spark" data-sku="${e.sku}"></div></div></div>`;
 }
 function render(){
@@ -150,10 +162,10 @@ function render(){
   const f = e => !q || (e.title||"").toLowerCase().includes(q)
                    || (D.products[e.sku]||{}).title?.toLowerCase().includes(q);
   $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios</p>";
-  $("#g-ofertas").innerHTML = ev.filter(e=>e.type==="oferta"&&f(e)).map(e=>card(e)).join("")
+  $("#g-ofertas").innerHTML = ev.filter(e=>["oferta","oferta_termino"].includes(e.type)&&f(e)).map(e=>card(e)).join("")
     || D.ofertas.filter(o=>!q||o.title?.toLowerCase().includes(q)).map(o=>card({sku:o.sku,type:"oferta",saving:o.saving,price:o.price,title:o.title})).join("");
-  $("#g-stock").innerHTML = ev.filter(e=>["agotado","reaparecio"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin eventos de stock</p>";
-  $("#g-nuevos").innerHTML = ev.filter(e=>["nuevo","salio_del_catalogo"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin altas/bajas de catálogo</p>";
+  $("#g-stock").innerHTML = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo","regreso"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios de disponibilidad</p>";
+  $("#g-nuevos").innerHTML = ev.filter(e=>e.type==="nuevo"&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin productos nuevos</p>";
   sparks();
 }
 $("#q").oninput = render;

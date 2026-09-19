@@ -157,18 +157,87 @@ def cleanup_synthetic():
         print("filas demo eliminadas de prices.db:", n)
 
 
-def diff(prev, cur):
-    """Genera eventos comparando snapshots {sku: {price_SV, inventory_SV,...}}."""
+def history_index():
+    """Indice de prices.db: skus conocidos, ultimo estado por sku,
+    y ultima fecha con stock (para 'dias fuera')."""
+    known, last, last_in = set(), {}, {}
+    if not os.path.exists(DB_PATH):
+        return known, last, last_in
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        for sku, price, d, st in conn.execute(
+                "SELECT sku, price, date, in_stock FROM prices "
+                "ORDER BY sku, date"):
+            known.add(sku)
+            last[sku] = (price, d)
+            if st:
+                last_in[sku] = d
+    except sqlite3.OperationalError:
+        pass
+    conn.close()
+    return known, last, last_in
+
+
+def _days_between(d_old, d_new):
+    try:
+        return (datetime.strptime(d_new, "%Y-%m-%d")
+                - datetime.strptime(d_old, "%Y-%m-%d")).days
+    except (TypeError, ValueError):
+        return None
+
+
+def diff(prev, cur, today=None, known=None, last=None, last_in=None):
+    """Genera eventos comparando snapshots {sku: {price_SV, inventory_SV,...}}.
+
+    - 'reaparecio' fusiona la vuelta de stock con el cambio de precio
+      (un solo evento dice: volvio tras N dias, antes $X ahora $Y).
+    - 'regreso' (volvio al catalogo tras haber salido) se distingue de
+      'nuevo' (SKU jamas visto) consultando la historia en prices.db.
+    """
+    known, last, last_in = known or set(), last or {}, last_in or {}
     events = []
     for sku, p in cur.items():
         if sku not in prev:
-            events.append({"sku": sku, "type": "nuevo", "title": p["title"],
-                           "price": p["price_SV"]})
+            if sku in known:  # salio del catalogo y regreso: NO es nuevo
+                lp, ld = last.get(sku, (None, None))
+                e = {"sku": sku, "type": "regreso", "title": p["title"],
+                     "price": p["price_SV"], "prev_price": lp,
+                     "days_out": _days_between(ld, today)}
+                if lp and p["price_SV"] and p["price_SV"] != lp:
+                    e["from"], e["to"] = lp, p["price_SV"]
+                    e["pct"] = round((p["price_SV"] - lp) / lp * 100, 1)
+                events.append(e)
+            else:
+                events.append({"sku": sku, "type": "nuevo",
+                               "title": p["title"], "price": p["price_SV"]})
             continue
         old = prev[sku]
         p_new, p_old = p.get("price_SV"), old.get("price_SV")
-        if p_new is not None and p_old is not None and p_new != p_old:
-            pct = round((p_new - p_old) / p_old * 100, 1) if p_old else None
+        price_changed = (p_new is not None and p_old is not None
+                         and p_new != p_old)
+        pct = (round((p_new - p_old) / p_old * 100, 1)
+               if price_changed and p_old else None)
+        s_new = p.get("inventory_SV") == "in stock"
+        s_old = old.get("inventory_SV") == "in stock"
+        if s_new != s_old:
+            if s_new:
+                # Volvio: un solo evento cubre el cambio de precio si hubo
+                e = {"sku": sku, "type": "reaparecio", "title": p["title"],
+                     "price": p_new, "prev_price": p_old,
+                     "days_out": _days_between(last_in.get(sku), today)}
+                if price_changed:
+                    e["from"], e["to"], e["pct"] = p_old, p_new, pct
+                events.append(e)
+            else:
+                events.append({"sku": sku, "type": "agotado",
+                               "title": p["title"], "price": p_new})
+                if price_changed:
+                    events.append({
+                        "sku": sku,
+                        "type": "bajo" if p_new < p_old else "subio",
+                        "title": p["title"], "from": p_old, "to": p_new,
+                        "delta": p_new - p_old, "pct": pct})
+        elif price_changed:
             events.append({
                 "sku": sku, "type": "bajo" if p_new < p_old else "subio",
                 "title": p["title"], "from": p_old, "to": p_new,
@@ -183,12 +252,6 @@ def diff(prev, cur):
             else:
                 events.append({"sku": sku, "type": "oferta_termino",
                                "title": p["title"], "price": p_new})
-        s_new = p.get("inventory_SV") == "in stock"
-        s_old = old.get("inventory_SV") == "in stock"
-        if s_new != s_old:
-            events.append({"sku": sku,
-                           "type": "reaparecio" if s_new else "agotado",
-                           "title": p["title"], "price": p_new})
     for sku, old in prev.items():
         if sku not in cur:
             events.append({"sku": sku, "type": "salio_del_catalogo",
@@ -280,21 +343,25 @@ def main():
         with open(snap_file, "w") as f:
             json.dump({"date": today, "products": cur}, f)
         print(f"Snapshot: {snap_file}")
+        # indice de historia ANTES de grabar hoy (last = ultimo estado previo)
+        hist_idx = history_index()
         record_history(cur, today)
         print(f"Historia actualizada en {DB_PATH}")
         cleanup_synthetic()
     else:
         snaps = sorted(os.listdir(SNAP_DIR))
-        with open(os.path.join(SNAP_DIR, snaps[-1])) as f:
+        with open(os.path.join(SNAP_DIR, snaps[-1]), encoding="utf-8") as f:
             cur = json.load(f)["products"]
         print(f"Dry-run sobre {snaps[-1]}")
         prev_name, prev = snaps[-1], {}
         if len(snaps) >= 2:
             prev_name = snaps[-2]
-            with open(os.path.join(SNAP_DIR, snaps[-2])) as f:
+            with open(os.path.join(SNAP_DIR, snaps[-2]), encoding="utf-8") as f:
                 prev = json.load(f)["products"]
+        hist_idx = history_index()
 
-    events = diff(prev, cur)
+    known, last, last_in = hist_idx
+    events = diff(prev, cur, today, known, last, last_in)
     by_type = {}
     for e in events:
         by_type[e["type"]] = by_type.get(e["type"], 0) + 1
@@ -309,7 +376,7 @@ def main():
     if len(events) > 15:
         print(f"  ... y {len(events)-15} mas")
 
-    if events:
+    if events and "--dry" not in sys.argv:
         with open(EVENTS_LOG, "a", encoding="utf-8") as f:
             for e in events:
                 e["date"] = today
