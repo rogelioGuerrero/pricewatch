@@ -103,6 +103,9 @@
         <option value="categoria">por categoría</option>
         <option value="marca">por marca</option>
       </select>
+      <label style="font-size:13px;color:var(--mut);display:flex;align-items:center;gap:5px;cursor:pointer">
+        <input type="checkbox" id="stok1" style="width:auto"> solo con stock
+      </label>
     </div>
     <perspective-viewer id="pv"></perspective-viewer>
   </div>
@@ -113,6 +116,9 @@
         <option value="marca">por marca</option>
         <option value="">sin agrupar</option>
       </select>
+      <label style="font-size:13px;color:var(--mut);display:flex;align-items:center;gap:5px;cursor:pointer">
+        <input type="checkbox" id="stok2" style="width:auto"> solo con stock
+      </label>
     </div>
     <perspective-viewer id="pv2"></perspective-viewer>
   </div>
@@ -299,8 +305,11 @@ function favCard(sku){
 // completo sobre cualquier tab; tambien filtra las tablas Perspective
 function pspFilter(id){
   const q = $("#q").value.trim();
-  const f = q ? (/^\d+$/.test(q) ? [["sku","contains",q]]
-                                 : [["producto","contains",q]]) : [];
+  const f = [];
+  if (q) f.push(/^\d+$/.test(q) ? ["sku","contains",q]
+                               : ["producto","contains",q]);
+  const cb = document.getElementById(id === "pv" ? "stok1" : "stok2");
+  if (cb?.checked) f.push(["stock","==","sí"]);
   document.getElementById(id).restore({filter: f});
 }
 $("#q").oninput = () => {
@@ -355,7 +364,9 @@ async function loadExplorer(attempt=0){
     pane.querySelector(".pv-status")?.remove();
     document.getElementById("grp1").onchange = e =>
       pv.restore({group_by: e.target.value ? [e.target.value] : []});
-    if ($("#q").value.trim()) pspFilter("pv");
+    document.getElementById("stok1").onchange = () => pspFilter("pv");
+    if ($("#q").value.trim() || document.getElementById("stok1").checked)
+      pspFilter("pv");
     pv.addEventListener("perspective-click", e => {
       const r = e.detail?.row;
       if (r && r.sku != null) openProd(String(r.sku));
@@ -406,7 +417,9 @@ async function loadIntel(attempt=0){
     pane.querySelector(".pv-status")?.remove();
     document.getElementById("grp").onchange = e =>
       pv.restore({group_by: e.target.value ? [e.target.value] : []});
-    if ($("#q").value.trim()) pspFilter("pv2");
+    document.getElementById("stok2").onchange = () => pspFilter("pv2");
+    if ($("#q").value.trim() || document.getElementById("stok2").checked)
+      pspFilter("pv2");
     pv.addEventListener("perspective-click", e => {
       const r = e.detail?.row;
       if (r && r.sku != null) openProd(String(r.sku));
