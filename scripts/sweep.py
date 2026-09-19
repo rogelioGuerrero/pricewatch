@@ -266,7 +266,8 @@ def diff(prev, cur, today=None, known=None, last=None, last_in=None):
 def club_stock_diff(date, skus, products):
     """Transiciones de stock por club para los skus dados: compara la
     corrida actual contra la fecha anterior registrada en club_stock.
-    Devuelve eventos club_agotado / club_volvio."""
+    Devuelve eventos club_agotado / club_volvio / se_agota (velocidad:
+    la cantidad cae >=40% sin llegar a cero — 'se vende rapido')."""
     if not os.path.exists(DB_PATH):
         return []
     conn = sqlite3.connect(DB_PATH)
@@ -276,35 +277,46 @@ def club_stock_diff(date, skus, products):
             (date,)).fetchone()[0]
         if not prev_date:
             return []
-        prev = {(s, c): st for s, c, st in conn.execute(
-            "SELECT sku, club, in_stock FROM club_stock WHERE date = ?",
-            (prev_date,))}
+        prev = {(s, c): (st, q) for s, c, st, q in conn.execute(
+            "SELECT sku, club, in_stock, qty FROM club_stock "
+            "WHERE date = ?", (prev_date,))}
         cur = conn.execute(
-            "SELECT sku, club, club_name, in_stock FROM club_stock "
+            "SELECT sku, club, club_name, in_stock, qty FROM club_stock "
             "WHERE date = ?", (date,)).fetchall()
     except sqlite3.OperationalError:
         return []
     finally:
         conn.close()
     events = []
-    for sku, club, name, st in cur:
+    for sku, club, name, st, qty in cur:
         if sku not in skus:
             continue
         old = prev.get((sku, club))
-        if old is None or old == st:
+        if old is None:
             continue
-        events.append({
-            "sku": sku,
-            "type": "club_volvio" if st else "club_agotado",
-            "title": (products.get(sku) or {}).get("title", sku),
-            "price": (products.get(sku) or {}).get("price_SV"),
-            "club": name, "prev_date": prev_date})
+        o_st, o_qty = old
+        if o_st != st:
+            events.append({
+                "sku": sku,
+                "type": "club_volvio" if st else "club_agotado",
+                "title": (products.get(sku) or {}).get("title", sku),
+                "price": (products.get(sku) or {}).get("price_SV"),
+                "club": name, "prev_date": prev_date})
+        elif st and qty is not None and o_qty and qty <= o_qty * 0.6 \
+                and o_qty - qty >= 2:
+            events.append({
+                "sku": sku, "type": "se_agota",
+                "title": (products.get(sku) or {}).get("title", sku),
+                "price": (products.get(sku) or {}).get("price_SV"),
+                "club": name, "qty_from": o_qty, "qty_to": qty,
+                "prev_date": prev_date})
     return events
 
 
 def fetch_club_stock(skus, date):
     """Nivel 2: stock por club SV para los skus dados (batch de 50).
     Guarda en club_stock(sku,date,club,nombre,en_stock,qty)."""
+    skus = sorted(skus)
     if not skus:
         return
     conn = sqlite3.connect(DB_PATH)
@@ -372,9 +384,73 @@ def record_history(products, date):
     conn.close()
 
 
+def stock_candidates(today, products):
+    """SKUs a vigilar diario: ofertas activas del ultimo snapshot +
+    cualquier producto con evento en los ultimos 14 dias."""
+    cands = {s for s, p in products.items()
+             if (p.get("saving_usd") or 0) > 0}
+    try:
+        from datetime import timedelta
+        lim = (datetime.strptime(today, "%Y-%m-%d")
+               - timedelta(days=14)).strftime("%Y-%m-%d")
+        if os.path.exists(EVENTS_LOG):
+            for line in open(EVENTS_LOG, encoding="utf-8"):
+                try:
+                    e = json.loads(line)
+                except Exception:
+                    continue
+                if e.get("date", "") >= lim and e.get("sku"):
+                    cands.add(e["sku"])
+    except Exception:
+        pass
+    return cands
+
+
+def append_events(events, today):
+    """Escribe eventos al log sin duplicar (mismo date+sku+type+club)."""
+    existing = set()
+    if os.path.exists(EVENTS_LOG):
+        for line in open(EVENTS_LOG, encoding="utf-8"):
+            try:
+                e = json.loads(line)
+                existing.add((e.get("date"), e.get("sku"), e.get("type"),
+                              e.get("club")))
+            except Exception:
+                pass
+    new = [e for e in events
+           if (today, e.get("sku"), e.get("type"), e.get("club"))
+           not in existing]
+    if new:
+        with open(EVENTS_LOG, "a", encoding="utf-8") as f:
+            for e in new:
+                e["date"] = today
+                f.write(json.dumps(e, ensure_ascii=False) + "\n")
+    print(f"Eventos anexados a {EVENTS_LOG}: {len(new)}")
+    return new
+
+
 def main():
     os.makedirs(SNAP_DIR, exist_ok=True)
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    if "--stock-check" in sys.argv:
+        # Chequeo diario ligero: solo stock por club de candidatos,
+        # sin barrer el catalogo. Detecta velocidad de venta (se_agota).
+        prev_name, prev_full = load_previous_snapshot()
+        cur = prev_full["products"] if prev_full else {}
+        cands = stock_candidates(today, cur)
+        cands = set(sorted(cands)[:400])
+        print(f"[{today}] Stock-check: {len(cands)} candidatos "
+              f"(ofertas + eventos recientes)")
+        fetch_club_stock(cands, today)
+        events = club_stock_diff(today, cands, cur)
+        print(f"Transiciones/velocidad: {len(events)}")
+        for e in events[:15]:
+            print(f"  {e['type']:>12} | {e['title'][:50]} | {e['club']}"
+                  + (f" {e['qty_from']}->{e['qty_to']}"
+                     if e["type"] == "se_agota" else ""))
+        append_events(events, today)
+        return
 
     if "--dry" not in sys.argv:
         prev_name, prev_full = load_previous_snapshot()  # antes de escribir
@@ -434,11 +510,7 @@ def main():
                 events.extend(club_ev)
 
     if events and "--dry" not in sys.argv:
-        with open(EVENTS_LOG, "a", encoding="utf-8") as f:
-            for e in events:
-                e["date"] = today
-                f.write(json.dumps(e, ensure_ascii=False) + "\n")
-        print(f"Eventos anexados a {EVENTS_LOG}")
+        append_events(events, today)
 
 
 if __name__ == "__main__":
