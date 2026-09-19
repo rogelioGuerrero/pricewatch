@@ -6,6 +6,7 @@ prices.db + events.jsonl. Muestra lo que el usuario final ve.
 import json
 import os
 import sqlite3
+import statistics
 from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -66,6 +67,39 @@ ofertas = [{"sku": s, "saving": r["saving"], "price": r["price"],
             **products.get(s, {})}
            for s, r in latest.items() if (r["saving"] or 0) > 0]
 
+# Agregados historicos por sku: lo que pricesmart.com no puede mostrar
+agg = {}
+for sku, s in series.items():
+    prices = [r[1] for r in s if r[1] is not None]
+    if not prices:
+        continue
+    min_p, max_p = min(prices), max(prices)
+    med = statistics.median(prices)
+    last_p = prices[-1]
+    n_ch = sum(1 for i in range(1, len(s))
+               if s[i][1] is not None and s[i - 1][1] is not None
+               and s[i][1] != s[i - 1][1])
+    last_ch = None
+    for i in range(len(s) - 1, 0, -1):
+        if s[i][1] != s[i - 1][1]:
+            last_ch = s[i][0]
+            break
+    d_out = 0  # racha actual de dias agotado
+    for r in reversed(s):
+        if r[2]:
+            break
+        d_out += 1
+    n_out = sum(1 for i in range(1, len(s)) if s[i - 1][2] and not s[i][2])
+    agg[sku] = {
+        "min": min_p, "max": max_p, "med": round(med),
+        "pct_min": round((last_p - min_p) / min_p * 100, 1) if min_p else None,
+        "vs_med": round((last_p - med) / med * 100, 1) if med else None,
+        "n_ch": n_ch, "last_ch": last_ch,
+        "d_out": d_out if not s[-1][2] else 0,
+        "pct_stock": round(sum(1 for r in s if r[2]) / len(s) * 100),
+        "n_out": n_out,
+    }
+
 # ¿aun hay datos sinteticos del demo? (snapshot marcado o fechas pre-inicio)
 SNAP_DIR = os.path.join(ROOT, "data", "snapshots")
 demo = False
@@ -85,7 +119,7 @@ data = {
     "n_products": len(products),
     "n_stockout": sum(1 for r in latest.values() if not r["in_stock"]),
     "products": products, "series": series, "events": events,
-    "mis": mis, "ofertas": ofertas, "clubs": clubs,
+    "mis": mis, "ofertas": ofertas, "clubs": clubs, "agg": agg,
 }
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 with open(os.path.join(ROOT, "scripts", "template.html"),

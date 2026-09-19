@@ -85,7 +85,9 @@
   <div class="pane" id="pane-ofertas"><div class="grid" id="g-ofertas"></div></div>
   <div class="pane" id="pane-stock"><div class="grid" id="g-stock"></div></div>
   <div class="pane" id="pane-nuevos"><div class="grid" id="g-nuevos"></div></div>
+  <div class="pane" id="pane-mejores"><div class="grid" id="g-mejores"></div></div>
   <div class="pane" id="pane-explorar"><perspective-viewer id="pv"></perspective-viewer></div>
+  <div class="pane" id="pane-inteligencia"><perspective-viewer id="pv2"></perspective-viewer></div>
 </div>
 <dialog id="dlg">
   <span class="close" onclick="dlg.close()">✕</span>
@@ -114,7 +116,11 @@ const TABS = [
    byType("agotado").length + byType("reaparecio").length
    + byType("salio_del_catalogo").length + byType("regreso").length],
   ["nuevos","Nuevos", byType("nuevo").length],
+  ["mejores","Mejores precios",
+   Object.keys(D.agg).filter(s=>(D.series[s]||[]).length>=3
+     && D.agg[s].pct_min<=0 && D.agg[s].d_out===0).length],
   ["explorar","Explorar catálogo", D.n_products],
+  ["inteligencia","Inteligencia", D.n_products],
 ];
 $("#tabs").innerHTML = TABS.map(([id,n,nr]) =>
   `<div class="tab" data-t="${id}">${n}<span class="n">${nr}</span></div>`).join("");
@@ -124,6 +130,7 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   t.classList.add("on");
   document.getElementById("pane-"+t.dataset.t).classList.add("on");
   if (t.dataset.t==="explorar") loadExplorer();
+  if (t.dataset.t==="inteligencia") loadIntel();
 });
 document.querySelector(".tab").classList.add("on");
 
@@ -166,6 +173,23 @@ function render(){
     || D.ofertas.filter(o=>!q||o.title?.toLowerCase().includes(q)).map(o=>card({sku:o.sku,type:"oferta",saving:o.saving,price:o.price,title:o.title})).join("");
   $("#g-stock").innerHTML = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo","regreso"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios de disponibilidad</p>";
   $("#g-nuevos").innerHTML = ev.filter(e=>e.type==="nuevo"&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin productos nuevos</p>";
+  $("#g-mejores").innerHTML = Object.entries(D.agg)
+    .filter(([s,a]) => a.pct_min<=0 && a.d_out===0
+            && (D.series[s]||[]).length>=3
+            && (!q || (D.products[s]||{}).title?.toLowerCase().includes(q)))
+    .sort((x,y)=>x[1].vs_med-y[1].vs_med).slice(0,90)
+    .map(([s,a])=>{
+      const p=D.products[s]||{}, l=(D.series[s]||[]).slice(-1)[0];
+      return `<div class="card" onclick="openProd('${s}')">
+        ${img(s)?`<img src="${img(s)}" loading="lazy" onerror="this.remove()">`:""}
+        <div style="flex:1;min-width:0">
+          <div class="t">${p.title||s}</div>
+          <div><span class="pr">${l?fmt(l[1]):"—"}</span>
+            <span class="tag nuevo">mín histórico</span>
+            ${a.vs_med<0?`<span class="tag bajo">${a.vs_med}% vs típico</span>`:""}</div>
+          <div class="meta">${p.category||""} · ${a.n_ch} cambios · ${a.pct_stock}% días con stock</div>
+          <div class="spark" data-sku="${s}"></div></div></div>`;
+    }).join("") || "<p class='meta'>Nada en su mínimo hoy</p>";
   sparks();
 }
 $("#q").oninput = render;
@@ -211,6 +235,46 @@ async function loadExplorer(attempt=0){
     pane.querySelector(".pv-status")?.remove();
   } catch(e) {
     if (attempt < 2) { msg("Reintentando…"); await new Promise(r=>setTimeout(r,1500)); return loadExplorer(attempt+1); }
+    msg("No se pudo cargar el explorador (CDN/WASM). Recarga la página e intenta de nuevo.");
+  }
+}
+
+let pv2Done=false;
+async function loadIntel(attempt=0){
+  if (pv2Done) return;
+  const pane = document.getElementById("pane-inteligencia");
+  const msg = t => { pane.querySelector(".pv-status")?.remove();
+    pane.insertAdjacentHTML("beforeend", `<p class="meta pv-status" style="padding:10px">${t}</p>`); };
+  msg("Cargando inteligencia (WASM)…");
+  try {
+    const psp = (await import('https://cdn.jsdelivr.net/npm/@finos/perspective@3.8.0/dist/cdn/perspective.js')).default;
+    await import('https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.8.0/dist/cdn/perspective-viewer.js');
+    await import('https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-datagrid@3.8.0/dist/cdn/perspective-viewer-datagrid.js');
+    await import('https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-d3fc@3.8.0/dist/cdn/perspective-viewer-d3fc.js');
+    const rows = Object.entries(D.products).map(([sku,p])=>{
+      const l = (D.series[sku]||[]).slice(-1)[0];
+      const a = D.agg[sku]||{};
+      return {sku, producto:p.title, marca:p.brand||"", categoria:p.category||"",
+        precio: l?+(l[1]/100).toFixed(2):null,
+        min_hist: a.min!=null?+(a.min/100).toFixed(2):null,
+        max_hist: a.max!=null?+(a.max/100).toFixed(2):null,
+        pct_sobre_min: a.pct_min ?? null,
+        vs_tipico_pct: a.vs_med ?? null,
+        ahorro_letrero: l?+((l[3]||0).toFixed(2)):0,
+        n_cambios: a.n_ch ?? null, ult_cambio: a.last_ch||"",
+        pct_dias_stock: a.pct_stock ?? null, dias_agotado: a.d_out ?? 0,
+        n_veces_agotado: a.n_out ?? 0,
+        stock: l?(l[2]?"sí":"no"):"?"};
+    });
+    const worker = await psp.worker();
+    const table = await worker.table(rows);
+    const pv = document.getElementById("pv2");
+    await pv.load(table);
+    await pv.restore({plugin: "Datagrid", theme: "Pro Dark"});
+    pv2Done = true;
+    pane.querySelector(".pv-status")?.remove();
+  } catch(e) {
+    if (attempt < 2) { msg("Reintentando…"); await new Promise(r=>setTimeout(r,1500)); return loadIntel(attempt+1); }
     msg("No se pudo cargar el explorador (CDN/WASM). Recarga la página e intenta de nuevo.");
   }
 }
