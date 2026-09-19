@@ -119,7 +119,8 @@
   <span class="close" onclick="dlg.close()">✕</span>
   <div style="display:flex;gap:12px;align-items:start">
     <img id="dimg" style="width:80px;height:80px;object-fit:contain;background:#fff;border-radius:8px">
-    <div><h2 id="dtitle"></h2><div class="meta" id="dmeta"></div><div class="bigprice" id="dprice"></div></div>
+    <div style="flex:1"><h2 id="dtitle"></h2><div class="meta" id="dmeta"></div><div class="bigprice" id="dprice"></div></div>
+    <span id="dstar" class="star" style="position:static;font-size:26px"></span>
   </div>
   <div id="chart"></div>
   <div id="dclubs"></div>
@@ -350,6 +351,10 @@ async function loadExplorer(attempt=0){
     document.getElementById("grp1").onchange = e =>
       pv.restore({group_by: e.target.value ? [e.target.value] : []});
     if ($("#q").value.trim()) pspFilter("pv");
+    pv.addEventListener("perspective-click", e => {
+      const r = e.detail?.row;
+      if (r && r.sku != null) openProd(String(r.sku));
+    });
   } catch(e) {
     if (attempt < 2) { msg("Reintentando…"); await new Promise(r=>setTimeout(r,1500)); return loadExplorer(attempt+1); }
     msg("No se pudo cargar el explorador (CDN/WASM). Recarga la página e intenta de nuevo.");
@@ -397,6 +402,10 @@ async function loadIntel(attempt=0){
     document.getElementById("grp").onchange = e =>
       pv.restore({group_by: e.target.value ? [e.target.value] : []});
     if ($("#q").value.trim()) pspFilter("pv2");
+    pv.addEventListener("perspective-click", e => {
+      const r = e.detail?.row;
+      if (r && r.sku != null) openProd(String(r.sku));
+    });
   } catch(e) {
     if (attempt < 2) { msg("Reintentando…"); await new Promise(r=>setTimeout(r,1500)); return loadIntel(attempt+1); }
     msg("No se pudo cargar el explorador (CDN/WASM). Recarga la página e intenta de nuevo.");
@@ -416,6 +425,10 @@ function openProd(sku){
   if (p.slug){ dl.style.display=""; dl.href =
     `https://www.pricesmart.com/es-sv/producto/${p.slug}/${sku}`; }
   else dl.style.display = "none";
+  const ds = $("#dstar");
+  ds.textContent = FAV.has(sku) ? "★" : "☆";
+  ds.className = "star" + (FAV.has(sku) ? " on" : "");
+  ds.onclick = () => toggleFav(sku, {stopPropagation(){}}) || openProd(sku);
   const clubs = D.clubs[sku]||{};
   const clubRows = Object.entries(clubs);
   $("#dclubs").innerHTML = clubRows.length
@@ -425,7 +438,7 @@ function openProd(sku){
   $("#dtable").innerHTML = "<tr><th>Fecha</th><th>Precio</th><th>Ahorro</th><th>Stock</th></tr>" +
     s.slice(-12).reverse().map(([d,pr,st,sv]) =>
       `<tr><td>${d}</td><td>${fmt(pr)}</td><td>${sv?"$"+(+sv).toFixed(2):"—"}</td><td>${st?"✓":"✗"}</td></tr>`).join("");
-  dlg.showModal();
+  if (!dlg.open) dlg.showModal();
   if (s.length >= 2){
     $("#chart").style.display="block";
     chart = chart || echarts.init(document.getElementById("chart"), null, {renderer:"svg"});
