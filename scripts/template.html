@@ -86,8 +86,26 @@
   <div class="pane" id="pane-stock"><div class="grid" id="g-stock"></div></div>
   <div class="pane" id="pane-nuevos"><div class="grid" id="g-nuevos"></div></div>
   <div class="pane" id="pane-mejores"><div class="grid" id="g-mejores"></div></div>
-  <div class="pane" id="pane-explorar"><perspective-viewer id="pv"></perspective-viewer></div>
-  <div class="pane" id="pane-inteligencia"><perspective-viewer id="pv2"></perspective-viewer></div>
+  <div class="pane" id="pane-explorar">
+    <div class="filters">Agrupar:
+      <select id="grp1" style="background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 10px;font-size:13px">
+        <option value="">sin agrupar</option>
+        <option value="categoria">por categoría</option>
+        <option value="marca">por marca</option>
+      </select>
+    </div>
+    <perspective-viewer id="pv"></perspective-viewer>
+  </div>
+  <div class="pane" id="pane-inteligencia">
+    <div class="filters">Agrupar:
+      <select id="grp" style="background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 10px;font-size:13px">
+        <option value="categoria">por categoría</option>
+        <option value="marca">por marca</option>
+        <option value="">sin agrupar</option>
+      </select>
+    </div>
+    <perspective-viewer id="pv2"></perspective-viewer>
+  </div>
 </div>
 <dialog id="dlg">
   <span class="close" onclick="dlg.close()">✕</span>
@@ -233,6 +251,8 @@ async function loadExplorer(attempt=0){
     await pv.restore({plugin: "Datagrid", theme: "Pro Dark"});
     pvDone = true;
     pane.querySelector(".pv-status")?.remove();
+    document.getElementById("grp1").onchange = e =>
+      pv.restore({group_by: e.target.value ? [e.target.value] : []});
   } catch(e) {
     if (attempt < 2) { msg("Reintentando…"); await new Promise(r=>setTimeout(r,1500)); return loadExplorer(attempt+1); }
     msg("No se pudo cargar el explorador (CDN/WASM). Recarga la página e intenta de nuevo.");
@@ -270,9 +290,12 @@ async function loadIntel(attempt=0){
     const table = await worker.table(rows);
     const pv = document.getElementById("pv2");
     await pv.load(table);
-    await pv.restore({plugin: "Datagrid", theme: "Pro Dark"});
+    await pv.restore({plugin: "Datagrid", theme: "Pro Dark",
+                      group_by: ["categoria"]});
     pv2Done = true;
     pane.querySelector(".pv-status")?.remove();
+    document.getElementById("grp").onchange = e =>
+      pv.restore({group_by: e.target.value ? [e.target.value] : []});
   } catch(e) {
     if (attempt < 2) { msg("Reintentando…"); await new Promise(r=>setTimeout(r,1500)); return loadIntel(attempt+1); }
     msg("No se pudo cargar el explorador (CDN/WASM). Recarga la página e intenta de nuevo.");
