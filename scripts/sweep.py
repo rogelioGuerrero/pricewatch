@@ -39,6 +39,7 @@ FL = ",".join([
 ])
 ROWS = 200
 SLEEP = 0.4  # educado: ~2.5 req/s
+MIN_MOVE_PCT = 1.0  # cambios de precio <1% son ruido, no evento
 
 # Categorias raiz es-sv (del sitemap; la query del padre incluye hijos)
 CATEGORIES = {
@@ -217,6 +218,9 @@ def diff(prev, cur, today=None, known=None, last=None, last_in=None):
                          and p_new != p_old)
         pct = (round((p_new - p_old) / p_old * 100, 1)
                if price_changed and p_old else None)
+        # filtro de ruido: jitter <1% no es evento (movimientos que importan)
+        if pct is not None and abs(pct) < MIN_MOVE_PCT:
+            price_changed, pct = False, None
         s_new = p.get("inventory_SV") == "in stock"
         s_old = old.get("inventory_SV") == "in stock"
         if s_new != s_old:
@@ -256,6 +260,45 @@ def diff(prev, cur, today=None, known=None, last=None, last_in=None):
         if sku not in cur:
             events.append({"sku": sku, "type": "salio_del_catalogo",
                            "title": old["title"], "price": old.get("price_SV")})
+    return events
+
+
+def club_stock_diff(date, skus, products):
+    """Transiciones de stock por club para los skus dados: compara la
+    corrida actual contra la fecha anterior registrada en club_stock.
+    Devuelve eventos club_agotado / club_volvio."""
+    if not os.path.exists(DB_PATH):
+        return []
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        prev_date = conn.execute(
+            "SELECT MAX(date) FROM club_stock WHERE date < ?",
+            (date,)).fetchone()[0]
+        if not prev_date:
+            return []
+        prev = {(s, c): st for s, c, st in conn.execute(
+            "SELECT sku, club, in_stock FROM club_stock WHERE date = ?",
+            (prev_date,))}
+        cur = conn.execute(
+            "SELECT sku, club, club_name, in_stock FROM club_stock "
+            "WHERE date = ?", (date,)).fetchall()
+    except sqlite3.OperationalError:
+        return []
+    finally:
+        conn.close()
+    events = []
+    for sku, club, name, st in cur:
+        if sku not in skus:
+            continue
+        old = prev.get((sku, club))
+        if old is None or old == st:
+            continue
+        events.append({
+            "sku": sku,
+            "type": "club_volvio" if st else "club_agotado",
+            "title": (products.get(sku) or {}).get("title", sku),
+            "price": (products.get(sku) or {}).get("price_SV"),
+            "club": name, "prev_date": prev_date})
     return events
 
 
@@ -376,22 +419,26 @@ def main():
     if len(events) > 15:
         print(f"  ... y {len(events)-15} mas")
 
+    # Nivel 2: stock por club para lo que importa (eventos + ofertas)
+    if "--dry" not in sys.argv:
+        skus_ev = {e["sku"] for e in events}
+        skus_ev |= {s for s, p in cur.items() if (p.get("saving_usd") or 0) > 0}
+        skus_ev = set(sorted(skus_ev)[:300])
+        if skus_ev:
+            print(f"Detalle por club para {len(skus_ev)} productos "
+                  "(eventos + ofertas)…")
+            fetch_club_stock(skus_ev, today)
+            club_ev = club_stock_diff(today, skus_ev, cur)
+            if club_ev:
+                print(f"Transiciones por club: {len(club_ev)}")
+                events.extend(club_ev)
+
     if events and "--dry" not in sys.argv:
         with open(EVENTS_LOG, "a", encoding="utf-8") as f:
             for e in events:
                 e["date"] = today
                 f.write(json.dumps(e, ensure_ascii=False) + "\n")
         print(f"Eventos anexados a {EVENTS_LOG}")
-
-    # Nivel 2: stock por club para lo que importa (eventos + ofertas)
-    if "--dry" not in sys.argv:
-        skus_ev = {e["sku"] for e in events}
-        skus_ev |= {s for s, p in cur.items() if (p.get("saving_usd") or 0) > 0}
-        skus_ev = sorted(skus_ev)[:300]
-        if skus_ev:
-            print(f"Detalle por club para {len(skus_ev)} productos "
-                  "(eventos + ofertas)…")
-            fetch_club_stock(skus_ev, today)
 
 
 if __name__ == "__main__":

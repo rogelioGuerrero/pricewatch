@@ -56,6 +56,8 @@
   .tag.nuevo { background:#14532d; color:#86efac }
   .tag.salio_del_catalogo { background:#374151; color:#9ca3af }
   .tag.oferta_termino { background:#374151; color:#9ca3af }
+  .tag.club_volvio { background:#422006; color:var(--warn) }
+  .tag.club_agotado { background:#3f3f46; color:#d4d4d8 }
   .pr { font-weight:700 } .old { color:var(--mut); text-decoration:line-through; font-weight:400 }
   .spark { height:30px; margin-top:4px; min-width:120px }
   perspective-viewer { display:block; width:100%; height:70vh }
@@ -125,6 +127,7 @@
   <div id="chart"></div>
   <div id="dclubs"></div>
   <a id="dlink" class="plink" target="_blank" rel="noopener">Ver en pricesmart.com ↗</a>
+  <a id="dshare" class="plink" style="margin-left:14px;cursor:pointer">Copiar enlace</a>
   <table id="dtable"></table>
 </dialog>
 <script>
@@ -151,7 +154,8 @@ const TABS = [
   ["ofertas","Ofertas", D.ofertas.length],
   ["stock","Se acabó / Volvió",
    byType("agotado").length + byType("reaparecio").length
-   + byType("salio_del_catalogo").length + byType("regreso").length],
+   + byType("salio_del_catalogo").length + byType("regreso").length
+   + byType("club_agotado").length + byType("club_volvio").length],
   ["nuevos","Nuevos", byType("nuevo").length],
   ["mejores","Mejores precios",
    Object.keys(D.agg).filter(s=>(D.series[s]||[]).length>=3
@@ -199,7 +203,8 @@ $("#kpis").innerHTML = [
 
 const LABEL = {agotado:"se acabó", reaparecio:"volvió",
   salio_del_catalogo:"salió del catálogo", regreso:"regresó al catálogo",
-  nuevo:"nuevo", oferta_termino:"terminó oferta"};
+  nuevo:"nuevo", oferta_termino:"terminó oferta",
+  club_volvio:"volvió a", club_agotado:"se acabó en"};
 function card(e){
   const p = D.products[e.sku]||{};
   let price;
@@ -213,7 +218,7 @@ function card(e){
       + (hist && a.pct_min<=0 ? `<span class="tag real">oferta real</span>` : "");
   }
   else
-    price = `<span class="pr">${fmt(e.price)}</span> <span class="tag ${e.type}">${LABEL[e.type]||e.type}</span>`;
+    price = `<span class="pr">${fmt(e.price)}</span> <span class="tag ${e.type}">${(LABEL[e.type]||e.type)}${e.club?" "+e.club:""}</span>`;
   const dias = e.days_out != null ? ` · ${e.days_out}d fuera` : "";
   return `<div class="card" onclick="openProd('${e.sku}')">
     ${star(e.sku)}
@@ -230,7 +235,7 @@ function render(){
   $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios</p>";
   $("#g-ofertas").innerHTML = ev.filter(e=>["oferta","oferta_termino"].includes(e.type)&&f(e)).map(e=>card(e)).join("")
     || D.ofertas.filter(o=>!q||o.title?.toLowerCase().includes(q)).map(o=>card({sku:o.sku,type:"oferta",saving:o.saving,price:o.price,title:o.title})).join("");
-  $("#g-stock").innerHTML = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo","regreso"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios de disponibilidad</p>";
+  $("#g-stock").innerHTML = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo","regreso","club_agotado","club_volvio"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios de disponibilidad</p>";
   $("#g-nuevos").innerHTML = ev.filter(e=>e.type==="nuevo"&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin productos nuevos</p>";
   $("#g-mejores").innerHTML = Object.entries(D.agg)
     .filter(([s,a]) => a.pct_min<=0 && a.d_out===0
@@ -429,6 +434,12 @@ function openProd(sku){
   ds.textContent = FAV.has(sku) ? "★" : "☆";
   ds.className = "star" + (FAV.has(sku) ? " on" : "");
   ds.onclick = () => toggleFav(sku, {stopPropagation(){}}) || openProd(sku);
+  $("#dshare").onclick = () => {
+    const url = `${location.origin}${location.pathname}?sku=${sku}`;
+    navigator.clipboard?.writeText(url);
+    $("#dshare").textContent = "¡Copiado!";
+    setTimeout(()=>$("#dshare").textContent="Copiar enlace", 1500);
+  };
   const clubs = D.clubs[sku]||{};
   const clubRows = Object.entries(clubs);
   $("#dclubs").innerHTML = clubRows.length
@@ -457,6 +468,9 @@ function openProd(sku){
   }
 }
 render();
+// deep link compartible: ?sku=498227 abre la ficha directo
+const qs = new URLSearchParams(location.search).get("sku");
+if (qs && D.products[qs]) openProd(qs);
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js", {scope: "./"}).catch(()=>{});
 }
