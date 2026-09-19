@@ -86,7 +86,8 @@
   </header>
   <div class="kpis" id="kpis"></div>
   <div class="tabs" id="tabs"></div>
-  <div class="filters"><input id="q" placeholder="Buscar en todo el catálogo…"></div>
+  <div class="filters"><input id="q" placeholder="Buscar en todo el catálogo (nombre, marca, SKU)…"></div>
+  <div class="pane" id="pane-buscar"><div class="grid" id="g-buscar"></div></div>
   <div class="pane on" id="pane-cambios"><div class="grid" id="g-cambios"></div></div>
   <div class="pane" id="pane-ofertas"><div class="grid" id="g-ofertas"></div></div>
   <div class="pane" id="pane-stock"><div class="grid" id="g-stock"></div></div>
@@ -249,6 +250,15 @@ function render(){
     }).join("") || "<p class='meta'>Nada en su mínimo hoy</p>";
   $("#g-favs").innerHTML = [...FAV].map(favCard).join("")
     || "<p class='meta'>Marca productos con ☆ para seguirlos aquí. La lista vive en tu teléfono, sin cuenta.</p>";
+  if (q.length >= 2) {
+    $("#g-buscar").innerHTML = Object.keys(D.products)
+      .filter(s => { const p = D.products[s]||{};
+        return (p.title||"").toLowerCase().includes(q) || s.includes(q)
+          || (p.brand||"").toLowerCase().includes(q)
+          || (p.category||"").toLowerCase().includes(q); })
+      .slice(0, 60).map(favCard).join("")
+      || "<p class='meta'>Sin coincidencias en el catálogo</p>";
+  }
   sparks();
 }
 // clubes del usuario: match por nombre del canal
@@ -279,7 +289,24 @@ function favCard(sku){
       <div style="margin-top:5px">${clubChips(sku)}</div>
       <div class="spark" data-sku="${sku}"></div></div></div>`;
 }
-$("#q").oninput = render;
+// el buscador global: >=2 letras muestra panel de resultados del catalogo
+// completo sobre cualquier tab; tambien filtra las tablas Perspective
+function pspFilter(id){
+  const q = $("#q").value.trim();
+  const f = q ? (/^\d+$/.test(q) ? [["sku","contains",q]]
+                                 : [["producto","contains",q]]) : [];
+  document.getElementById(id).restore({filter: f});
+}
+$("#q").oninput = () => {
+  const q = $("#q").value.trim();
+  document.querySelectorAll(".pane").forEach(x=>x.classList.remove("on"));
+  const t = document.querySelector(".tab.on")?.dataset.t;
+  if (q.length >= 2) document.getElementById("pane-buscar").classList.add("on");
+  else document.getElementById("pane-"+t)?.classList.add("on");
+  render();
+  if (t === "explorar" && pvDone) pspFilter("pv");
+  if (t === "inteligencia" && pv2Done) pspFilter("pv2");
+};
 
 function sparks(){
   document.querySelectorAll(".spark").forEach(el => {
@@ -322,6 +349,7 @@ async function loadExplorer(attempt=0){
     pane.querySelector(".pv-status")?.remove();
     document.getElementById("grp1").onchange = e =>
       pv.restore({group_by: e.target.value ? [e.target.value] : []});
+    if ($("#q").value.trim()) pspFilter("pv");
   } catch(e) {
     if (attempt < 2) { msg("Reintentando…"); await new Promise(r=>setTimeout(r,1500)); return loadExplorer(attempt+1); }
     msg("No se pudo cargar el explorador (CDN/WASM). Recarga la página e intenta de nuevo.");
@@ -368,6 +396,7 @@ async function loadIntel(attempt=0){
     pane.querySelector(".pv-status")?.remove();
     document.getElementById("grp").onchange = e =>
       pv.restore({group_by: e.target.value ? [e.target.value] : []});
+    if ($("#q").value.trim()) pspFilter("pv2");
   } catch(e) {
     if (attempt < 2) { msg("Reintentando…"); await new Promise(r=>setTimeout(r,1500)); return loadIntel(attempt+1); }
     msg("No se pudo cargar el explorador (CDN/WASM). Recarga la página e intenta de nuevo.");
