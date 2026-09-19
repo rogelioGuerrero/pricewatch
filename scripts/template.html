@@ -69,6 +69,12 @@
   td,th { padding:4px 6px; border-bottom:1px solid var(--line); text-align:left }
   th { color:var(--mut); font-weight:500 }
   .bigprice { font-size:30px; font-weight:700; margin:10px 0 }
+  .star { position:absolute; top:8px; right:10px; font-size:18px; cursor:pointer;
+          color:var(--mut) } .star.on { color:var(--warn) }
+  .card { position:relative }
+  .plink { display:inline-block; margin-top:10px; color:var(--info);
+           font-size:13px }
+  .tag.real { background:#064e3b; color:#86efac }
 </style>
 </head>
 <body>
@@ -86,6 +92,7 @@
   <div class="pane" id="pane-stock"><div class="grid" id="g-stock"></div></div>
   <div class="pane" id="pane-nuevos"><div class="grid" id="g-nuevos"></div></div>
   <div class="pane" id="pane-mejores"><div class="grid" id="g-mejores"></div></div>
+  <div class="pane" id="pane-favs"><div class="grid" id="g-favs"></div></div>
   <div class="pane" id="pane-explorar">
     <div class="filters">Agrupar:
       <select id="grp1" style="background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 10px;font-size:13px">
@@ -115,6 +122,7 @@
   </div>
   <div id="chart"></div>
   <div id="dclubs"></div>
+  <a id="dlink" class="plink" target="_blank" rel="noopener">Ver en pricesmart.com ↗</a>
   <table id="dtable"></table>
 </dialog>
 <script>
@@ -127,6 +135,15 @@ const img = sku => (D.products[sku]||{}).image || "";
 const ev = D.events.slice().reverse();
 const byType = t => ev.filter(e=>e.type===t);
 
+const FAV = new Set(JSON.parse(localStorage.getItem("pw-favs")||"[]"));
+const toggleFav = (sku,e)=>{e.stopPropagation();
+  FAV.has(sku)?FAV.delete(sku):FAV.add(sku);
+  localStorage.setItem("pw-favs",JSON.stringify([...FAV]));render();
+  const n=document.querySelector('.tab[data-t="favs"] .n');
+  if(n) n.textContent=FAV.size;};
+const star = sku =>
+  `<span class="star ${FAV.has(sku)?"on":""}" onclick="toggleFav('${sku}',event)">${FAV.has(sku)?"★":"☆"}</span>`;
+
 const TABS = [
   ["cambios","Cambios de precio", byType("bajo").length + byType("subio").length],
   ["ofertas","Ofertas", D.ofertas.length],
@@ -137,6 +154,7 @@ const TABS = [
   ["mejores","Mejores precios",
    Object.keys(D.agg).filter(s=>(D.series[s]||[]).length>=3
      && D.agg[s].pct_min<=0 && D.agg[s].d_out===0).length],
+  ["favs","Mi lista", FAV.size],
   ["explorar","Explorar catálogo", D.n_products],
   ["inteligencia","Inteligencia", D.n_products],
 ];
@@ -152,13 +170,30 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
 });
 document.querySelector(".tab").classList.add("on");
 
+const idxTxt = D.indice==null ? "—"
+  : (D.indice>0?"+":"")+D.indice+"%";
 $("#kpis").innerHTML = [
   [D.n_products,"productos en línea base"],
   [D.ofertas.length,"ofertas activas"],
   [D.n_stockout,"sin stock hoy"],
   [byType("bajo").length,"bajadas"],
   [byType("subio").length,"subidas"],
+  [idxTxt,"índice del catálogo"],
 ].map(([b,s])=>`<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join("");
+
+// frescura: proxima corrida (mar/jue 12:00 UTC)
+(function(){
+  const dias = {2:"martes",4:"jueves"};
+  const d = new Date();
+  for (let i=1;i<8;i++){
+    const n = new Date(d); n.setDate(d.getDate()+i);
+    if (dias[n.getUTCDay()]) {
+      document.querySelector("header p").insertAdjacentHTML("beforeend",
+        ` · próximo barrido: <b>${dias[n.getUTCDay()]}</b>`);
+      break;
+    }
+  }
+})();
 
 const LABEL = {agotado:"se acabó", reaparecio:"volvió",
   salio_del_catalogo:"salió del catálogo", regreso:"regresó al catálogo",
@@ -170,12 +205,16 @@ function card(e){
     price = `<span class="old">${fmt(e.from)}</span> → <span class="pr">${fmt(e.to)}</span>
       <span class="tag ${e.type}">${e.pct>0?"+":""}${e.pct}%</span>
       ${["reaparecio","regreso"].includes(e.type)?`<span class="tag ${e.type}">${LABEL[e.type]}</span>`:""}`;
-  else if (e.type==="oferta")
-    price = `<span class="pr">${fmt(e.price)}</span> <span class="tag oferta">ahorra $${(+e.saving).toFixed(2)}</span>`;
+  else if (e.type==="oferta"){
+    const a = D.agg[e.sku]||{}, hist = (D.series[e.sku]||[]).length>=3;
+    price = `<span class="pr">${fmt(e.price)}</span> <span class="tag oferta">ahorra $${(+e.saving).toFixed(2)}</span>`
+      + (hist && a.pct_min<=0 ? `<span class="tag real">oferta real</span>` : "");
+  }
   else
     price = `<span class="pr">${fmt(e.price)}</span> <span class="tag ${e.type}">${LABEL[e.type]||e.type}</span>`;
   const dias = e.days_out != null ? ` · ${e.days_out}d fuera` : "";
   return `<div class="card" onclick="openProd('${e.sku}')">
+    ${star(e.sku)}
     ${img(e.sku)?`<img src="${img(e.sku)}" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
       <div class="t">${e.title||p.title||e.sku}</div><div>${price}</div>
@@ -208,7 +247,37 @@ function render(){
           <div class="meta">${p.category||""} · ${a.n_ch} cambios · ${a.pct_stock}% días con stock</div>
           <div class="spark" data-sku="${s}"></div></div></div>`;
     }).join("") || "<p class='meta'>Nada en su mínimo hoy</p>";
+  $("#g-favs").innerHTML = [...FAV].map(favCard).join("")
+    || "<p class='meta'>Marca productos con ☆ para seguirlos aquí. La lista vive en tu teléfono, sin cuenta.</p>";
   sparks();
+}
+// clubes del usuario: match por nombre del canal
+const CLUB_MATCH = [["Santa Elena","elena"],["Los Héroes","héroe|heroe"],
+                    ["San Miguel","miguel"]];
+function clubChips(sku){
+  const cl = D.clubs[sku]||{};
+  if (!Object.keys(cl).length)
+    return `<span class="meta">sin dato de club aún</span>`;
+  return CLUB_MATCH.map(([label,pat])=>{
+    const k = Object.keys(cl).find(n=>new RegExp(pat,"i").test(n));
+    const c = k ? cl[k] : null;
+    return `<span class="tag ${c&&c.in_stock?"bajo":"agotado"}">${label} ${c?(c.in_stock?"✓":"✗"):"—"}</span>`;
+  }).join(" ");
+}
+function favCard(sku){
+  const p = D.products[sku]||{}, l = (D.series[sku]||[]).slice(-1)[0],
+        a = D.agg[sku]||{};
+  return `<div class="card" onclick="openProd('${sku}')">
+    ${star(sku)}
+    ${img(sku)?`<img src="${img(sku)}" loading="lazy" onerror="this.remove()">`:""}
+    <div style="flex:1;min-width:0">
+      <div class="t">${p.title||sku}</div>
+      <div><span class="pr">${l?fmt(l[1]):"—"}</span>
+        ${a.pct_min<=0?`<span class="tag real">mín histórico</span>`
+          :a.pct_min!=null?`<span class="meta">+${a.pct_min}% sobre mín</span>`:""}
+        ${l&&l[3]>0?`<span class="tag oferta">-$${(+l[3]).toFixed(2)}</span>`:""}</div>
+      <div style="margin-top:5px">${clubChips(sku)}</div>
+      <div class="spark" data-sku="${sku}"></div></div></div>`;
 }
 $("#q").oninput = render;
 
@@ -291,7 +360,10 @@ async function loadIntel(attempt=0){
     const pv = document.getElementById("pv2");
     await pv.load(table);
     await pv.restore({plugin: "Datagrid", theme: "Pro Dark",
-                      group_by: ["categoria"]});
+                      group_by: ["categoria"],
+                      aggregates: {precio:"avg", pct_sobre_min:"avg",
+                        vs_tipico_pct:"avg", ahorro_letrero:"sum",
+                        n_cambios:"sum", dias_agotado:"avg"}});
     pv2Done = true;
     pane.querySelector(".pv-status")?.remove();
     document.getElementById("grp").onchange = e =>
@@ -311,6 +383,10 @@ function openProd(sku){
   $("#dtitle").textContent = p.title||sku;
   $("#dmeta").textContent = `${p.brand||""} · ${p.category||""} · SKU ${sku}`;
   $("#dprice").textContent = last ? fmt(last[1]) : "—";
+  const dl = $("#dlink");
+  if (p.slug){ dl.style.display=""; dl.href =
+    `https://www.pricesmart.com/es-sv/producto/${p.slug}/${sku}`; }
+  else dl.style.display = "none";
   const clubs = D.clubs[sku]||{};
   const clubRows = Object.entries(clubs);
   $("#dclubs").innerHTML = clubRows.length

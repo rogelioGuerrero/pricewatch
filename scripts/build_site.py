@@ -100,6 +100,14 @@ for sku, s in series.items():
         "n_out": n_out,
     }
 
+# Indice PriceWatch: % mediano de cambio de precio entre las 2 ultimas
+# observaciones = "la inflacion de la tienda" segun nuestros datos
+chg = []
+for s in series.values():
+    if len(s) >= 2 and s[-1][1] and s[-2][1]:
+        chg.append((s[-1][1] - s[-2][1]) / s[-2][1] * 100)
+indice = round(statistics.median(chg), 2) if chg else None
+
 # ¿aun hay datos sinteticos del demo? (snapshot marcado o fechas pre-inicio)
 SNAP_DIR = os.path.join(ROOT, "data", "snapshots")
 demo = False
@@ -120,6 +128,7 @@ data = {
     "n_stockout": sum(1 for r in latest.values() if not r["in_stock"]),
     "products": products, "series": series, "events": events,
     "mis": mis, "ofertas": ofertas, "clubs": clubs, "agg": agg,
+    "indice": indice, "n_cambios_idx": len(chg),
 }
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 with open(os.path.join(ROOT, "scripts", "template.html"),

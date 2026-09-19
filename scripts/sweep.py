@@ -383,11 +383,15 @@ def main():
                 f.write(json.dumps(e, ensure_ascii=False) + "\n")
         print(f"Eventos anexados a {EVENTS_LOG}")
 
-    # Nivel 2: stock por club solo para productos con eventos
-    if "--dry" not in sys.argv and events:
-        skus_ev = sorted({e["sku"] for e in events})
-        print(f"Detalle por club para {len(skus_ev)} productos con eventos…")
-        fetch_club_stock(skus_ev, today)
+    # Nivel 2: stock por club para lo que importa (eventos + ofertas)
+    if "--dry" not in sys.argv:
+        skus_ev = {e["sku"] for e in events}
+        skus_ev |= {s for s, p in cur.items() if (p.get("saving_usd") or 0) > 0}
+        skus_ev = sorted(skus_ev)[:300]
+        if skus_ev:
+            print(f"Detalle por club para {len(skus_ev)} productos "
+                  "(eventos + ofertas)…")
+            fetch_club_stock(skus_ev, today)
 
 
 if __name__ == "__main__":
