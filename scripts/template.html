@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PriceWatch SV — Qué cambió en PriceSmart</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<link rel="stylesheet" crossorigin="anonymous"
+      href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.8.0/dist/css/themes.css">
+<style>
+  :root { --bg:#0f1420; --card:#1a2133; --line:#2a3350; --txt:#e8ecf5;
+          --mut:#8b93ad; --down:#34d399; --up:#f87171; --info:#60a5fa; --warn:#fbbf24; }
+  * { box-sizing:border-box; margin:0 }
+  body { background:var(--bg); color:var(--txt); font:14px/1.45 system-ui,sans-serif; }
+  .wrap { max-width:1150px; margin:0 auto; padding:16px; }
+  header h1 { font-size:20px } header p { color:var(--mut); font-size:12px }
+  .demo { background:#7c2d12; color:#fed7aa; padding:6px 10px; border-radius:6px;
+          font-size:12px; margin:10px 0; display:inline-block }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+          gap:10px; margin:14px 0 }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px }
+  .kpi b { font-size:22px; display:block }
+  .kpi span { color:var(--mut); font-size:11px }
+  .tabs { display:flex; gap:4px; border-bottom:1px solid var(--line); margin:16px 0 12px;
+          overflow-x:auto }
+  .tab { padding:8px 14px; cursor:pointer; color:var(--mut); font-size:13px;
+         border-bottom:2px solid transparent; white-space:nowrap }
+  .tab.on { color:var(--txt); border-color:var(--info); font-weight:600 }
+  .tab .n { font-size:11px; background:var(--line); border-radius:99px; padding:1px 7px; margin-left:4px }
+  .filters { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap }
+  input { background:var(--card); border:1px solid var(--line); color:var(--txt);
+          border-radius:8px; padding:8px 10px; font-size:13px; width:280px }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:10px }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px;
+          padding:10px 12px; cursor:pointer; display:flex; gap:10px;
+          transition:border-color .15s }
+  .card:hover { border-color:var(--info) }
+  .card img { width:64px; height:64px; object-fit:contain; border-radius:8px;
+              background:#fff; flex-shrink:0 }
+  .card .t { font-size:13px; margin-bottom:4px; line-height:1.3 }
+  .card .meta { color:var(--mut); font-size:11px; margin-top:2px }
+  .tag { font-size:11px; font-weight:600; padding:2px 8px; border-radius:99px; }
+  .tag.bajo { background:#064e3b; color:var(--down) }
+  .tag.subio { background:#4c0519; color:var(--up) }
+  .tag.oferta { background:#1e3a8a; color:#93c5fd }
+  .tag.agotado { background:#3f3f46; color:#d4d4d8 }
+  .tag.reaparecio { background:#422006; color:var(--warn) }
+  .tag.nuevo { background:#14532d; color:#86efac }
+  .tag.salio_del_catalogo { background:#374151; color:#9ca3af }
+  .pr { font-weight:700 } .old { color:var(--mut); text-decoration:line-through; font-weight:400 }
+  .spark { height:30px; margin-top:4px; min-width:120px }
+  perspective-viewer { display:block; width:100%; height:70vh }
+  .pane { display:none } .pane.on { display:block }
+  dialog { background:var(--card); color:var(--txt); border:1px solid var(--line);
+           border-radius:12px; padding:20px; width:min(720px,94vw) }
+  dialog::backdrop { background:#000a }
+  #chart { width:100%; height:300px; margin-top:10px }
+  .close { float:right; cursor:pointer; color:var(--mut); font-size:18px }
+  table { width:100%; border-collapse:collapse; font-size:12px; margin-top:10px }
+  td,th { padding:4px 6px; border-bottom:1px solid var(--line); text-align:left }
+  th { color:var(--mut); font-weight:500 }
+  .bigprice { font-size:30px; font-weight:700; margin:10px 0 }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>PriceWatch SV</h1>
+    <p>Línea base + variaciones detectadas en pricesmart.com/es-sv · datos al <b id="gen"></b></p>
+    <span class="demo">DEMO — el historial es sintético hasta acumular corridas reales (mar/jue)</span>
+  </header>
+  <div class="kpis" id="kpis"></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="filters"><input id="q" placeholder="Buscar en todo el catálogo…"></div>
+  <div class="pane on" id="pane-cambios"><div class="grid" id="g-cambios"></div></div>
+  <div class="pane" id="pane-ofertas"><div class="grid" id="g-ofertas"></div></div>
+  <div class="pane" id="pane-stock"><div class="grid" id="g-stock"></div></div>
+  <div class="pane" id="pane-nuevos"><div class="grid" id="g-nuevos"></div></div>
+  <div class="pane" id="pane-explorar"><perspective-viewer id="pv"></perspective-viewer></div>
+</div>
+<dialog id="dlg">
+  <span class="close" onclick="dlg.close()">✕</span>
+  <div style="display:flex;gap:12px;align-items:start">
+    <img id="dimg" style="width:80px;height:80px;object-fit:contain;background:#fff;border-radius:8px">
+    <div><h2 id="dtitle"></h2><div class="meta" id="dmeta"></div><div class="bigprice" id="dprice"></div></div>
+  </div>
+  <div id="chart"></div>
+  <div id="dclubs"></div>
+  <table id="dtable"></table>
+</dialog>
+<script>
+const D = __DATA__;
+const $ = s => document.querySelector(s);
+const fmt = c => c == null ? "—" : "$" + (c/100).toFixed(2);
+document.getElementById("gen").textContent = D.generated;
+const img = sku => (D.products[sku]||{}).image || "";
+const ev = D.events.slice().reverse();
+const byType = t => ev.filter(e=>e.type===t);
+
+const TABS = [
+  ["cambios","Cambios de precio", byType("bajo").length + byType("subio").length],
+  ["ofertas","Ofertas", D.ofertas.length],
+  ["stock","Stock", byType("agotado").length + byType("reaparecio").length],
+  ["nuevos","Nuevos / salidos", byType("nuevo").length + byType("salio_del_catalogo").length],
+  ["explorar","Explorar catálogo", D.n_products],
+];
+$("#tabs").innerHTML = TABS.map(([id,n,nr]) =>
+  `<div class="tab" data-t="${id}">${n}<span class="n">${nr}</span></div>`).join("");
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+  document.querySelectorAll(".pane").forEach(x=>x.classList.remove("on"));
+  t.classList.add("on");
+  document.getElementById("pane-"+t.dataset.t).classList.add("on");
+  if (t.dataset.t==="explorar") loadExplorer();
+});
+document.querySelector(".tab").classList.add("on");
+
+$("#kpis").innerHTML = [
+  [D.n_products,"productos en línea base"],
+  [D.ofertas.length,"ofertas activas"],
+  [D.n_stockout,"sin stock hoy"],
+  [byType("bajo").length,"bajadas"],
+  [byType("subio").length,"subidas"],
+].map(([b,s])=>`<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join("");
+
+function card(e, tagTxt){
+  const p = D.products[e.sku]||{};
+  const price = e.type==="bajo"||e.type==="subio"
+    ? `<span class="old">${fmt(e.from)}</span> → <span class="pr">${fmt(e.to)}</span>
+       <span class="tag ${e.type}">${e.pct}%</span>`
+    : e.type==="oferta" ? `<span class="pr">${fmt(e.price)}</span> <span class="tag oferta">ahorra $${(+e.saving).toFixed(2)}</span>`
+    : `<span class="pr">${fmt(e.price)}</span> <span class="tag ${e.type}">${tagTxt||e.type}</span>`;
+  return `<div class="card" onclick="openProd('${e.sku}')">
+    ${img(e.sku)?`<img src="${img(e.sku)}" loading="lazy" onerror="this.remove()">`:""}
+    <div style="flex:1;min-width:0">
+      <div class="t">${e.title||p.title||e.sku}</div><div>${price}</div>
+      <div class="meta">${e.date||""} · ${p.category||""}</div>
+      <div class="spark" data-sku="${e.sku}"></div></div></div>`;
+}
+function render(){
+  const q = $("#q").value.toLowerCase();
+  const f = e => !q || (e.title||"").toLowerCase().includes(q)
+                   || (D.products[e.sku]||{}).title?.toLowerCase().includes(q);
+  $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios</p>";
+  $("#g-ofertas").innerHTML = ev.filter(e=>e.type==="oferta"&&f(e)).map(e=>card(e)).join("")
+    || D.ofertas.filter(o=>!q||o.title?.toLowerCase().includes(q)).map(o=>card({sku:o.sku,type:"oferta",saving:o.saving,price:o.price,title:o.title})).join("");
+  $("#g-stock").innerHTML = ev.filter(e=>["agotado","reaparecio"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin eventos de stock</p>";
+  $("#g-nuevos").innerHTML = ev.filter(e=>["nuevo","salio_del_catalogo"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin altas/bajas de catálogo</p>";
+  sparks();
+}
+$("#q").oninput = render;
+
+function sparks(){
+  document.querySelectorAll(".spark").forEach(el => {
+    const s = D.series[el.dataset.sku]||[];
+    if (s.length < 2) return;
+    const pts = s.map(p=>p[1]), mn=Math.min(...pts), mx=Math.max(...pts);
+    const w=280,h=28, rng=(mx-mn)||1;
+    const xy = pts.map((v,i)=>`${(i/(pts.length-1)*w).toFixed(1)},${(h-2-(v-mn)/rng*(h-4)).toFixed(1)}`).join(" ");
+    const col = s[s.length-1][1] <= s[0][1] ? "var(--down)" : "var(--up)";
+    el.innerHTML = `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+      <polyline points="${xy}" fill="none" stroke="${col}" stroke-width="1.5"/></svg>`;
+  });
+}
+
+let pvDone=false;
+async function loadExplorer(attempt=0){
+  if (pvDone) return;
+  const pane = document.getElementById("pane-explorar");
+  const msg = t => { pane.querySelector(".pv-status")?.remove();
+    pane.insertAdjacentHTML("beforeend", `<p class="meta pv-status" style="padding:10px">${t}</p>`); };
+  msg("Cargando explorador (WASM, solo la primera vez)…");
+  try {
+    const psp = (await import('https://cdn.jsdelivr.net/npm/@finos/perspective@3.8.0/dist/cdn/perspective.js')).default;
+    await import('https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.8.0/dist/cdn/perspective-viewer.js');
+    await import('https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-datagrid@3.8.0/dist/cdn/perspective-viewer-datagrid.js');
+    await import('https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-d3fc@3.8.0/dist/cdn/perspective-viewer-d3fc.js');
+    const rows = Object.entries(D.products).map(([sku,p])=>{
+      const last = (D.series[sku]||[]).slice(-1)[0];
+      return {sku, producto:p.title, marca:p.brand||"", categoria:p.category||"",
+        precio: last?+(last[1]/100).toFixed(2):null,
+        ahorro: last?+((last[3]||0).toFixed(2)):0,
+        stock: last?(last[2]?"sí":"no"):"?"};
+    });
+    const worker = await psp.worker();
+    const table = await worker.table(rows);
+    const pv = document.getElementById("pv");
+    await pv.load(table);
+    await pv.restore({plugin: "Datagrid", theme: "Pro Dark"});
+    pvDone = true;
+    pane.querySelector(".pv-status")?.remove();
+  } catch(e) {
+    if (attempt < 2) { msg("Reintentando…"); await new Promise(r=>setTimeout(r,1500)); return loadExplorer(attempt+1); }
+    msg("No se pudo cargar el explorador (CDN/WASM). Recarga la página e intenta de nuevo.");
+  }
+}
+
+const dlg = document.getElementById("dlg");
+let chart;
+function openProd(sku){
+  const p = D.products[sku]||{}, s = D.series[sku]||[];
+  const last = s.slice(-1)[0];
+  $("#dimg").src = img(sku); $("#dimg").style.display = img(sku)?"":"none";
+  $("#dtitle").textContent = p.title||sku;
+  $("#dmeta").textContent = `${p.brand||""} · ${p.category||""} · SKU ${sku}`;
+  $("#dprice").textContent = last ? fmt(last[1]) : "—";
+  const clubs = D.clubs[sku]||{};
+  const clubRows = Object.entries(clubs);
+  $("#dclubs").innerHTML = clubRows.length
+    ? "<h2 style='margin-top:14px'>Disponibilidad en clubes</h2><table><tr><th>Club</th><th>Stock</th></tr>" +
+      clubRows.map(([n,c])=>`<tr><td>${n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td></tr>`).join("") + "</table>"
+    : "";
+  $("#dtable").innerHTML = "<tr><th>Fecha</th><th>Precio</th><th>Ahorro</th><th>Stock</th></tr>" +
+    s.slice(-12).reverse().map(([d,pr,st,sv]) =>
+      `<tr><td>${d}</td><td>${fmt(pr)}</td><td>${sv?"$"+(+sv).toFixed(2):"—"}</td><td>${st?"✓":"✗"}</td></tr>`).join("");
+  dlg.showModal();
+  if (s.length >= 2){
+    $("#chart").style.display="block";
+    chart = chart || echarts.init(document.getElementById("chart"), null, {renderer:"svg"});
+    chart.setOption({
+      grid:{left:55,right:15,top:20,bottom:30},
+      xAxis:{type:"category",data:s.map(p=>p[0]),axisLabel:{color:"#8b93ad",fontSize:10}},
+      yAxis:{type:"value",axisLabel:{color:"#8b93ad",formatter:v=>"$"+v},splitLine:{lineStyle:{color:"#2a3350"}},scale:true},
+      series:[{type:"line",step:"end",data:s.map(p=>+(p[1]/100).toFixed(2)),showSymbol:true,symbolSize:5,
+        lineStyle:{color:"#60a5fa"},areaStyle:{color:"#60a5fa18"},
+        markLine:{silent:true,data:[{yAxis:+(Math.min(...s.map(p=>p[1]))/100).toFixed(2)}],
+          lineStyle:{color:"#34d399",type:"dashed"},label:{formatter:"mín",color:"#34d399"}}}],
+      tooltip:{trigger:"axis",valueFormatter:v=>"$"+v},
+    }, true); chart.resize();
+  } else {
+    $("#chart").style.display="none";
+  }
+}
+render();
+</script>
+</body>
+</html>

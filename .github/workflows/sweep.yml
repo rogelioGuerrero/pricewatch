@@ -1,0 +1,38 @@
+name: PriceWatch Sweep
+
+on:
+  schedule:
+    # Martes y jueves 6am GMT-6 = 12:00 UTC (hipotesis: cambios pre-fin-de-semana)
+    - cron: '0 12 * * 2,4'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pricewatch-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Sweep catalog + diff + rebuild dashboard
+        run: |
+          python scripts/sweep.py
+          python scripts/build_site.py
+
+      - name: Commit data + dashboard
+        run: |
+          git config user.name "pricewatch-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/ docs/index.html
+          git diff --staged --quiet || git commit -m "sweep: $(date +%F)"
+          git push
