@@ -113,13 +113,48 @@ def sweep():
     return products
 
 
+def _is_synthetic(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return bool(json.load(f).get("synthetic"))
+    except Exception:
+        return False
+
+
 def load_previous_snapshot():
-    snaps = sorted(os.listdir(SNAP_DIR)) if os.path.isdir(SNAP_DIR) else []
+    """Devuelve el snapshot mas reciente, prefiriendo uno real
+    (los sinteticos del demo no deben contaminar el diff de produccion)."""
+    if not os.path.isdir(SNAP_DIR):
+        return None, None
+    snaps = sorted(os.listdir(SNAP_DIR))
     if not snaps:
         return None, None
-    last = snaps[-1]
-    with open(os.path.join(SNAP_DIR, last)) as f:
+    real = [s for s in snaps if not _is_synthetic(os.path.join(SNAP_DIR, s))]
+    last = real[-1] if real else snaps[-1]
+    with open(os.path.join(SNAP_DIR, last), encoding="utf-8") as f:
         return last[:-5], json.load(f)
+
+
+def cleanup_synthetic():
+    """Purga snapshots/filas demo cuando ya hay suficiente historia real."""
+    snaps = sorted(os.listdir(SNAP_DIR)) if os.path.isdir(SNAP_DIR) else []
+    real, synt = [], []
+    for s in snaps:
+        path = os.path.join(SNAP_DIR, s)
+        (synt if _is_synthetic(path) else real).append(s)
+    if len(real) < 5:
+        return
+    first_real = real[0][:-5]
+    for s in synt:
+        os.remove(os.path.join(SNAP_DIR, s))
+        print("snapshot sintetico eliminado:", s)
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("DELETE FROM prices WHERE date < ?", (first_real,))
+    n = conn.total_changes
+    conn.commit()
+    conn.close()
+    if n:
+        print("filas demo eliminadas de prices.db:", n)
 
 
 def diff(prev, cur):
@@ -247,6 +282,7 @@ def main():
         print(f"Snapshot: {snap_file}")
         record_history(cur, today)
         print(f"Historia actualizada en {DB_PATH}")
+        cleanup_synthetic()
     else:
         snaps = sorted(os.listdir(SNAP_DIR))
         with open(os.path.join(SNAP_DIR, snaps[-1])) as f:

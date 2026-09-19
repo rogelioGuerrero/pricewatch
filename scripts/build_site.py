@@ -66,8 +66,22 @@ ofertas = [{"sku": s, "saving": r["saving"], "price": r["price"],
             **products.get(s, {})}
            for s, r in latest.items() if (r["saving"] or 0) > 0]
 
+# ¿aun hay datos sinteticos del demo? (snapshot marcado o fechas pre-inicio)
+SNAP_DIR = os.path.join(ROOT, "data", "snapshots")
+demo = False
+if os.path.isdir(SNAP_DIR):
+    for f in os.listdir(SNAP_DIR):
+        try:
+            with open(os.path.join(SNAP_DIR, f), encoding="utf-8") as fh:
+                if json.load(fh).get("synthetic"):
+                    demo = True
+                    break
+        except Exception:
+            pass
+
 data = {
     "generated": max((r[0] for s in series.values() for r in s), default=""),
+    "demo": demo,
     "n_products": len(products),
     "n_stockout": sum(1 for r in latest.values() if not r["in_stock"]),
     "products": products, "series": series, "events": events,

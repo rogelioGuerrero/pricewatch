@@ -3,6 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1420">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PriceWatch">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>PriceWatch SV — Qué cambió en PriceSmart</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <link rel="stylesheet" crossorigin="anonymous"
@@ -67,7 +74,7 @@
   <header>
     <h1>PriceWatch SV</h1>
     <p>Línea base + variaciones detectadas en pricesmart.com/es-sv · datos al <b id="gen"></b></p>
-    <span class="demo">DEMO — el historial es sintético hasta acumular corridas reales (mar/jue)</span>
+    <span class="demo" id="demo-banner" style="display:none">DEMO — el historial es sintético hasta acumular corridas reales (mar/jue)</span>
   </header>
   <div class="kpis" id="kpis"></div>
   <div class="tabs" id="tabs"></div>
@@ -93,6 +100,7 @@ const D = __DATA__;
 const $ = s => document.querySelector(s);
 const fmt = c => c == null ? "—" : "$" + (c/100).toFixed(2);
 document.getElementById("gen").textContent = D.generated;
+if (D.demo) document.getElementById("demo-banner").style.display = "";
 const img = sku => (D.products[sku]||{}).image || "";
 const ev = D.events.slice().reverse();
 const byType = t => ev.filter(e=>e.type===t);
@@ -232,6 +240,9 @@ function openProd(sku){
   }
 }
 render();
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js", {scope: "./"}).catch(()=>{});
+}
 </script>
 </body>
 </html>
