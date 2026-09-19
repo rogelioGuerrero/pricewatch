@@ -314,9 +314,13 @@ function pspFilter(id){
 }
 $("#q").oninput = () => {
   const q = $("#q").value.trim();
-  document.querySelectorAll(".pane").forEach(x=>x.classList.remove("on"));
   const t = document.querySelector(".tab.on")?.dataset.t;
-  if (q.length >= 2) document.getElementById("pane-buscar").classList.add("on");
+  const esTabla = t === "explorar" || t === "inteligencia";
+  document.querySelectorAll(".pane").forEach(x=>x.classList.remove("on"));
+  // en tabs de tarjetas: panel de resultados del catalogo;
+  // en tabs de tabla: la tabla queda y se filtra sola
+  if (q.length >= 2 && !esTabla)
+    document.getElementById("pane-buscar").classList.add("on");
   else document.getElementById("pane-"+t)?.classList.add("on");
   render();
   if (t === "explorar" && pvDone) pspFilter("pv");
