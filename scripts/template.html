@@ -466,6 +466,7 @@ async function loadExplorer(attempt=0){
       return {sku, producto:p.title, marca:p.brand||"", categoria:p.category||"",
         precio: last?+(last[1]/100).toFixed(2):null,
         ahorro: last?+((last[3]||0).toFixed(2)):0,
+        desc_pct: last&&last[1]?+((last[3]||0)/(last[1]/100)*100).toFixed(1):0,
         stock: last?(last[2]?"sí":"no"):"?"};
     });
     const worker = await psp.worker();
@@ -512,6 +513,7 @@ async function loadIntel(attempt=0){
         pct_sobre_min: a.pct_min ?? null,
         vs_tipico_pct: a.vs_med ?? null,
         ahorro_letrero: l?+((l[3]||0).toFixed(2)):0,
+        desc_pct: l&&l[1]?+((l[3]||0)/(l[1]/100)*100).toFixed(1):0,
         n_cambios: a.n_ch ?? null, ult_cambio: a.last_ch||"",
         oferta_cada_d: a.of_every ?? null, ult_oferta_d: a.of_last ?? null,
         ahorro_tipico: a.of_save ?? null,
@@ -527,6 +529,7 @@ async function loadIntel(attempt=0){
                       group_by: ["categoria"],
                       aggregates: {precio:"avg", pct_sobre_min:"avg",
                         vs_tipico_pct:"avg", ahorro_letrero:"sum",
+                        desc_pct:"avg",
                         n_cambios:"sum", dias_agotado:"avg"}});
     pv2Done = true;
     pane.querySelector(".pv-status")?.remove();
