@@ -136,6 +136,15 @@ def load_previous_snapshot():
         return last[:-5], json.load(f)
 
 
+def prune_snapshots(keep=7):
+    """Retiene solo los ultimos `keep` snapshots: sirven para el diff
+    del dia siguiente; la historia longitudinal ya vive en prices.db."""
+    snaps = sorted(f for f in os.listdir(SNAP_DIR) if f.endswith(".json"))
+    for s in snaps[:-keep]:
+        os.remove(os.path.join(SNAP_DIR, s))
+        print("snapshot antiguo eliminado:", s)
+
+
 def cleanup_synthetic():
     """Purga snapshots/filas demo cuando ya hay suficiente historia real."""
     snaps = sorted(os.listdir(SNAP_DIR)) if os.path.isdir(SNAP_DIR) else []
@@ -467,6 +476,7 @@ def main():
         record_history(cur, today)
         print(f"Historia actualizada en {DB_PATH}")
         cleanup_synthetic()
+        prune_snapshots()
     else:
         snaps = sorted(os.listdir(SNAP_DIR))
         with open(os.path.join(SNAP_DIR, snaps[-1]), encoding="utf-8") as f:
