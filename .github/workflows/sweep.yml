@@ -2,8 +2,8 @@ name: PriceWatch Sweep
 
 on:
   schedule:
-    # Martes y jueves 6am GMT-6 = 12:00 UTC (hipotesis: cambios pre-fin-de-semana)
-    - cron: '0 12 * * 2,4'
+    # Diario 6am GMT-6 = 12:00 UTC (densidad de historia para cadencia/minimos)
+    - cron: '0 12 * * *'
   workflow_dispatch: {}
 
 permissions:

@@ -237,19 +237,9 @@ document.querySelectorAll(".kpi[data-tab]").forEach(k => k.onclick = () => {
   render();
 });
 
-// frescura: proxima corrida (mar/jue 12:00 UTC)
-(function(){
-  const dias = {2:"martes",4:"jueves"};
-  const d = new Date();
-  for (let i=1;i<8;i++){
-    const n = new Date(d); n.setDate(d.getDate()+i);
-    if (dias[n.getUTCDay()]) {
-      document.querySelector("header p").insertAdjacentHTML("beforeend",
-        ` · próximo barrido: <b>${dias[n.getUTCDay()]}</b>`);
-      break;
-    }
-  }
-})();
+// frescura: barrido diario 12:00 UTC (6am El Salvador)
+document.querySelector("header p").insertAdjacentHTML("beforeend",
+  ` · barrido diario 6am`);
 
 const LABEL = {agotado:"se acabó", reaparecio:"volvió",
   salio_del_catalogo:"salió del catálogo", regreso:"regresó al catálogo",
