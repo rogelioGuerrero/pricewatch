@@ -26,8 +26,14 @@
   .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
           gap:10px; margin:14px 0 }
   .kpi { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px }
+  .kpi[data-tab] { cursor:pointer; transition:border-color .15s }
+  .kpi[data-tab]:hover { border-color:var(--info) }
   .kpi b { font-size:22px; display:block }
   .kpi span { color:var(--mut); font-size:11px }
+  .chip { cursor:pointer; font-size:12px; padding:4px 12px; border-radius:99px;
+          border:1px solid var(--line); color:var(--mut) }
+  .chip.on { color:var(--txt); border-color:var(--info); background:var(--card);
+             font-weight:600 }
   .tabs { display:flex; gap:4px; border-bottom:1px solid var(--line); margin:16px 0 12px;
           overflow-x:auto }
   .tab { padding:8px 14px; cursor:pointer; color:var(--mut); font-size:13px;
@@ -91,12 +97,22 @@
   <div class="tabs" id="tabs"></div>
   <div class="filters"><input id="q" placeholder="Buscar en todo el catálogo (nombre, marca, SKU)…"></div>
   <div class="pane" id="pane-buscar"><div class="grid" id="g-buscar"></div></div>
-  <div class="pane on" id="pane-cambios"><div class="grid" id="g-cambios"></div></div>
+  <div class="pane on" id="pane-cambios">
+    <div class="filters" id="f-cambios">
+      <span class="chip on" data-cf="all">todas</span>
+      <span class="chip" data-cf="bajo">bajaron</span>
+      <span class="chip" data-cf="subio">subieron</span>
+    </div>
+    <div class="grid" id="g-cambios"></div>
+  </div>
   <div class="pane" id="pane-ofertas"><div class="grid" id="g-ofertas"></div></div>
   <div class="pane" id="pane-stock"><div class="grid" id="g-stock"></div></div>
   <div class="pane" id="pane-nuevos"><div class="grid" id="g-nuevos"></div></div>
   <div class="pane" id="pane-mejores"><div class="grid" id="g-mejores"></div></div>
-  <div class="pane" id="pane-favs"><div class="grid" id="g-favs"></div></div>
+  <div class="pane" id="pane-favs">
+    <p class="meta" id="favs-sum" style="margin-bottom:10px"></p>
+    <div class="grid" id="g-favs"></div>
+  </div>
   <div class="pane" id="pane-explorar">
     <div class="filters">Agrupar:
       <select id="grp1" style="background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 10px;font-size:13px">
@@ -148,6 +164,8 @@ const ev = D.events.slice().reverse();
 const byType = t => ev.filter(e=>e.type===t);
 
 const FAV = new Set(JSON.parse(localStorage.getItem("pw-favs")||"[]"));
+const PAID = {};
+(D.mis||[]).forEach(m => PAID[m.sku] = m);
 const toggleFav = (sku,e)=>{e.stopPropagation();
   FAV.has(sku)?FAV.delete(sku):FAV.add(sku);
   localStorage.setItem("pw-favs",JSON.stringify([...FAV]));render();
@@ -187,13 +205,25 @@ document.querySelector(".tab").classList.add("on");
 const idxTxt = D.indice==null ? "—"
   : (D.indice>0?"+":"")+D.indice+"%";
 $("#kpis").innerHTML = [
-  [D.n_products,"productos en línea base"],
-  [D.ofertas.length,"ofertas activas"],
-  [D.n_stockout,"sin stock hoy"],
-  [byType("bajo").length,"bajadas"],
-  [byType("subio").length,"subidas"],
+  [D.n_products,"productos en línea base","explorar"],
+  [D.ofertas.length,"ofertas activas","ofertas"],
+  [D.n_stockout,"sin stock hoy","stock"],
+  [byType("bajo").length,"bajaron de precio","cambios","bajo"],
+  [byType("subio").length,"subieron de precio","cambios","subio"],
   [idxTxt,"índice del catálogo"],
-].map(([b,s])=>`<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join("");
+].map(([b,s,tab,cf]) =>
+  `<div class="kpi"${tab?` data-tab="${tab}" data-cf="${cf||""}"`:""}><b>${b}</b><span>${s}</span></div>`).join("");
+let cf = "all";
+const setCf = v => { cf = v;
+  document.querySelectorAll("#f-cambios .chip")
+    .forEach(x => x.classList.toggle("on", x.dataset.cf === v)); };
+document.querySelectorAll("#f-cambios .chip")
+  .forEach(c => c.onclick = () => { setCf(c.dataset.cf); render(); });
+document.querySelectorAll(".kpi[data-tab]").forEach(k => k.onclick = () => {
+  if (k.dataset.tab === "cambios") setCf(k.dataset.cf || "all");
+  document.querySelector(`.tab[data-t="${k.dataset.tab}"]`).click();
+  render();
+});
 
 // frescura: proxima corrida (mar/jue 12:00 UTC)
 (function(){
@@ -243,7 +273,7 @@ function render(){
   const q = $("#q").value.toLowerCase();
   const f = e => !q || (e.title||"").toLowerCase().includes(q)
                    || (D.products[e.sku]||{}).title?.toLowerCase().includes(q);
-  $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios</p>";
+  $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio"].includes(e.type)&&(cf==="all"||e.type===cf)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios</p>";
   $("#g-ofertas").innerHTML = ev.filter(e=>["oferta","oferta_termino"].includes(e.type)&&f(e)).map(e=>card(e)).join("")
     || D.ofertas.filter(o=>!q||o.title?.toLowerCase().includes(q)).map(o=>card({sku:o.sku,type:"oferta",saving:o.saving,price:o.price,title:o.title})).join("");
   $("#g-stock").innerHTML = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo","regreso","club_agotado","club_volvio","se_agota"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios de disponibilidad</p>";
@@ -265,8 +295,17 @@ function render(){
           <div class="meta">${p.category||""} · ${a.n_ch} cambios · ${a.pct_stock}% días con stock</div>
           <div class="spark" data-sku="${s}"></div></div></div>`;
     }).join("") || "<p class='meta'>Nada en su mínimo hoy</p>";
-  $("#g-favs").innerHTML = [...FAV].map(favCard).join("")
+  const favList = [...FAV].sort((x,y)=>verdict(x).rank-verdict(y).rank);
+  $("#g-favs").innerHTML = favList.map(favCard).join("")
     || "<p class='meta'>Marca productos con ☆ para seguirlos aquí. La lista vive en tu teléfono, sin cuenta.</p>";
+  if (FAV.size) {
+    const vs = favList.map(verdict);
+    const ok = vs.filter(v=>v.rank<=4).length,
+          up = vs.filter(v=>v.rank===6).length,
+          out = vs.filter(v=>v.rank>=8).length;
+    $("#favs-sum").textContent =
+      `${ok} en buen precio · ${up} subieron · ${out} sin stock — ordenados por conveniencia`;
+  } else $("#favs-sum").textContent = "";
   if (q.length >= 2) {
     $("#g-buscar").innerHTML = Object.keys(D.products)
       .filter(s => { const p = D.products[s]||{};
@@ -291,18 +330,50 @@ function clubChips(sku){
     return `<span class="tag ${c&&c.in_stock?"bajo":"agotado"}">${label} ${c?(c.in_stock?"✓":"✗"):"—"}</span>`;
   }).join(" ");
 }
+// veredicto de compra: ¿conviene hoy o no? (menor rank = mejor momento)
+const ofTip = a =>
+  a.of_every ? ` · ofertas cada ~${a.of_every}d` +
+    (a.of_last ? ` (última hace ${a.of_last}d)` : "")
+  : a.of_last ? ` · última oferta hace ${a.of_last}d` : "";
+function verdict(sku){
+  const a = D.agg[sku]||{}, s = D.series[sku]||[], l = s.slice(-1)[0];
+  if (!l) return {rank:9, cls:"agotado", label:"sin datos", tip:""};
+  const save = l[3]||0, prev = s.length>=2 ? s[s.length-2][1] : null;
+  const chg = prev!=null && prev ? Math.round((l[1]-prev)/prev*1000)/10 : 0;
+  if (!l[2]) return {rank:8, cls:"agotado", label:"sin stock",
+                     tip:`lleva ${a.d_out||1}d agotado`};
+  if (save>0 && s.length>=3 && a.pct_min<=0)
+    return {rank:0, cls:"real", label:"buen momento",
+            tip:`oferta real: ahorra $${(+save).toFixed(2)} y está en su mínimo`};
+  if (save>0) return {rank:1, cls:"oferta", label:"en oferta",
+                      tip:`ahorra $${(+save).toFixed(2)}`+ofTip(a)};
+  if (a.pct_min!=null && a.pct_min<=0)
+    return {rank:2, cls:"bajo", label:"mínimo histórico",
+            tip:"nunca estuvo más barato en nuestros datos"+ofTip(a)};
+  if (a.vs_med!=null && a.vs_med<0)
+    return {rank:3, cls:"bajo", label:"bajo el típico",
+            tip:`${a.vs_med}% vs su precio habitual`+ofTip(a)};
+  if (chg<0) return {rank:4, cls:"bajo", label:`bajó ${-chg}%`,
+                     tip:"recién bajó de precio"+ofTip(a)};
+  if (chg>0) return {rank:6, cls:"subio", label:`subió ${chg}%`,
+                     tip:"si no urge, espera"+ofTip(a)};
+  return {rank:5, cls:"salio_del_catalogo", label:"precio normal",
+          tip:(a.pct_min!=null?`a ${a.pct_min}% de su mínimo`:"")+ofTip(a)};
+}
 function favCard(sku){
   const p = D.products[sku]||{}, l = (D.series[sku]||[]).slice(-1)[0],
-        a = D.agg[sku]||{};
+        a = D.agg[sku]||{}, v = verdict(sku), m = PAID[sku];
   return `<div class="card" onclick="openProd('${sku}')">
     ${star(sku)}
     ${img(sku)?`<img src="${img(sku)}" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
       <div class="t">${p.title||sku}</div>
       <div><span class="pr">${l?fmt(l[1]):"—"}</span>
-        ${a.pct_min<=0?`<span class="tag real">mín histórico</span>`
-          :a.pct_min!=null?`<span class="meta">+${a.pct_min}% sobre mín</span>`:""}
+        <span class="tag ${v.cls}">${v.label}</span>
         ${l&&l[3]>0?`<span class="tag oferta">-$${(+l[3]).toFixed(2)}</span>`:""}</div>
+      ${v.tip?`<div class="meta">${v.tip}</div>`:""}
+      ${m&&l?`<div class="meta">pagaste $${(+m.paid).toFixed(2)}${m.date?" el "+m.date:""}
+        → ${l[1]>=m.paid*100?"+":""}${Math.round((l[1]-m.paid*100)/(m.paid*100)*100)}% hoy</div>`:""}
       <div style="margin-top:5px">${clubChips(sku)}</div>
       <div class="spark" data-sku="${sku}"></div></div></div>`;
 }
@@ -409,6 +480,8 @@ async function loadIntel(attempt=0){
         vs_tipico_pct: a.vs_med ?? null,
         ahorro_letrero: l?+((l[3]||0).toFixed(2)):0,
         n_cambios: a.n_ch ?? null, ult_cambio: a.last_ch||"",
+        oferta_cada_d: a.of_every ?? null, ult_oferta_d: a.of_last ?? null,
+        ahorro_tipico: a.of_save ?? null,
         pct_dias_stock: a.pct_stock ?? null, dias_agotado: a.d_out ?? 0,
         n_veces_agotado: a.n_out ?? 0,
         stock: l?(l[2]?"sí":"no"):"?"};

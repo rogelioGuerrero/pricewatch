@@ -8,6 +8,7 @@ import os
 import sqlite3
 import statistics
 from collections import defaultdict
+from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB = os.path.join(ROOT, "data", "prices.db")
@@ -90,6 +91,13 @@ for sku, s in series.items():
             break
         d_out += 1
     n_out = sum(1 for i in range(1, len(s)) if s[i - 1][2] and not s[i][2])
+    # cadencia de ofertas: inicios de episodio con letrero de ahorro
+    of_starts = [s[i][0] for i in range(1, len(s))
+                 if (s[i][3] or 0) > 0 and not (s[i - 1][3] or 0)]
+    gaps = [(date.fromisoformat(b) - date.fromisoformat(a)).days
+            for a, b in zip(of_starts, of_starts[1:])]
+    last_of = next((r[0] for r in reversed(s) if (r[3] or 0) > 0), None)
+    saves = [r[3] for r in s if (r[3] or 0) > 0]
     agg[sku] = {
         "min": min_p, "max": max_p, "med": round(med),
         "pct_min": round((last_p - min_p) / min_p * 100, 1) if min_p else None,
@@ -98,6 +106,11 @@ for sku, s in series.items():
         "d_out": d_out if not s[-1][2] else 0,
         "pct_stock": round(sum(1 for r in s if r[2]) / len(s) * 100),
         "n_out": n_out,
+        "n_of": len(of_starts),
+        "of_every": round(statistics.median(gaps)) if gaps else None,
+        "of_last": (date.fromisoformat(s[-1][0])
+                    - date.fromisoformat(last_of)).days if last_of else None,
+        "of_save": round(statistics.median(saves), 2) if saves else None,
     }
 
 # Indice PriceWatch: % mediano de cambio de precio entre las 2 ultimas
