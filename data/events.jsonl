@@ -120,3 +120,11 @@
 {"sku": "509354", "type": "subio", "title": "Neuro Campolón Suplemento de Vitaminas y Ginseng 2 Paquetes / 12 Unidades / 10 mL", "from": 1199, "to": 1599, "delta": 400, "pct": 33.4, "date": "2026-09-19"}
 {"sku": "518212", "type": "subio", "title": "Tree Hut Exfoliante Corporal 3 Unidades / 510 g", "from": 2725, "to": 4399, "delta": 1674, "pct": 61.4, "date": "2026-09-19"}
 {"sku": "518212", "type": "agotado", "title": "Tree Hut Exfoliante Corporal 3 Unidades / 510 g", "price": 4399, "date": "2026-09-19"}
+{"sku": "171889", "type": "club_volvio", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Ana", "prev_date": "2026-09-19", "date": "2026-09-20"}
+{"sku": "195666", "type": "club_volvio", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "Santa Ana", "prev_date": "2026-09-19", "date": "2026-09-20"}
+{"sku": "232749", "type": "club_agotado", "title": "OxiClean Removedor y Quitamanchas Líquido en Spray Libre de Cloro 2 Unidades / 931 mL / 31.5 oz", "price": 1049, "club": "El Salvador", "prev_date": "2026-09-19", "date": "2026-09-20"}
+{"sku": "232749", "type": "club_agotado", "title": "OxiClean Removedor y Quitamanchas Líquido en Spray Libre de Cloro 2 Unidades / 931 mL / 31.5 oz", "price": 1049, "club": "Los Héroes", "prev_date": "2026-09-19", "date": "2026-09-20"}
+{"sku": "244383", "type": "club_agotado", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 879, "club": "Santa Elena", "prev_date": "2026-09-19", "date": "2026-09-20"}
+{"sku": "244383", "type": "se_agota", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 879, "club": "El Salvador", "qty_from": 34, "qty_to": 12, "prev_date": "2026-09-19", "date": "2026-09-20"}
+{"sku": "244383", "type": "se_agota", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 879, "club": "Los Héroes", "qty_from": 20, "qty_to": 12, "prev_date": "2026-09-19", "date": "2026-09-20"}
+{"sku": "302371", "type": "club_agotado", "title": "Taifeld's Galletas Avena con Nuez 40 Unidades / 15 g / 0.53 oz", "price": 699, "club": "Santa Elena", "prev_date": "2026-09-19", "date": "2026-09-20"}
