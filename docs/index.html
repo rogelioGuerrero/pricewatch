@@ -97,7 +97,7 @@
   <div class="tabs" id="tabs"></div>
   <div class="filters"><input id="q" placeholder="Buscar en todo el catálogo (nombre, marca, SKU)…"></div>
   <div class="pane" id="pane-buscar"><div class="grid" id="g-buscar"></div></div>
-  <div class="pane on" id="pane-cambios">
+  <div class="pane" id="pane-cambios">
     <div class="filters" id="f-cambios">
       <span class="chip on" data-cf="all">todas</span>
       <span class="chip" data-cf="bajo">bajaron</span>
@@ -110,7 +110,7 @@
   <div class="pane" id="pane-stock"><div class="grid" id="g-stock"></div></div>
   <div class="pane" id="pane-nuevos"><div class="grid" id="g-nuevos"></div></div>
   <div class="pane" id="pane-mejores"><div class="grid" id="g-mejores"></div></div>
-  <div class="pane" id="pane-favs">
+  <div class="pane on" id="pane-favs">
     <p class="meta" id="favs-sum" style="margin-bottom:10px"></p>
     <div class="grid" id="g-favs"></div>
   </div>
@@ -124,21 +124,11 @@
       <label style="font-size:13px;color:var(--mut);display:flex;align-items:center;gap:5px;cursor:pointer">
         <input type="checkbox" id="stok1" style="width:auto"> solo con stock
       </label>
-    </div>
-    <perspective-viewer id="pv"></perspective-viewer>
-  </div>
-  <div class="pane" id="pane-inteligencia">
-    <div class="filters">Agrupar:
-      <select id="grp" style="background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 10px;font-size:13px">
-        <option value="categoria">por categoría</option>
-        <option value="marca">por marca</option>
-        <option value="">sin agrupar</option>
-      </select>
       <label style="font-size:13px;color:var(--mut);display:flex;align-items:center;gap:5px;cursor:pointer">
-        <input type="checkbox" id="stok2" style="width:auto"> solo con stock
+        <input type="checkbox" id="adv" style="width:auto"> avanzado
       </label>
     </div>
-    <perspective-viewer id="pv2"></perspective-viewer>
+    <perspective-viewer id="pv"></perspective-viewer>
   </div>
 </div>
 <dialog id="dlg">
@@ -199,6 +189,7 @@ const star = sku =>
   `<span class="star ${FAV.has(sku)?"on":""}" onclick="toggleFav('${sku}',event)">${FAV.has(sku)?"★":"☆"}</span>`;
 
 const TABS = [
+  ["favs","Mi lista", FAV.size],
   ["cambios","Cambios de precio", byType("bajo").length + byType("subio").length],
   ["ofertas","Ofertas", D.ofertas.length],
   ["stock","Se acabó / Volvió",
@@ -210,9 +201,7 @@ const TABS = [
   ["mejores","Mejores precios",
    Object.keys(D.agg).filter(s=>(D.series[s]||[]).length>=3
      && D.agg[s].pct_min<=0 && D.agg[s].d_out===0).length],
-  ["favs","Mi lista", FAV.size],
-  ["explorar","Explorar catálogo", D.n_products],
-  ["inteligencia","Inteligencia", D.n_products],
+  ["explorar","Catálogo", D.n_products],
 ];
 $("#tabs").innerHTML = TABS.map(([id,n,nr]) =>
   `<div class="tab" data-t="${id}">${n}<span class="n">${nr}</span></div>`).join("");
@@ -222,7 +211,6 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   t.classList.add("on");
   document.getElementById("pane-"+t.dataset.t).classList.add("on");
   if (t.dataset.t==="explorar") loadExplorer();
-  if (t.dataset.t==="inteligencia") loadIntel();
 });
 document.querySelector(".tab").classList.add("on");
 
@@ -417,23 +405,20 @@ function pspFilter(id){
   const f = [];
   if (q) f.push(/^\d+$/.test(q) ? ["sku","contains",q]
                                : ["producto","contains",q]);
-  const cb = document.getElementById(id === "pv" ? "stok1" : "stok2");
-  if (cb?.checked) f.push(["stock","==","sí"]);
+  if (document.getElementById("stok1").checked) f.push(["stock","==","sí"]);
   document.getElementById(id).restore({filter: f});
 }
 $("#q").oninput = () => {
   const q = $("#q").value.trim();
   const t = document.querySelector(".tab.on")?.dataset.t;
-  const esTabla = t === "explorar" || t === "inteligencia";
   document.querySelectorAll(".pane").forEach(x=>x.classList.remove("on"));
   // en tabs de tarjetas: panel de resultados del catalogo;
   // en tabs de tabla: la tabla queda y se filtra sola
-  if (q.length >= 2 && !esTabla)
+  if (q.length >= 2 && t !== "explorar")
     document.getElementById("pane-buscar").classList.add("on");
   else document.getElementById("pane-"+t)?.classList.add("on");
   render();
   if (t === "explorar" && pvDone) pspFilter("pv");
-  if (t === "inteligencia" && pv2Done) pspFilter("pv2");
 };
 
 function sparks(){
@@ -450,54 +435,18 @@ function sparks(){
 }
 
 let pvDone=false;
+const COLS_BASE = ["sku","producto","marca","categoria","precio","ahorro",
+                   "desc_pct","stock"];
+const COLS_ADV = ["min_hist","max_hist","pct_sobre_min","vs_tipico_pct",
+                  "n_cambios","ult_cambio","oferta_cada_d","ult_oferta_d",
+                  "ahorro_tipico","pct_dias_stock","dias_agotado",
+                  "n_veces_agotado"];
 async function loadExplorer(attempt=0){
   if (pvDone) return;
   const pane = document.getElementById("pane-explorar");
   const msg = t => { pane.querySelector(".pv-status")?.remove();
     pane.insertAdjacentHTML("beforeend", `<p class="meta pv-status" style="padding:10px">${t}</p>`); };
-  msg("Cargando explorador (WASM, solo la primera vez)…");
-  try {
-    const psp = (await import('https://cdn.jsdelivr.net/npm/@finos/perspective@3.8.0/dist/cdn/perspective.js')).default;
-    await import('https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.8.0/dist/cdn/perspective-viewer.js');
-    await import('https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-datagrid@3.8.0/dist/cdn/perspective-viewer-datagrid.js');
-    await import('https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-d3fc@3.8.0/dist/cdn/perspective-viewer-d3fc.js');
-    const rows = Object.entries(D.products).map(([sku,p])=>{
-      const last = (D.series[sku]||[]).slice(-1)[0];
-      return {sku, producto:p.title, marca:p.brand||"", categoria:p.category||"",
-        precio: last?+(last[1]/100).toFixed(2):null,
-        ahorro: last?+((last[3]||0).toFixed(2)):0,
-        desc_pct: last&&last[1]?+((last[3]||0)/(last[1]/100)*100).toFixed(1):0,
-        stock: last?(last[2]?"sí":"no"):"?"};
-    });
-    const worker = await psp.worker();
-    const table = await worker.table(rows);
-    const pv = document.getElementById("pv");
-    await pv.load(table);
-    await pv.restore({plugin: "Datagrid", theme: "Pro Dark"});
-    pvDone = true;
-    pane.querySelector(".pv-status")?.remove();
-    document.getElementById("grp1").onchange = e =>
-      pv.restore({group_by: e.target.value ? [e.target.value] : []});
-    document.getElementById("stok1").onchange = () => pspFilter("pv");
-    if ($("#q").value.trim() || document.getElementById("stok1").checked)
-      pspFilter("pv");
-    pv.addEventListener("perspective-click", e => {
-      const r = e.detail?.row;
-      if (r && r.sku != null) openProd(String(r.sku));
-    });
-  } catch(e) {
-    if (attempt < 2) { msg("Reintentando…"); await new Promise(r=>setTimeout(r,1500)); return loadExplorer(attempt+1); }
-    msg("No se pudo cargar el explorador (CDN/WASM). Recarga la página e intenta de nuevo.");
-  }
-}
-
-let pv2Done=false;
-async function loadIntel(attempt=0){
-  if (pv2Done) return;
-  const pane = document.getElementById("pane-inteligencia");
-  const msg = t => { pane.querySelector(".pv-status")?.remove();
-    pane.insertAdjacentHTML("beforeend", `<p class="meta pv-status" style="padding:10px">${t}</p>`); };
-  msg("Cargando inteligencia (WASM)…");
+  msg("Cargando catálogo (WASM, solo la primera vez)…");
   try {
     const psp = (await import('https://cdn.jsdelivr.net/npm/@finos/perspective@3.8.0/dist/cdn/perspective.js')).default;
     await import('https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.8.0/dist/cdn/perspective-viewer.js');
@@ -508,43 +457,45 @@ async function loadIntel(attempt=0){
       const a = D.agg[sku]||{};
       return {sku, producto:p.title, marca:p.brand||"", categoria:p.category||"",
         precio: l?+(l[1]/100).toFixed(2):null,
+        ahorro: l?+((l[3]||0).toFixed(2)):0,
+        desc_pct: l&&l[1]?+((l[3]||0)/(l[1]/100)*100).toFixed(1):0,
+        stock: l?(l[2]?"sí":"no"):"?",
         min_hist: a.min!=null?+(a.min/100).toFixed(2):null,
         max_hist: a.max!=null?+(a.max/100).toFixed(2):null,
         pct_sobre_min: a.pct_min ?? null,
         vs_tipico_pct: a.vs_med ?? null,
-        ahorro_letrero: l?+((l[3]||0).toFixed(2)):0,
-        desc_pct: l&&l[1]?+((l[3]||0)/(l[1]/100)*100).toFixed(1):0,
         n_cambios: a.n_ch ?? null, ult_cambio: a.last_ch||"",
         oferta_cada_d: a.of_every ?? null, ult_oferta_d: a.of_last ?? null,
         ahorro_tipico: a.of_save ?? null,
         pct_dias_stock: a.pct_stock ?? null, dias_agotado: a.d_out ?? 0,
-        n_veces_agotado: a.n_out ?? 0,
-        stock: l?(l[2]?"sí":"no"):"?"};
+        n_veces_agotado: a.n_out ?? 0};
     });
     const worker = await psp.worker();
     const table = await worker.table(rows);
-    const pv = document.getElementById("pv2");
+    const pv = document.getElementById("pv");
     await pv.load(table);
     await pv.restore({plugin: "Datagrid", theme: "Pro Dark",
-                      group_by: ["categoria"],
+                      columns: COLS_BASE,
                       aggregates: {precio:"avg", pct_sobre_min:"avg",
-                        vs_tipico_pct:"avg", ahorro_letrero:"sum",
-                        desc_pct:"avg",
+                        vs_tipico_pct:"avg", ahorro:"sum", desc_pct:"avg",
                         n_cambios:"sum", dias_agotado:"avg"}});
-    pv2Done = true;
+    pvDone = true;
     pane.querySelector(".pv-status")?.remove();
-    document.getElementById("grp").onchange = e =>
+    document.getElementById("grp1").onchange = e =>
       pv.restore({group_by: e.target.value ? [e.target.value] : []});
-    document.getElementById("stok2").onchange = () => pspFilter("pv2");
-    if ($("#q").value.trim() || document.getElementById("stok2").checked)
-      pspFilter("pv2");
+    document.getElementById("stok1").onchange = () => pspFilter("pv");
+    document.getElementById("adv").onchange = e =>
+      pv.restore({columns: e.target.checked ? COLS_BASE.concat(COLS_ADV)
+                                            : COLS_BASE});
+    if ($("#q").value.trim() || document.getElementById("stok1").checked)
+      pspFilter("pv");
     pv.addEventListener("perspective-click", e => {
       const r = e.detail?.row;
-      if (r && r.sku != null) openProd(String(r.sku));
+      if (r && r.sku != null && D.products[String(r.sku)]) openProd(String(r.sku));
     });
   } catch(e) {
-    if (attempt < 2) { msg("Reintentando…"); await new Promise(r=>setTimeout(r,1500)); return loadIntel(attempt+1); }
-    msg("No se pudo cargar el explorador (CDN/WASM). Recarga la página e intenta de nuevo.");
+    if (attempt < 2) { msg("Reintentando…"); await new Promise(r=>setTimeout(r,1500)); return loadExplorer(attempt+1); }
+    msg("No se pudo cargar el catálogo (CDN/WASM). Recarga la página e intenta de nuevo.");
   }
 }
 
