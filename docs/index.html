@@ -170,8 +170,17 @@ const FAV = new Set(JSON.parse(localStorage.getItem("pw-favs")||"[]"));
 // historial de compras: log append-only en el teléfono {sku, paid, date}
 const COMPRAS = JSON.parse(localStorage.getItem("pw-compras")||"[]");
 const PAID = {};
-(D.mis||[]).forEach(m => PAID[m.sku] = {paid:m.paid, date:m.date});
-COMPRAS.forEach(m => PAID[m.sku] = m);  // local pisa a la semilla del repo
+const rebuildPaid = () => {
+  for (const k in PAID) delete PAID[k];
+  (D.mis||[]).forEach(m => PAID[m.sku] = {paid:m.paid, date:m.date});
+  COMPRAS.forEach(m => PAID[m.sku] = m);  // local pisa a la semilla del repo
+};
+rebuildPaid();
+const delCompra = (i, sku) => {
+  COMPRAS.splice(i, 1);
+  localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
+  rebuildPaid(); render(); openProd(sku);
+};
 const comprar = sku => {
   const l = (D.series[sku]||[]).slice(-1)[0];
   const v = prompt("¿A cuánto lo pagaste?", l ? (l[1]/100).toFixed(2) : "");
@@ -554,9 +563,12 @@ function openProd(sku){
   ds.className = "star" + (FAV.has(sku) ? " on" : "");
   ds.onclick = () => toggleFav(sku, {stopPropagation(){}}) || openProd(sku);
   $("#dbuy").onclick = () => comprar(sku);
-  const buys = COMPRAS.filter(c=>c.sku===sku);
-  $("#dbuys").textContent = buys.length
-    ? "Lo compraste: " + buys.map(b=>`$${(+b.paid).toFixed(2)} (${b.date||"?"})`).join(", ")
+  const buys = COMPRAS.map((c,i)=>({c,i})).filter(x=>x.c.sku===sku);
+  $("#dbuys").innerHTML = buys.length
+    ? "Lo compraste: " + buys.map(x=>
+        `<span>$${(+x.c.paid).toFixed(2)} (${x.c.date||"?"})
+         <a style="cursor:pointer;color:var(--up)"
+            onclick="delCompra(${x.i},'${sku}')">✕</a></span>`).join(", ")
     : "";
   $("#dshare").onclick = () => {
     const url = `${location.origin}${location.pathname}?sku=${sku}`;
