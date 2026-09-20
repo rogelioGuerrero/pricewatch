@@ -102,6 +102,7 @@
       <span class="chip on" data-cf="all">todas</span>
       <span class="chip" data-cf="bajo">bajaron</span>
       <span class="chip" data-cf="subio">subieron</span>
+      <span class="chip" data-cf="fav">★ mi lista</span>
     </div>
     <div class="grid" id="g-cambios"></div>
   </div>
@@ -150,7 +151,9 @@
   <div id="chart"></div>
   <div id="dclubs"></div>
   <a id="dlink" class="plink" target="_blank" rel="noopener">Ver en pricesmart.com ↗</a>
+  <a id="dbuy" class="plink" style="margin-left:14px;cursor:pointer">✓ lo compré</a>
   <a id="dshare" class="plink" style="margin-left:14px;cursor:pointer">Copiar enlace</a>
+  <p class="meta" id="dbuys" style="margin-top:8px"></p>
   <table id="dtable"></table>
 </dialog>
 <script>
@@ -164,13 +167,25 @@ const ev = D.events.slice().reverse();
 const byType = t => ev.filter(e=>e.type===t);
 
 const FAV = new Set(JSON.parse(localStorage.getItem("pw-favs")||"[]"));
+// historial de compras: log append-only en el teléfono {sku, paid, date}
+const COMPRAS = JSON.parse(localStorage.getItem("pw-compras")||"[]");
 const PAID = {};
-(D.mis||[]).forEach(m => PAID[m.sku] = m);
+(D.mis||[]).forEach(m => PAID[m.sku] = {paid:m.paid, date:m.date});
+COMPRAS.forEach(m => PAID[m.sku] = m);  // local pisa a la semilla del repo
+const comprar = sku => {
+  const l = (D.series[sku]||[]).slice(-1)[0];
+  const v = prompt("¿A cuánto lo pagaste?", l ? (l[1]/100).toFixed(2) : "");
+  if (v == null) return;
+  const paid = parseFloat(v);
+  if (!(paid > 0)) return;
+  const r = {sku, paid, date: new Date().toISOString().slice(0,10)};
+  COMPRAS.push(r); PAID[sku] = r;
+  localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
+  render();
+};
 const toggleFav = (sku,e)=>{e.stopPropagation();
   FAV.has(sku)?FAV.delete(sku):FAV.add(sku);
-  localStorage.setItem("pw-favs",JSON.stringify([...FAV]));render();
-  const n=document.querySelector('.tab[data-t="favs"] .n');
-  if(n) n.textContent=FAV.size;};
+  localStorage.setItem("pw-favs",JSON.stringify([...FAV]));render();};
 const star = sku =>
   `<span class="star ${FAV.has(sku)?"on":""}" onclick="toggleFav('${sku}',event)">${FAV.has(sku)?"★":"☆"}</span>`;
 
@@ -273,7 +288,9 @@ function render(){
   const q = $("#q").value.toLowerCase();
   const f = e => !q || (e.title||"").toLowerCase().includes(q)
                    || (D.products[e.sku]||{}).title?.toLowerCase().includes(q);
-  $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio"].includes(e.type)&&(cf==="all"||e.type===cf)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios</p>";
+  $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio"].includes(e.type)
+    && (cf==="all" ? true : cf==="fav" ? FAV.has(e.sku) : e.type===cf)
+    && f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios</p>";
   $("#g-ofertas").innerHTML = ev.filter(e=>["oferta","oferta_termino"].includes(e.type)&&f(e)).map(e=>card(e)).join("")
     || D.ofertas.filter(o=>!q||o.title?.toLowerCase().includes(q)).map(o=>card({sku:o.sku,type:"oferta",saving:o.saving,price:o.price,title:o.title})).join("");
   $("#g-stock").innerHTML = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo","regreso","club_agotado","club_volvio","se_agota"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios de disponibilidad</p>";
@@ -298,6 +315,9 @@ function render(){
   const favList = [...FAV].sort((x,y)=>verdict(x).rank-verdict(y).rank);
   $("#g-favs").innerHTML = favList.map(favCard).join("")
     || "<p class='meta'>Marca productos con ☆ para seguirlos aquí. La lista vive en tu teléfono, sin cuenta.</p>";
+  const nChFav = ev.filter(e=>["bajo","subio"].includes(e.type)&&FAV.has(e.sku)).length;
+  const favN = document.querySelector('.tab[data-t="favs"] .n');
+  if (favN) favN.textContent = FAV.size + (nChFav ? ` ⚡${nChFav}` : "");
   if (FAV.size) {
     const vs = favList.map(verdict);
     const ok = vs.filter(v=>v.rank<=4).length,
@@ -362,7 +382,8 @@ function verdict(sku){
 }
 function favCard(sku){
   const p = D.products[sku]||{}, l = (D.series[sku]||[]).slice(-1)[0],
-        a = D.agg[sku]||{}, v = verdict(sku), m = PAID[sku];
+        a = D.agg[sku]||{}, v = verdict(sku), m = PAID[sku],
+        nBuys = COMPRAS.filter(c=>c.sku===sku).length;
   return `<div class="card" onclick="openProd('${sku}')">
     ${star(sku)}
     ${img(sku)?`<img src="${img(sku)}" loading="lazy" onerror="this.remove()">`:""}
@@ -373,7 +394,10 @@ function favCard(sku){
         ${l&&l[3]>0?`<span class="tag oferta">-$${(+l[3]).toFixed(2)}</span>`:""}</div>
       ${v.tip?`<div class="meta">${v.tip}</div>`:""}
       ${m&&l?`<div class="meta">pagaste $${(+m.paid).toFixed(2)}${m.date?" el "+m.date:""}
-        → ${l[1]>=m.paid*100?"+":""}${Math.round((l[1]-m.paid*100)/(m.paid*100)*100)}% hoy</div>`:""}
+        → ${l[1]>=m.paid*100?"+":""}${Math.round((l[1]-m.paid*100)/(m.paid*100)*100)}% hoy
+        ${nBuys>1?`· ${nBuys} compras`:""}</div>`:""}
+      <div class="meta" style="margin-top:4px"><a class="plink" style="margin:0;cursor:pointer"
+        onclick="event.stopPropagation();comprar('${sku}')">✓ lo compré</a></div>
       <div style="margin-top:5px">${clubChips(sku)}</div>
       <div class="spark" data-sku="${sku}"></div></div></div>`;
 }
@@ -529,6 +553,11 @@ function openProd(sku){
   ds.textContent = FAV.has(sku) ? "★" : "☆";
   ds.className = "star" + (FAV.has(sku) ? " on" : "");
   ds.onclick = () => toggleFav(sku, {stopPropagation(){}}) || openProd(sku);
+  $("#dbuy").onclick = () => comprar(sku);
+  const buys = COMPRAS.filter(c=>c.sku===sku);
+  $("#dbuys").textContent = buys.length
+    ? "Lo compraste: " + buys.map(b=>`$${(+b.paid).toFixed(2)} (${b.date||"?"})`).join(", ")
+    : "";
   $("#dshare").onclick = () => {
     const url = `${location.origin}${location.pathname}?sku=${sku}`;
     navigator.clipboard?.writeText(url);
