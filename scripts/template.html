@@ -90,7 +90,7 @@
 <div class="wrap">
   <header>
     <h1>PriceWatch SV</h1>
-    <p>Línea base + variaciones detectadas en pricesmart.com/es-sv · datos al <b id="gen"></b></p>
+    <p>PriceSmart El Salvador · datos al <b id="gen"></b></p>
     <span class="demo" id="demo-banner" style="display:none">DEMO — el historial es sintético hasta acumular corridas reales (mar/jue)</span>
   </header>
   <div class="kpis" id="kpis"></div>
@@ -150,7 +150,9 @@
 const D = __DATA__;
 const $ = s => document.querySelector(s);
 const fmt = c => c == null ? "—" : "$" + (c/100).toFixed(2);
-document.getElementById("gen").textContent = D.generated;
+const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const [_y,_m,_d] = D.generated.split("-");
+document.getElementById("gen").textContent = `${+_d} ${MESES[+_m-1]} ${_y}`;
 if (D.demo) document.getElementById("demo-banner").style.display = "";
 const img = sku => (D.products[sku]||{}).image || "";
 const ev = D.events.slice().reverse();
@@ -236,10 +238,6 @@ document.querySelectorAll(".kpi[data-tab]").forEach(k => k.onclick = () => {
   document.querySelector(`.tab[data-t="${k.dataset.tab}"]`).click();
   render();
 });
-
-// frescura: barrido diario 12:00 UTC (6am El Salvador)
-document.querySelector("header p").insertAdjacentHTML("beforeend",
-  ` · barrido diario 6am`);
 
 const LABEL = {agotado:"se acabó", reaparecio:"volvió",
   salio_del_catalogo:"salió del catálogo", regreso:"regresó al catálogo",
