@@ -86,6 +86,26 @@
   .plink { display:inline-block; margin-top:10px; color:var(--info);
            font-size:13px }
   .tag.real { background:#064e3b; color:#86efac }
+  .ticker { overflow:hidden; margin:10px 0; border-block:1px solid var(--line) }
+  .tk-track { display:inline-flex; gap:26px; padding:7px 4px; white-space:nowrap;
+              animation:tick 32s linear infinite }
+  .ticker:hover .tk-track, .ticker:active .tk-track { animation-play-state:paused }
+  @keyframes tick { to { transform:translateX(-50%) } }
+  .tk { font-size:12px; color:var(--mut); cursor:pointer }
+  .tk b { color:var(--txt); font-size:13px }
+  #alerts { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px }
+  .alert { background:var(--card); border:1px solid var(--warn); color:var(--txt);
+           border-radius:10px; padding:8px 12px; font-size:12px; cursor:pointer }
+  .fab { display:none; position:fixed; right:16px; bottom:18px; z-index:60;
+         width:52px; height:52px; border-radius:50%; background:var(--info);
+         color:#fff; border:0; font-size:22px; box-shadow:0 4px 14px #0008;
+         cursor:pointer }
+  dialog.sheet { position:fixed; bottom:0; left:0; right:0; top:auto; margin:0;
+                 width:100%; max-width:100%; border-radius:16px 16px 0 0 }
+  .navitem { display:flex; justify-content:space-between; padding:13px 4px;
+             border-bottom:1px solid var(--line); cursor:pointer; font-size:14px }
+  .navitem.on { color:var(--info); font-weight:600 }
+  @media (max-width:700px) { .tabs { display:none } .fab { display:block } }
   .sw { display:inline-flex; align-items:center; gap:6px; cursor:pointer;
         font-size:12px; color:var(--mut); user-select:none }
   .sw input { display:none }
@@ -105,8 +125,9 @@
     <p>PriceSmart El Salvador · datos al <b id="gen"></b></p>
     <span class="demo" id="demo-banner" style="display:none">DEMO — el historial es sintético hasta acumular corridas reales (mar/jue)</span>
   </header>
-  <div class="kpis" id="kpis"></div>
+  <div class="ticker"><div class="tk-track" id="ticker"></div></div>
   <div class="tabs" id="tabs"></div>
+  <div id="alerts"></div>
   <div class="filters"><input id="q" placeholder="Buscar en todo el catálogo (nombre, marca, SKU)…"></div>
   <div class="pane" id="pane-buscar"><div class="grid" id="g-buscar"></div></div>
   <div class="pane" id="pane-cambios">
@@ -160,6 +181,8 @@
   <p class="meta" id="dbuys" style="margin-top:8px"></p>
   <table id="dtable"></table>
 </dialog>
+<button class="fab" id="fab" aria-label="secciones">≡</button>
+<dialog id="dlg-nav" class="sheet"><div id="navitems"></div></dialog>
 <dialog id="dlg-login">
   <span class="close" onclick="lgDlg.close()">✕</span>
   <h2>Cuenta</h2>
@@ -378,26 +401,45 @@ document.querySelector(".tab").classList.add("on");
 
 const idxTxt = D.indice==null ? "—"
   : (D.indice>0?"+":"")+D.indice+"%";
-$("#kpis").innerHTML = [
-  [D.n_products,"productos en el catálogo","explorar"],
-  [D.ofertas.length,"ofertas activas","ofertas"],
-  [D.n_stockout,"sin stock hoy","stock"],
-  [byType("rebaja").length,"bajaron de precio","cambios","bajo"],
-  [byType("subio").length,"subieron de precio","cambios","subio"],
-  [idxTxt,"índice del catálogo"],
+const tkHtml = [
+  [D.n_products,"productos","explorar"],
+  [D.ofertas.length,"ofertas","ofertas"],
+  [D.n_stockout,"sin stock","stock"],
+  [byType("rebaja").length,"bajaron","cambios","bajo"],
+  [byType("subio").length,"subieron","cambios","subio"],
+  [idxTxt,"índice"],
 ].map(([b,s,tab,cf]) =>
-  `<div class="kpi"${tab?` data-tab="${tab}" data-cf="${cf||""}"`:""}><b>${b}</b><span>${s}</span></div>`).join("");
+  `<span class="tk"${tab?` data-tab="${tab}" data-cf="${cf||""}"`:""}><b>${b}</b> ${s}</span>`).join("");
+$("#ticker").innerHTML = tkHtml.repeat(4);  // loop continuo sin huecos
+const goTab = id => document.querySelector(`.tab[data-t="${id}"]`)?.click();
+$("#ticker").onclick = e => {
+  const t = e.target.closest(".tk[data-tab]"); if (!t) return;
+  if (t.dataset.tab === "cambios") setCf(t.dataset.cf || "all");
+  goTab(t.dataset.tab);
+};
 let cf = "all";
 const setCf = v => { cf = v;
   document.querySelectorAll("#f-cambios .chip")
     .forEach(x => x.classList.toggle("on", x.dataset.cf === v)); };
 document.querySelectorAll("#f-cambios .chip")
   .forEach(c => c.onclick = () => { setCf(c.dataset.cf); render(); });
-document.querySelectorAll(".kpi[data-tab]").forEach(k => k.onclick = () => {
-  if (k.dataset.tab === "cambios") setCf(k.dataset.cf || "all");
-  document.querySelector(`.tab[data-t="${k.dataset.tab}"]`).click();
-  render();
-});
+// FAB + hoja de secciones (movil)
+const dlgNav = document.getElementById("dlg-nav");
+$("#fab").onclick = () => {
+  $("#navitems").innerHTML = TABS.map(([id,n,nr]) =>
+    `<div class="navitem${document.querySelector(`.tab[data-t="${id}"]`).classList.contains("on")?" on":""}"
+      data-t="${id}"><span>${n}</span><span class="meta">${nr}</span></div>`).join("");
+  dlgNav.showModal();
+};
+$("#navitems").onclick = e => {
+  const it = e.target.closest(".navitem"); if (!it) return;
+  dlgNav.close(); goTab(it.dataset.t);
+};
+$("#alerts").onclick = e => {
+  const a = e.target.closest(".alert"); if (!a) return;
+  if (a.dataset.tab === "cambios") setCf(a.dataset.cf || "all");
+  goTab(a.dataset.tab); render();
+};
 
 const LABEL = {agotado:"se acabó", reaparecio:"volvió",
   salio_del_catalogo:"salió del catálogo", regreso:"regresó al catálogo",
@@ -475,6 +517,18 @@ function render(){
           <div class="spark" data-sku="${s}"></div></div></div>`;
     }).join("") || "<p class='meta'>Nada en su mínimo hoy</p>";
   const favList = [...FAV].sort((x,y)=>verdict(x).rank-verdict(y).rank);
+  // alertas accionables: solo ocupan espacio cuando hay algo que hacer
+  const alerts = [], lastOf = s => (D.series[s]||[]).slice(-1)[0];
+  const favOf  = favList.filter(s => (lastOf(s)?.[3]||0) > 0),
+        resu   = favList.filter(s => verdict(s).label === "resurtir"),
+        favOut = favList.filter(s => { const l = lastOf(s); return l && !l[2]; });
+  if (favOf.length)  alerts.push([`${favOf.length} de tu lista en oferta`,"favs"]);
+  if (resu.length)   alerts.push([`${resu.length} para resurtir`,"favs"]);
+  if (favOut.length) alerts.push([`${favOut.length} de tu lista sin stock`,"favs"]);
+  const nReb = byType("rebaja").length;
+  if (nReb) alerts.push([`${nReb} rebaja${nReb>1?"s":""} silenciosa${nReb>1?"s":""}`,"cambios","bajo"]);
+  $("#alerts").innerHTML = alerts.map(([t,tab,cf]) =>
+    `<span class="alert" data-tab="${tab}" data-cf="${cf||""}">${t}</span>`).join("");
   $("#g-favs").innerHTML = favList.map(favCard).join("")
     || "<p class='meta'>Marca productos con ☆ para seguirlos aquí. Con 'cuenta' se sincronizan entre teléfono y PC.</p>";
   const nChFav = ev.filter(e=>["bajo","subio"].includes(e.type)&&FAV.has(e.sku)).length;
@@ -749,7 +803,7 @@ function openProd(sku){
   }
 }
 // clic fuera del modal (backdrop) lo cierra
-for (const d of [dlg, lgDlg]) d.addEventListener("click", e => {
+for (const d of [dlg, lgDlg, dlgNav]) d.addEventListener("click", e => {
   const r = d.getBoundingClientRect();
   if (e.clientX < r.left || e.clientX > r.right
       || e.clientY < r.top || e.clientY > r.bottom) d.close();
