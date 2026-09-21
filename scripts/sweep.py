@@ -16,6 +16,7 @@ import sqlite3
 import sys
 import time
 from datetime import datetime, timezone
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -420,8 +421,9 @@ def favs_remote():
     if not (ep and pid and key):
         return set()
     try:
+        q = quote('{"method":"limit","values":[500]}')
         req = Request(f"{ep}/tablesdb/pricewatch/tables/favs/rows"
-                      "?queries%5B%5D=limit%28500%29",
+                      f"?queries%5B%5D={q}",
                       headers={"X-Appwrite-Project": pid,
                                "X-Appwrite-Key": key})
         rows = json.load(urlopen(req, timeout=15)).get("rows", [])
