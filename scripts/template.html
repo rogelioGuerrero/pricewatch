@@ -104,6 +104,7 @@
       <span class="chip on" data-cf="all">todas</span>
       <span class="chip" data-cf="bajo">bajaron</span>
       <span class="chip" data-cf="subio">subieron</span>
+      <span class="chip" data-cf="oferta_termino">fin de oferta</span>
       <span class="chip" data-cf="fav">★ mi lista</span>
     </div>
     <div class="grid" id="g-cambios"></div>
@@ -319,7 +320,7 @@ async function doAuth(reg){
 
 const TABS = [
   ["favs","Mi lista", FAV.size],
-  ["cambios","Cambios de precio", byType("bajo").length + byType("subio").length + byType("oferta_termino").length],
+  ["cambios","Movimientos", byType("bajo").length + byType("subio").length + byType("oferta_termino").length],
   ["ofertas","Ofertas", D.ofertas.length],
   ["stock","Se acabó / Volvió",
    byType("agotado").length + byType("reaparecio").length
@@ -388,12 +389,14 @@ function card(e){
   else
     price = `<span class="pr">${fmt(e.price)}</span> <span class="tag ${e.type}">${(LABEL[e.type]||e.type)}${e.club?" "+e.club:""}</span>`;
   const dias = e.days_out != null ? ` · ${e.days_out}d fuera` : "";
+  const oe = e.type==="oferta_termino" && (D.agg[e.sku]||{}).of_end;
+  const odur = oe ? ` · oferta ${oe[0].slice(5)}→${oe[1].slice(5)}` : "";
   return `<div class="card" onclick="openProd('${e.sku}')">
     ${star(e.sku)}
     ${img(e.sku)?`<img src="${img(e.sku)}" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
       <div class="t">${e.title||p.title||e.sku}</div><div>${price}</div>
-      <div class="meta">${e.date||""}${dias} · ${p.category||""}</div>
+      <div class="meta">${e.date||""}${dias}${odur} · ${p.category||""}</div>
       <div class="spark" data-sku="${e.sku}"></div></div></div>`;
 }
 function render(){
@@ -401,9 +404,7 @@ function render(){
   const f = e => !q || (e.title||"").toLowerCase().includes(q)
                    || (D.products[e.sku]||{}).title?.toLowerCase().includes(q);
   $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio","oferta_termino"].includes(e.type)
-    && (cf==="all" ? true : cf==="fav" ? FAV.has(e.sku)
-        : cf==="subio" ? ["subio","oferta_termino"].includes(e.type)
-        : e.type===cf)
+    && (cf==="all" ? true : cf==="fav" ? FAV.has(e.sku) : e.type===cf)
     && f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios</p>";
   const ofIni = {}; ev.filter(e=>e.type==="oferta")
     .forEach(e => ofIni[e.sku] = e.date);
@@ -411,7 +412,7 @@ function render(){
     .filter(o=>!q||o.title?.toLowerCase().includes(q))
     .sort((a,b)=>(b.saving||0)-(a.saving||0))
     .map(o=>card({sku:o.sku,type:"oferta",saving:o.saving,price:o.price,
-                 title:o.title,date:ofIni[o.sku]}))
+                 title:o.title,date:(D.agg[o.sku]||{}).of_cur||ofIni[o.sku]}))
     .join("") || "<p class='meta'>Sin ofertas activas hoy</p>";
   $("#g-stock").innerHTML = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo","regreso","club_agotado","club_volvio","se_agota"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios de disponibilidad</p>";
   $("#g-nuevos").innerHTML = ev.filter(e=>e.type==="nuevo"&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin productos nuevos</p>";

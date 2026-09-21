@@ -98,6 +98,13 @@ for sku, s in series.items():
             for a, b in zip(of_starts, of_starts[1:])]
     last_of = next((r[0] for r in reversed(s) if (r[3] or 0) > 0), None)
     saves = [r[3] for r in s if (r[3] or 0) > 0]
+    # racha de letrero activa (of_cur) y ultima racha ya terminada (of_end)
+    run = None; last_run = None
+    for i, r in enumerate(s):
+        if (r[3] or 0) > 0:
+            if run is None: run = r[0]
+        elif run is not None:
+            last_run = [run, s[i - 1][0]]; run = None
     agg[sku] = {
         "min": min_p, "max": max_p, "med": round(med),
         "pct_min": round((last_p - min_p) / min_p * 100, 1) if min_p else None,
@@ -111,6 +118,7 @@ for sku, s in series.items():
         "of_last": (date.fromisoformat(s[-1][0])
                     - date.fromisoformat(last_of)).days if last_of else None,
         "of_save": round(statistics.median(saves), 2) if saves else None,
+        "of_cur": run, "of_end": last_run,
     }
 
 # Indice PriceWatch: % mediano de cambio de precio entre las 2 ultimas
