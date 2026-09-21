@@ -99,7 +99,7 @@
   .fab { display:none; position:fixed; right:16px; bottom:18px; z-index:60;
          width:52px; height:52px; border-radius:50%; background:var(--info);
          color:#fff; border:0; font-size:22px; box-shadow:0 4px 14px #0008;
-         cursor:pointer }
+         cursor:pointer; display:flex; align-items:center; justify-content:center }
   dialog.sheet { position:fixed; bottom:0; left:0; right:0; top:auto; margin:0;
                  width:100%; max-width:100%; border-radius:16px 16px 0 0 }
   .navitem { display:flex; justify-content:space-between; padding:13px 4px;
@@ -128,7 +128,7 @@
   <div class="ticker"><div class="tk-track" id="ticker"></div></div>
   <div class="tabs" id="tabs"></div>
   <div id="alerts"></div>
-  <div class="filters"><input id="q" placeholder="Buscar en todo el catálogo (nombre, marca, SKU)…"></div>
+  <div class="filters"><input id="q" type="search" autocomplete="off" name="pw-search" placeholder="Buscar en todo el catálogo (nombre, marca, SKU)…"></div>
   <div class="pane" id="pane-buscar"><div class="grid" id="g-buscar"></div></div>
   <div class="pane" id="pane-cambios">
     <div class="filters" id="f-cambios">
@@ -181,15 +181,15 @@
   <p class="meta" id="dbuys" style="margin-top:8px"></p>
   <table id="dtable"></table>
 </dialog>
-<button class="fab" id="fab" aria-label="secciones">≡</button>
+<button class="fab" id="fab" aria-label="secciones"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></button>
 <dialog id="dlg-nav" class="sheet"><div id="navitems"></div></dialog>
 <dialog id="dlg-login">
   <span class="close" onclick="lgDlg.close()">✕</span>
   <h2>Cuenta</h2>
   <p class="meta">Tu lista y tus compras se sincronizan entre teléfono y PC.</p>
   <div id="lg-form">
-    <input id="lg-email" type="email" placeholder="correo" style="width:100%;margin-top:10px">
-    <input id="lg-pass" type="password" placeholder="contraseña" style="width:100%;margin-top:8px">
+    <input id="lg-email" type="email" autocomplete="email" placeholder="correo" style="width:100%;margin-top:10px">
+    <input id="lg-pass" type="password" autocomplete="current-password" placeholder="contraseña" style="width:100%;margin-top:8px">
     <div style="margin-top:12px;display:flex;gap:10px">
       <span class="chip on" id="lg-in">Entrar</span>
       <span class="chip" id="lg-up">Crear cuenta</span>
