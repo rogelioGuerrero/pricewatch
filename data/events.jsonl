@@ -128,3 +128,296 @@
 {"sku": "244383", "type": "se_agota", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 879, "club": "El Salvador", "qty_from": 34, "qty_to": 12, "prev_date": "2026-09-19", "date": "2026-09-20"}
 {"sku": "244383", "type": "se_agota", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 879, "club": "Los Héroes", "qty_from": 20, "qty_to": 12, "prev_date": "2026-09-19", "date": "2026-09-20"}
 {"sku": "302371", "type": "club_agotado", "title": "Taifeld's Galletas Avena con Nuez 40 Unidades / 15 g / 0.53 oz", "price": 699, "club": "Santa Elena", "prev_date": "2026-09-19", "date": "2026-09-20"}
+{"sku": "452750", "type": "bajo", "title": "Sanissimo Salmas Horneadas 40 Unidades / 18 g      ", "from": 1129, "to": 959, "delta": -170, "pct": -15.1, "date": "2026-09-21"}
+{"sku": "452750", "type": "oferta", "title": "Sanissimo Salmas Horneadas 40 Unidades / 18 g      ", "saving": 1.7, "price": 959, "date": "2026-09-21"}
+{"sku": "459004", "type": "bajo", "title": "Butterball Carne Molida de Pavo Congelado Empacado al Vacío 3 Unidades / 453 g / 16 oz", "from": 1329, "to": 1069, "delta": -260, "pct": -19.6, "date": "2026-09-21"}
+{"sku": "459004", "type": "oferta", "title": "Butterball Carne Molida de Pavo Congelado Empacado al Vacío 3 Unidades / 453 g / 16 oz", "saving": 2.6, "price": 1069, "date": "2026-09-21"}
+{"sku": "202065", "type": "bajo", "title": "McCain Papas Sazonadas con Cáscara 2 kg / 4.4 lb", "from": 999, "to": 799, "delta": -200, "pct": -20.0, "date": "2026-09-21"}
+{"sku": "202065", "type": "oferta", "title": "McCain Papas Sazonadas con Cáscara 2 kg / 4.4 lb", "saving": 2.0, "price": 799, "date": "2026-09-21"}
+{"sku": "39997", "type": "bajo", "title": "Bob's Red Mill Hojuelas de Avena Orgánica 1.59 kg / 56 oz", "from": 1199, "to": 969, "delta": -230, "pct": -19.2, "date": "2026-09-21"}
+{"sku": "39997", "type": "oferta", "title": "Bob's Red Mill Hojuelas de Avena Orgánica 1.59 kg / 56 oz", "saving": 2.3, "price": 969, "date": "2026-09-21"}
+{"sku": "406118", "type": "bajo", "title": "Silk Bebida de Almendras Sin Azúcar Sabor Original 6 Unidades / 946 mL / 32 oz", "from": 1729, "to": 1369, "delta": -360, "pct": -20.8, "date": "2026-09-21"}
+{"sku": "406118", "type": "oferta", "title": "Silk Bebida de Almendras Sin Azúcar Sabor Original 6 Unidades / 946 mL / 32 oz", "saving": 3.6, "price": 1369, "date": "2026-09-21"}
+{"sku": "4997", "type": "subio", "title": "Nutri Grain Barras de Cereal Horneadas y Rellenas 36 Unidades / 37 g / 1.3 oz", "from": 1059, "to": 1269, "delta": 210, "pct": 19.8, "date": "2026-09-21"}
+{"sku": "4997", "type": "oferta_termino", "title": "Nutri Grain Barras de Cereal Horneadas y Rellenas 36 Unidades / 37 g / 1.3 oz", "price": 1269, "date": "2026-09-21"}
+{"sku": "50630", "type": "subio", "title": "Kraft Salsa Barbacoa Original Cocida a Fuego Lento 2.3 kg", "from": 869, "to": 1089, "delta": 220, "pct": 25.3, "date": "2026-09-21"}
+{"sku": "50630", "type": "oferta_termino", "title": "Kraft Salsa Barbacoa Original Cocida a Fuego Lento 2.3 kg", "price": 1089, "date": "2026-09-21"}
+{"sku": "326756", "type": "reaparecio", "title": "Lifeway Kéfir de Fresa 2 Unidades / 946 mL / 32 oz ", "price": 1079, "prev_price": 1079, "days_out": null, "date": "2026-09-21"}
+{"sku": "468034", "type": "reaparecio", "title": "House Foods Tofu Orgánico 4 Unidades 340 g / 12.34 oz", "price": 1369, "prev_price": 1369, "days_out": null, "date": "2026-09-21"}
+{"sku": "1711", "type": "subio", "title": "Doritos Nachos con Sabor a Queso 453 g / 16 oz", "from": 549, "to": 649, "delta": 100, "pct": 18.2, "date": "2026-09-21"}
+{"sku": "1711", "type": "oferta_termino", "title": "Doritos Nachos con Sabor a Queso 453 g / 16 oz", "price": 649, "date": "2026-09-21"}
+{"sku": "36633", "type": "subio", "title": "Olde Thompson Pimienta Negra con Molinillo 153 g / 5.4 oz", "from": 529, "to": 669, "delta": 140, "pct": 26.5, "date": "2026-09-21"}
+{"sku": "36633", "type": "oferta_termino", "title": "Olde Thompson Pimienta Negra con Molinillo 153 g / 5.4 oz", "price": 669, "date": "2026-09-21"}
+{"sku": "108095", "type": "bajo", "title": "Virginia Brand Vinagreta de Cebolla Vidalia 1 L / 33.8 oz", "from": 599, "to": 479, "delta": -120, "pct": -20.0, "date": "2026-09-21"}
+{"sku": "108095", "type": "oferta", "title": "Virginia Brand Vinagreta de Cebolla Vidalia 1 L / 33.8 oz", "saving": 1.2, "price": 479, "date": "2026-09-21"}
+{"sku": "359319", "type": "bajo", "title": "International Delight Crema de Vainilla Francesa 3 Unidades / 946 mL / 32 oz", "from": 1499, "to": 1129, "delta": -370, "pct": -24.7, "date": "2026-09-21"}
+{"sku": "359319", "type": "oferta", "title": "International Delight Crema de Vainilla Francesa 3 Unidades / 946 mL / 32 oz", "saving": 3.7, "price": 1129, "date": "2026-09-21"}
+{"sku": "87577", "type": "subio", "title": "Coca Cola Lata 24 Unidades / 354 mL / 12 oz", "from": 1579, "to": 1649, "delta": 70, "pct": 4.4, "date": "2026-09-21"}
+{"sku": "439428", "type": "subio", "title": "Fresh Gourmet Crutones Orgánicos Sazonados 907 g / 32 oz", "from": 959, "to": 1199, "delta": 240, "pct": 25.0, "date": "2026-09-21"}
+{"sku": "439428", "type": "oferta_termino", "title": "Fresh Gourmet Crutones Orgánicos Sazonados 907 g / 32 oz", "price": 1199, "date": "2026-09-21"}
+{"sku": "458934", "type": "bajo", "title": "Monk Fruit La Gretta Endulzante 100% Natural Sin Calorías 1.13 kg / 2.5 lb", "from": 1999, "to": 1699, "delta": -300, "pct": -15.0, "date": "2026-09-21"}
+{"sku": "458934", "type": "oferta", "title": "Monk Fruit La Gretta Endulzante 100% Natural Sin Calorías 1.13 kg / 2.5 lb", "saving": 3.0, "price": 1699, "date": "2026-09-21"}
+{"sku": "772094", "type": "bajo", "title": "Kraft Mayonesa Light 2 Unidades / 650 mL / 22 oz", "from": 899, "to": 719, "delta": -180, "pct": -20.0, "date": "2026-09-21"}
+{"sku": "772094", "type": "oferta", "title": "Kraft Mayonesa Light 2 Unidades / 650 mL / 22 oz", "saving": 1.8, "price": 719, "date": "2026-09-21"}
+{"sku": "29043", "type": "subio", "title": "Member's Selection Queso Havarti Rebanado 680 g / 1.5 lb", "from": 277, "to": 1149, "delta": 872, "pct": 314.8, "date": "2026-09-21"}
+{"sku": "234326", "type": "subio", "title": "Folgers Café Instantáneo 453 g / 16 oz", "from": 1499, "to": 1899, "delta": 400, "pct": 26.7, "date": "2026-09-21"}
+{"sku": "234326", "type": "oferta_termino", "title": "Folgers Café Instantáneo 453 g / 16 oz", "price": 1899, "date": "2026-09-21"}
+{"sku": "750840", "type": "subio", "title": "Filete de Ribeye Choice Fresco Bandeja", "from": 4119, "to": 4589, "delta": 470, "pct": 11.4, "date": "2026-09-21"}
+{"sku": "298509", "type": "reaparecio", "title": "President Brie Soft-Ripened Queso 555 g / 1.2 lb", "price": 999, "prev_price": 999, "days_out": null, "date": "2026-09-21"}
+{"sku": "461720", "type": "bajo", "title": "Sunny Fruits Higos Orgánicos Deshidratados 10 Unidades / 50 g / 1.76 oz", "from": 899, "to": 729, "delta": -170, "pct": -18.9, "date": "2026-09-21"}
+{"sku": "461720", "type": "oferta", "title": "Sunny Fruits Higos Orgánicos Deshidratados 10 Unidades / 50 g / 1.76 oz", "saving": 1.7, "price": 729, "date": "2026-09-21"}
+{"sku": "48571", "type": "bajo", "title": "S&W Tomates Enteros Pelados / 1.8 kg / 63.5 oz", "from": 829, "to": 669, "delta": -160, "pct": -19.3, "date": "2026-09-21"}
+{"sku": "48571", "type": "oferta", "title": "S&W Tomates Enteros Pelados / 1.8 kg / 63.5 oz", "saving": 1.6, "price": 669, "date": "2026-09-21"}
+{"sku": "514001", "type": "reaparecio", "title": "Montchevre Queso de Cabra con Arándanos y Vainilla 298 g / 10.51 oz", "price": 829, "prev_price": 829, "days_out": null, "date": "2026-09-21"}
+{"sku": "399003", "type": "reaparecio", "title": "Reny Picot Queso Camembert 397 g / 14 oz", "price": 849, "prev_price": 849, "days_out": null, "date": "2026-09-21"}
+{"sku": "750841", "type": "subio", "title": "Filete de Ribeye / Ojo de Bife Fresco Empacado al Vacío", "from": 35347, "to": 36906, "delta": 1559, "pct": 4.4, "date": "2026-09-21"}
+{"sku": "488967", "type": "subio", "title": "Special K Cereal Fusion Frutal 3 Unidades / 340 g / 12 oz", "from": 1109, "to": 1399, "delta": 290, "pct": 26.1, "date": "2026-09-21"}
+{"sku": "488967", "type": "oferta_termino", "title": "Special K Cereal Fusion Frutal 3 Unidades / 340 g / 12 oz", "price": 1399, "date": "2026-09-21"}
+{"sku": "477356", "type": "bajo", "title": "Café Barista Instantáneo 2 Unidades / 170 g", "from": 1699, "to": 1439, "delta": -260, "pct": -15.3, "date": "2026-09-21"}
+{"sku": "477356", "type": "oferta", "title": "Café Barista Instantáneo 2 Unidades / 170 g", "saving": 2.6, "price": 1439, "date": "2026-09-21"}
+{"sku": "236122", "type": "subio", "title": "Hellmann's Aderezo de Queso Cheddar 2 Unidades / 1 L / 33 oz", "from": 1449, "to": 1729, "delta": 280, "pct": 19.3, "date": "2026-09-21"}
+{"sku": "236122", "type": "oferta_termino", "title": "Hellmann's Aderezo de Queso Cheddar 2 Unidades / 1 L / 33 oz", "price": 1729, "date": "2026-09-21"}
+{"sku": "466613", "type": "bajo", "title": "Fun Mix Paletas y Caramelos de Sabores Surtidos 5 kg", "from": 1699, "to": 1429, "delta": -270, "pct": -15.9, "date": "2026-09-21"}
+{"sku": "466613", "type": "oferta", "title": "Fun Mix Paletas y Caramelos de Sabores Surtidos 5 kg", "saving": 2.7, "price": 1429, "date": "2026-09-21"}
+{"sku": "233434", "type": "subio", "title": "Maizena Fécula De Maíz 2.3 kg / 5 lb", "from": 1449, "to": 1749, "delta": 300, "pct": 20.7, "date": "2026-09-21"}
+{"sku": "233434", "type": "oferta_termino", "title": "Maizena Fécula De Maíz 2.3 kg / 5 lb", "price": 1749, "date": "2026-09-21"}
+{"sku": "302371", "type": "subio", "title": "Taifeld's Galletas Avena con Nuez 40 Unidades / 15 g / 0.53 oz", "from": 699, "to": 829, "delta": 130, "pct": 18.6, "date": "2026-09-21"}
+{"sku": "302371", "type": "oferta_termino", "title": "Taifeld's Galletas Avena con Nuez 40 Unidades / 15 g / 0.53 oz", "price": 829, "date": "2026-09-21"}
+{"sku": "448259", "type": "bajo", "title": "Petacones Queso Blanco Duro 340 g / 12 oz", "from": 569, "to": 469, "delta": -100, "pct": -17.6, "date": "2026-09-21"}
+{"sku": "448259", "type": "oferta", "title": "Petacones Queso Blanco Duro 340 g / 12 oz", "saving": 1.0, "price": 469, "date": "2026-09-21"}
+{"sku": "495873", "type": "subio", "title": "Zucaritas Cereal Frosted Flakes 2 Unidades / 1.2 kg / 42 oz", "from": 1089, "to": 1349, "delta": 260, "pct": 23.9, "date": "2026-09-21"}
+{"sku": "495873", "type": "oferta_termino", "title": "Zucaritas Cereal Frosted Flakes 2 Unidades / 1.2 kg / 42 oz", "price": 1349, "date": "2026-09-21"}
+{"sku": "444827", "type": "subio", "title": "Coca Cola Regular 6 Unidades / 2.5 L / 84.5 oz", "from": 1139, "to": 1279, "delta": 140, "pct": 12.3, "date": "2026-09-21"}
+{"sku": "481908", "type": "subio", "title": "Suerox Bebida Hidratante Sabores Surtidos 8 Unidades / 630 mL", "from": 1229, "to": 1449, "delta": 220, "pct": 17.9, "date": "2026-09-21"}
+{"sku": "481908", "type": "oferta_termino", "title": "Suerox Bebida Hidratante Sabores Surtidos 8 Unidades / 630 mL", "price": 1449, "date": "2026-09-21"}
+{"sku": "444767", "type": "bajo", "title": "Tajin Clásico Salsa en Polvo con Chiles 100% Mexicanos y Limón 2 Unidades / 400 g", "from": 1279, "to": 1079, "delta": -200, "pct": -15.6, "date": "2026-09-21"}
+{"sku": "444767", "type": "oferta", "title": "Tajin Clásico Salsa en Polvo con Chiles 100% Mexicanos y Limón 2 Unidades / 400 g", "saving": 2.0, "price": 1079, "date": "2026-09-21"}
+{"sku": "471127", "type": "subio", "title": "Member's Selection Costilla de Cerdo Ahumada Bandeja", "from": 1131, "to": 1325, "delta": 194, "pct": 17.2, "date": "2026-09-21"}
+{"sku": "471127", "type": "oferta_termino", "title": "Member's Selection Costilla de Cerdo Ahumada Bandeja", "price": 1325, "date": "2026-09-21"}
+{"sku": "325114", "type": "bajo", "title": "McCormick Jalisco Salsa Picante 3.7 L / 125 oz", "from": 1749, "to": 1479, "delta": -270, "pct": -15.4, "date": "2026-09-21"}
+{"sku": "325114", "type": "oferta", "title": "McCormick Jalisco Salsa Picante 3.7 L / 125 oz", "saving": 2.7, "price": 1479, "date": "2026-09-21"}
+{"sku": "320186", "type": "subio", "title": "Kreef Salchicha Cocktel 454 g / 1 lb", "from": 659, "to": 779, "delta": 120, "pct": 18.2, "date": "2026-09-21"}
+{"sku": "320186", "type": "oferta_termino", "title": "Kreef Salchicha Cocktel 454 g / 1 lb", "price": 779, "date": "2026-09-21"}
+{"sku": "477440", "type": "bajo", "title": "Popsis Palomitas de Maíz Bañadas de Caramelo 600 g", "from": 1099, "to": 899, "delta": -200, "pct": -18.2, "date": "2026-09-21"}
+{"sku": "477440", "type": "oferta", "title": "Popsis Palomitas de Maíz Bañadas de Caramelo 600 g", "saving": 2.0, "price": 899, "date": "2026-09-21"}
+{"sku": "378350", "type": "bajo", "title": "Kreef Lomo de Cerdo Ahumado 907 g / 2 lb", "from": 999, "to": 849, "delta": -150, "pct": -15.0, "date": "2026-09-21"}
+{"sku": "378350", "type": "oferta", "title": "Kreef Lomo de Cerdo Ahumado 907 g / 2 lb", "saving": 1.5, "price": 849, "date": "2026-09-21"}
+{"sku": "341786", "type": "nuevo", "title": "Pierna de Cerdo Congelada Importada Rebanada", "price": 729, "date": "2026-09-21"}
+{"sku": "471103", "type": "bajo", "title": "Member's Selection Puyaso Tenderizado Fresco Caja", "from": 39164, "to": 38654, "delta": -510, "pct": -1.3, "date": "2026-09-21"}
+{"sku": "341788", "type": "nuevo", "title": "Member's Selection Pierna de Cerdo con Hueso Congelada Empacado al Vacío", "price": 5081, "date": "2026-09-21"}
+{"sku": "419092", "type": "nuevo", "title": "Nature Valley Barras de Nueces Dulces y Saladas 24 Unidades / 35 g / 1.2 oz", "price": 1299, "date": "2026-09-21"}
+{"sku": "97830", "type": "reaparecio", "title": "Toronja 4 Unidades", "price": 749, "prev_price": 749, "days_out": null, "date": "2026-09-21"}
+{"sku": "600583", "type": "agotado", "title": "Eggo Thick & Fluffy Waffles Original y Arándano 2 Unidades / 330 g / 11.6 oz", "price": 677, "date": "2026-09-21"}
+{"sku": "479462", "type": "agotado", "title": "Calbee Snacks Crujientes de Guisantes al Horno Ligeramente Salados 567 g / 1.25 lb", "price": 777, "date": "2026-09-21"}
+{"sku": "438650", "type": "agotado", "title": "Rana Pasta Tortelloni Pollo Mozzarella 567 g / 20 oz", "price": 999, "date": "2026-09-21"}
+{"sku": "468356", "type": "agotado", "title": "Garcia Salchicha de Carnes 794 g / 1.75 lb", "price": 577, "date": "2026-09-21"}
+{"sku": "484660", "type": "agotado", "title": "Sacla Salsa Picante para Pasta Arrabbiata con Tomates y Chiles / 2 Unidades / 680 g / 24 oz", "price": 570, "date": "2026-09-21"}
+{"sku": "456683", "type": "agotado", "title": "Krisppy's Mini Bocadillos 27 Unidades / 27.3 g / 0.96 oz", "price": 1379, "date": "2026-09-21"}
+{"sku": "462741", "type": "agotado", "title": "Las Perlitas Agua Natural 12 Unidades / 680 mL / 23 oz", "price": 349, "date": "2026-09-21"}
+{"sku": "322344", "type": "agotado", "title": "Blue Ribbon Helado de Vainilla con Vetas de Chocolate 3.78 L / 128 oz", "price": 989, "date": "2026-09-21"}
+{"sku": "781065", "type": "agotado", "title": "Member's Selection Mayonesa Premium 591 mL / 20 oz", "price": 299, "date": "2026-09-21"}
+{"sku": "229038", "type": "agotado", "title": "Calvo Calamares en Tinta 4 Unidades / 72 g ", "price": 479, "date": "2026-09-21"}
+{"sku": "526238", "type": "agotado", "title": "Sello de Oro Pollo Marinado Sabor al Pastor 1.36 kg / 3 lb", "price": 1099, "date": "2026-09-21"}
+{"sku": "335557", "type": "agotado", "title": "Cooper Llanta 265/70R16 Evolution ATT", "price": 15699, "date": "2026-09-21"}
+{"sku": "491123", "type": "subio", "title": "Pampers Pañales para Bebé Cruisers Talla 4 / 144 Unidades", "from": 3609, "to": 4249, "delta": 640, "pct": 17.7, "date": "2026-09-21"}
+{"sku": "491123", "type": "oferta_termino", "title": "Pampers Pañales para Bebé Cruisers Talla 4 / 144 Unidades", "price": 4249, "date": "2026-09-21"}
+{"sku": "476481", "type": "subio", "title": "Pampers Pañales Swaddlers Hipoalergénicos para Bebés Talla 1 / 160 Unidades", "from": 3779, "to": 4449, "delta": 670, "pct": 17.7, "date": "2026-09-21"}
+{"sku": "476481", "type": "oferta_termino", "title": "Pampers Pañales Swaddlers Hipoalergénicos para Bebés Talla 1 / 160 Unidades", "price": 4449, "date": "2026-09-21"}
+{"sku": "491274", "type": "subio", "title": "Pampers Pañales Cruisers para Bebé Etapa 5 / 128 Unidades", "from": 3609, "to": 4249, "delta": 640, "pct": 17.7, "date": "2026-09-21"}
+{"sku": "491274", "type": "oferta_termino", "title": "Pampers Pañales Cruisers para Bebé Etapa 5 / 128 Unidades", "price": 4249, "date": "2026-09-21"}
+{"sku": "476226", "type": "subio", "title": "Pampers Pañales Swaddlers para Bebé Talla 2 / 144 Unidades", "from": 3779, "to": 4449, "delta": 670, "pct": 17.7, "date": "2026-09-21"}
+{"sku": "476226", "type": "oferta_termino", "title": "Pampers Pañales Swaddlers para Bebé Talla 2 / 144 Unidades", "price": 4449, "date": "2026-09-21"}
+{"sku": "491141", "type": "subio", "title": "Pampers Pañales para Bebé Cruisers Talla 6 / 108 Unidades ", "from": 3609, "to": 4249, "delta": 640, "pct": 17.7, "date": "2026-09-21"}
+{"sku": "491141", "type": "oferta_termino", "title": "Pampers Pañales para Bebé Cruisers Talla 6 / 108 Unidades ", "price": 4249, "date": "2026-09-21"}
+{"sku": "515588", "type": "subio", "title": "Pampers Pañales de Entrenamiento Easy Ups Talla 5 - 6 / 70 Unidades", "from": 4119, "to": 4849, "delta": 730, "pct": 17.7, "date": "2026-09-21"}
+{"sku": "515588", "type": "oferta_termino", "title": "Pampers Pañales de Entrenamiento Easy Ups Talla 5 - 6 / 70 Unidades", "price": 4849, "date": "2026-09-21"}
+{"sku": "491201", "type": "subio", "title": "Pampers Pañales Cruisers para Bebé Etapa 7 - 84 Unidades", "from": 3609, "to": 4249, "delta": 640, "pct": 17.7, "date": "2026-09-21"}
+{"sku": "491201", "type": "oferta_termino", "title": "Pampers Pañales Cruisers para Bebé Etapa 7 - 84 Unidades", "price": 4249, "date": "2026-09-21"}
+{"sku": "512013", "type": "subio", "title": "Pampers Pañales para Bebé Swaddlers Talla 3 / 132 Unidades", "from": 3649, "to": 4299, "delta": 650, "pct": 17.8, "date": "2026-09-21"}
+{"sku": "512013", "type": "oferta_termino", "title": "Pampers Pañales para Bebé Swaddlers Talla 3 / 132 Unidades", "price": 4299, "date": "2026-09-21"}
+{"sku": "498092", "type": "subio", "title": "Pampers Pañales Swaddlers 360° Talla 4 / 104 Unidades", "from": 3569, "to": 4199, "delta": 630, "pct": 17.7, "date": "2026-09-21"}
+{"sku": "498092", "type": "oferta_termino", "title": "Pampers Pañales Swaddlers 360° Talla 4 / 104 Unidades", "price": 4199, "date": "2026-09-21"}
+{"sku": "483179", "type": "subio", "title": "Pampers Pañales Swaddlers 360° Talla 5 / 92 Unidades", "from": 3569, "to": 4199, "delta": 630, "pct": 17.7, "date": "2026-09-21"}
+{"sku": "483179", "type": "oferta_termino", "title": "Pampers Pañales Swaddlers 360° Talla 5 / 92 Unidades", "price": 4199, "date": "2026-09-21"}
+{"sku": "307067", "type": "reaparecio", "title": "Nestum Cereal Trigo y Miel 730 g / 1.6 lb", "price": 929, "prev_price": 929, "days_out": null, "date": "2026-09-21"}
+{"sku": "508969", "type": "nuevo", "title": "Brother Impresora Multifuncional Láser a Color MFC-L3765CDW", "price": 66999, "date": "2026-09-21"}
+{"sku": "511592-0850057907506", "type": "subio", "title": "Supermach Bicicleta Eléctrica con Suspensión Completa y Motor de 750 W SM26pro", "from": 67999, "to": 84999, "delta": 17000, "pct": 25.0, "date": "2026-09-21"}
+{"sku": "511592-0850057907506", "type": "oferta_termino", "title": "Supermach Bicicleta Eléctrica con Suspensión Completa y Motor de 750 W SM26pro", "price": 84999, "date": "2026-09-21"}
+{"sku": "495435", "type": "reaparecio", "title": "OmniBreeze Ventilador de Torre de 5 Velocidades con Control Remoto 97.31 cm / 38.31\"", "price": 5999, "prev_price": 5999, "days_out": null, "date": "2026-09-21"}
+{"sku": "464968", "type": "bajo", "title": "Forza Regulador de Voltaje 110 / 120 VAC 3 Unidades", "from": 2999, "to": 2199, "delta": -800, "pct": -26.7, "date": "2026-09-21"}
+{"sku": "464968", "type": "oferta", "title": "Forza Regulador de Voltaje 110 / 120 VAC 3 Unidades", "saving": 8.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "307509", "type": "agotado", "title": "Grillsmith Parrilla de Rejilla con 4 Quemadores", "price": 25999, "date": "2026-09-21"}
+{"sku": "19127", "type": "subio", "title": "Duracell Baterías Alcalinas AA 40 Unidades", "from": 1999, "to": 2499, "delta": 500, "pct": 25.0, "date": "2026-09-21"}
+{"sku": "19127", "type": "oferta_termino", "title": "Duracell Baterías Alcalinas AA 40 Unidades", "price": 2499, "date": "2026-09-21"}
+{"sku": "480874", "type": "subio", "title": "Duracell Baterías Alcalinas AAA 40 Unidades", "from": 1999, "to": 2499, "delta": 500, "pct": 25.0, "date": "2026-09-21"}
+{"sku": "480874", "type": "oferta_termino", "title": "Duracell Baterías Alcalinas AAA 40 Unidades", "price": 2499, "date": "2026-09-21"}
+{"sku": "513295", "type": "nuevo", "title": "Link2Home Enrollador de Cable con 3 Tomas y 2 Puertos USB A+C 9.1 m / 30'", "price": 2799, "date": "2026-09-21"}
+{"sku": "498474", "type": "agotado", "title": "Fanttik Taladro Eléctrico Inalámbrico sin Escobillas", "price": 2977, "date": "2026-09-21"}
+{"sku": "457256", "type": "bajo", "title": "Arm & Hammer Detergente Líquido para Ropa Ultra Concentrado con Oxi Clean Quitamanchas 5.91 L / 200 oz / 200 Lavadas", "from": 1999, "to": 1599, "delta": -400, "pct": -20.0, "date": "2026-09-21"}
+{"sku": "457256", "type": "oferta", "title": "Arm & Hammer Detergente Líquido para Ropa Ultra Concentrado con Oxi Clean Quitamanchas 5.91 L / 200 oz / 200 Lavadas", "saving": 4.0, "price": 1599, "date": "2026-09-21"}
+{"sku": "490200", "type": "subio", "title": "Downy Perlas Aromatizadas 694 g / 24.5 oz", "from": 1149, "to": 1449, "delta": 300, "pct": 26.1, "date": "2026-09-21"}
+{"sku": "490200", "type": "oferta_termino", "title": "Downy Perlas Aromatizadas 694 g / 24.5 oz", "price": 1449, "date": "2026-09-21"}
+{"sku": "514698", "type": "subio", "title": "Dawn Lavaplatos Líquido Platinum Desengrasante Aroma Fresh Rain 2.66 L / 90 oz", "from": 1249, "to": 1549, "delta": 300, "pct": 24.0, "date": "2026-09-21"}
+{"sku": "514698", "type": "oferta_termino", "title": "Dawn Lavaplatos Líquido Platinum Desengrasante Aroma Fresh Rain 2.66 L / 90 oz", "price": 1549, "date": "2026-09-21"}
+{"sku": "503025", "type": "subio", "title": "Charmin Papel Higiénico Ultra Suave 24 Rollos / 208 Hojas", "from": 1949, "to": 2479, "delta": 530, "pct": 27.2, "date": "2026-09-21"}
+{"sku": "503025", "type": "oferta_termino", "title": "Charmin Papel Higiénico Ultra Suave 24 Rollos / 208 Hojas", "price": 2479, "date": "2026-09-21"}
+{"sku": "517917", "type": "bajo", "title": "OxiClean Removedor y Quitamanchas Versátil en Polvo Libre de Cloro 4.98 kg / 11 lb / 195 Cargas", "from": 2049, "to": 1549, "delta": -500, "pct": -24.4, "date": "2026-09-21"}
+{"sku": "517917", "type": "oferta", "title": "OxiClean Removedor y Quitamanchas Versátil en Polvo Libre de Cloro 4.98 kg / 11 lb / 195 Cargas", "saving": 5.0, "price": 1549, "date": "2026-09-21"}
+{"sku": "378706", "type": "subio", "title": "Lysol Desinfectante para Inodoros 4 Unidades / 946 mL / 32 oz", "from": 1349, "to": 1699, "delta": 350, "pct": 25.9, "date": "2026-09-21"}
+{"sku": "378706", "type": "oferta_termino", "title": "Lysol Desinfectante para Inodoros 4 Unidades / 946 mL / 32 oz", "price": 1699, "date": "2026-09-21"}
+{"sku": "524336", "type": "nuevo", "title": "Glade Aromatizantes Surtidos en Gel 4 Unidades / 180 g ", "price": 1049, "date": "2026-09-21"}
+{"sku": "5794", "type": "subio", "title": "Scotch-Brite Esponja para Limpieza Pesada 6 Unidades", "from": 749, "to": 899, "delta": 150, "pct": 20.0, "date": "2026-09-21"}
+{"sku": "5794", "type": "oferta_termino", "title": "Scotch-Brite Esponja para Limpieza Pesada 6 Unidades", "price": 899, "date": "2026-09-21"}
+{"sku": "508426-0607766151405", "type": "nuevo", "title": "Member's Selection Juego de Sábanas Twin en Algodón 4 Piezas", "price": 3299, "date": "2026-09-21"}
+{"sku": "232749", "type": "agotado", "title": "OxiClean Removedor y Quitamanchas Líquido en Spray Libre de Cloro 2 Unidades / 931 mL / 31.5 oz", "price": 1299, "date": "2026-09-21"}
+{"sku": "232749", "type": "subio", "title": "OxiClean Removedor y Quitamanchas Líquido en Spray Libre de Cloro 2 Unidades / 931 mL / 31.5 oz", "from": 1049, "to": 1299, "delta": 250, "pct": 23.8, "date": "2026-09-21"}
+{"sku": "232749", "type": "oferta_termino", "title": "OxiClean Removedor y Quitamanchas Líquido en Spray Libre de Cloro 2 Unidades / 931 mL / 31.5 oz", "price": 1299, "date": "2026-09-21"}
+{"sku": "362345", "type": "agotado", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "date": "2026-09-21"}
+{"sku": "503188-00840125947015", "type": "agotado", "title": "Adare Home Set de Sábanas de Microfibra Twin 6 Piezas", "price": 1899, "date": "2026-09-21"}
+{"sku": "39794-0607766393942", "type": "agotado", "title": "Member's Selection Juego de Sartenes Antiadherente 3 Piezas ", "price": 4299, "date": "2026-09-21"}
+{"sku": "502850-0198062017903", "type": "agotado", "title": "Berkshire Life Manta de Terciopelo 152 cm x 178 cm / 60\" x 70\"", "price": 1049, "date": "2026-09-21"}
+{"sku": "29873", "type": "subio", "title": "Tanqueray Ginebra 750 mL / 25.3 oz", "from": 2949, "to": 3279, "delta": 330, "pct": 11.2, "date": "2026-09-21"}
+{"sku": "479310", "type": "subio", "title": "Cerveza Corona en Botella 24 Unidades / 330 mL", "from": 3029, "to": 3699, "delta": 670, "pct": 22.1, "date": "2026-09-21"}
+{"sku": "442212", "type": "subio", "title": "Regia Extra Refrescante Cerveza Tipo Pilsen 24 Unidades / 473 mL / 16 oz", "from": 2779, "to": 3099, "delta": 320, "pct": 11.5, "date": "2026-09-21"}
+{"sku": "363279", "type": "subio", "title": "Suprema Cerveza Premium Calidad de Exportación 24 Unidades / 330 mL / 11.15 oz", "from": 2599, "to": 2899, "delta": 300, "pct": 11.5, "date": "2026-09-21"}
+{"sku": "482193", "type": "agotado", "title": "GE Lavadora de Carga Superior 24 kg / 4.5 cu ft. LGA74215WBAB0", "price": 56999, "date": "2026-09-21"}
+{"sku": "484460", "type": "bajo", "title": "Dog Chow Comida para Perro Adulto 26 kg / 57 lb", "from": 6399, "to": 5399, "delta": -1000, "pct": -15.6, "date": "2026-09-21"}
+{"sku": "484460", "type": "oferta", "title": "Dog Chow Comida para Perro Adulto 26 kg / 57 lb", "saving": 10.0, "price": 5399, "date": "2026-09-21"}
+{"sku": "40400", "type": "bajo", "title": "Friskies Comida para Gato 24 Unidades / 156 g / 5.5 oz", "from": 4349, "to": 3529, "delta": -820, "pct": -18.9, "date": "2026-09-21"}
+{"sku": "40400", "type": "oferta", "title": "Friskies Comida para Gato 24 Unidades / 156 g / 5.5 oz", "saving": 8.2, "price": 3529, "date": "2026-09-21"}
+{"sku": "515570-0714370911742", "type": "nuevo", "title": "Flora Nikrooz Set de Pijama de para Mujer 2 Piezas ", "price": 1699, "date": "2026-09-21"}
+{"sku": "515255-7453136820166", "type": "agotado", "title": "Runic Tenis Deportivos para Niños", "price": 1499, "date": "2026-09-21"}
+{"sku": "512337-0822540395428", "type": "agotado", "title": "Pekkle Bodies Manga Corta para Niño Bebé 4 Unidades", "price": 1199, "date": "2026-09-21"}
+{"sku": "517521-0696317652850", "type": "agotado", "title": "Kenneth Cole Pantalón Azul Oscuro Corte Regular para Hombre", "price": 2099, "date": "2026-09-21"}
+{"sku": "509076-0192703157294", "type": "agotado", "title": "Single Stitch Conjunto Deportivo para Mujer 2 Piezas", "price": 1277, "date": "2026-09-21"}
+{"sku": "507859-7506392185484", "type": "agotado", "title": "Ben Sherman Camiseta Polo para Hombre", "price": 1177, "date": "2026-09-21"}
+{"sku": "516537-0195160518042", "type": "agotado", "title": "Peloton Licra Deportiva para Dama con Bolsillo", "price": 1599, "date": "2026-09-21"}
+{"sku": "512278-0195160507947", "type": "agotado", "title": "English Laundry Pantalón Fenwick Caqui para Hombre", "price": 2299, "date": "2026-09-21"}
+{"sku": "487242", "type": "nuevo", "title": "Mueble Recibidor en Madera con 6 Cajones", "price": 43999, "date": "2026-09-21"}
+{"sku": "445424", "type": "bajo", "title": "Foster Grant +2.75 Gafas de Lectura Kyne Lyden 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445424", "type": "oferta", "title": "Foster Grant +2.75 Gafas de Lectura Kyne Lyden 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445567", "type": "bajo", "title": "Foster Grant +3.0 Gafas de Lectura Clansy Lola 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445567", "type": "oferta", "title": "Foster Grant +3.0 Gafas de Lectura Clansy Lola 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445562", "type": "bajo", "title": "Foster Grant +2.50 Gafas de Lectura Clansy Lola 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445562", "type": "oferta", "title": "Foster Grant +2.50 Gafas de Lectura Clansy Lola 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445413", "type": "bajo", "title": "Foster Grant +1.50 Gafas de Lectura Kyne Lyden 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445413", "type": "oferta", "title": "Foster Grant +1.50 Gafas de Lectura Kyne Lyden 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445542", "type": "bajo", "title": "Foster Grant +1.75 Gafas de Lectura Cole Dax 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445542", "type": "oferta", "title": "Foster Grant +1.75 Gafas de Lectura Cole Dax 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445587", "type": "bajo", "title": "Foster Grant +2.50 Gafas de Lectura McKay Eric 2 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445587", "type": "oferta", "title": "Foster Grant +2.50 Gafas de Lectura McKay Eric 2 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445553", "type": "bajo", "title": "Foster Grant +1.50 Gafas de Lectura Clansy Lola 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445553", "type": "oferta", "title": "Foster Grant +1.50 Gafas de Lectura Clansy Lola 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445560", "type": "bajo", "title": "Foster Grant +2.0 Gafas de Lectura Clansy Lola 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445560", "type": "oferta", "title": "Foster Grant +2.0 Gafas de Lectura Clansy Lola 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445607", "type": "bajo", "title": "Foster Grant +2.75 Gafas de Lectura Addie Kiersey 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445607", "type": "oferta", "title": "Foster Grant +2.75 Gafas de Lectura Addie Kiersey 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445581", "type": "bajo", "title": "Foster Grant +1.50 Gafas de Lectura McKay Eric 2 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445581", "type": "oferta", "title": "Foster Grant +1.50 Gafas de Lectura McKay Eric 2 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445585", "type": "bajo", "title": "Foster Grant +2.0 Gafas de Lectura McKay Eric 2 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445585", "type": "oferta", "title": "Foster Grant +2.0 Gafas de Lectura McKay Eric 2 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445550", "type": "bajo", "title": "Foster Grant +3.0 Gafas de Lectura Cole Dax 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445550", "type": "oferta", "title": "Foster Grant +3.0 Gafas de Lectura Cole Dax 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445609", "type": "bajo", "title": "Foster Grant +3.0 Gafas de Lectura Addie Kiersey 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445609", "type": "oferta", "title": "Foster Grant +3.0 Gafas de Lectura Addie Kiersey 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445596", "type": "bajo", "title": "Foster Grant +1.75 Gafas de Lectura Addie Kiersey 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445596", "type": "oferta", "title": "Foster Grant +1.75 Gafas de Lectura Addie Kiersey 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445421", "type": "bajo", "title": "Foster Grant +2.50 Gafas de Lectura Kyne Lyden 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445421", "type": "oferta", "title": "Foster Grant +2.50 Gafas de Lectura Kyne Lyden 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445583", "type": "bajo", "title": "Foster Grant +1.75 Gafas de Lectura McKay Eric 2 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445583", "type": "oferta", "title": "Foster Grant +1.75 Gafas de Lectura McKay Eric 2 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445589", "type": "bajo", "title": "Foster Grant +2.75 Gafas de Lectura McKay Eric 2 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445589", "type": "oferta", "title": "Foster Grant +2.75 Gafas de Lectura McKay Eric 2 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445417", "type": "bajo", "title": "Foster Grant +2.0 Gafas de Lectura Kyne Lyden 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445417", "type": "oferta", "title": "Foster Grant +2.0 Gafas de Lectura Kyne Lyden 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445548", "type": "bajo", "title": "Foster Grant +2.75 Gafas de Lectura Cole Dax 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445548", "type": "oferta", "title": "Foster Grant +2.75 Gafas de Lectura Cole Dax 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445544", "type": "bajo", "title": "Foster Grant +2.0 Gafas de Lectura Cole Dax 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445544", "type": "oferta", "title": "Foster Grant +2.0 Gafas de Lectura Cole Dax 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445540", "type": "bajo", "title": "Foster Grant +1.50 Gafas de Lectura Cole Dax 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445540", "type": "oferta", "title": "Foster Grant +1.50 Gafas de Lectura Cole Dax 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445558", "type": "bajo", "title": "Foster Grant +1.75 Gafas de Lectura Clansy Lola 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445558", "type": "oferta", "title": "Foster Grant +1.75 Gafas de Lectura Clansy Lola 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445546", "type": "bajo", "title": "Foster Grant +2.50 Gafas de Lectura Cole Dax 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445546", "type": "oferta", "title": "Foster Grant +2.50 Gafas de Lectura Cole Dax 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445591", "type": "bajo", "title": "Foster Grant +3.0 Gafas de Lectura McKay Eric 2 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445591", "type": "oferta", "title": "Foster Grant +3.0 Gafas de Lectura McKay Eric 2 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445564", "type": "bajo", "title": "Foster Grant +2.75 Gafas de Lectura Clansy Lola 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445564", "type": "oferta", "title": "Foster Grant +2.75 Gafas de Lectura Clansy Lola 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445594", "type": "bajo", "title": "Foster Grant +1.50 Gafas de Lectura Addie Kiersey 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445594", "type": "oferta", "title": "Foster Grant +1.50 Gafas de Lectura Addie Kiersey 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445415", "type": "bajo", "title": "Foster Grant +1.75 Gafas de Lectura Kyne Lyden 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445415", "type": "oferta", "title": "Foster Grant +1.75 Gafas de Lectura Kyne Lyden 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445603", "type": "bajo", "title": "Foster Grant +2.0 Gafas de Lectura Addie Kiersey 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445603", "type": "oferta", "title": "Foster Grant +2.0 Gafas de Lectura Addie Kiersey 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445426", "type": "bajo", "title": "Foster Grant +3.0 Gafas de Lectura Kyne Lyden 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445426", "type": "oferta", "title": "Foster Grant +3.0 Gafas de Lectura Kyne Lyden 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "445605", "type": "bajo", "title": "Foster Grant +2.50 Gafas de Lectura Addie Kiersey 3 Unidades", "from": 2799, "to": 2199, "delta": -600, "pct": -21.4, "date": "2026-09-21"}
+{"sku": "445605", "type": "oferta", "title": "Foster Grant +2.50 Gafas de Lectura Addie Kiersey 3 Unidades", "saving": 6.0, "price": 2199, "date": "2026-09-21"}
+{"sku": "339831", "type": "agotado", "title": "Acuvue Oasys -2.25 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "date": "2026-09-21"}
+{"sku": "339834", "type": "agotado", "title": "Acuvue Oasys -2.75 Lentes de Cоntacto Oasys Esferico 6 Unidades", "price": 6499, "date": "2026-09-21"}
+{"sku": "339827", "type": "agotado", "title": "Acuvue Oasys -1.75 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "date": "2026-09-21"}
+{"sku": "507403", "type": "nuevo", "title": "Member's Selection Luces Decorativas de Copos de Nieve para Jardín 8 Unidades", "price": 3699, "date": "2026-09-21"}
+{"sku": "486817", "type": "nuevo", "title": "Member's Selection Luces LED C6 de Colores Cambiantes con Corte de Diamante 200 Luces para Interiores y Exteriores", "price": 2499, "date": "2026-09-21"}
+{"sku": "486823", "type": "nuevo", "title": "Member's Selection Luces LED Navideñas a Prueba de Agua ", "price": 1699, "date": "2026-09-21"}
+{"sku": "471877", "type": "nuevo", "title": "Member’s Selection Luces LED Blanco Frío en Forma de Copos de Nieve", "price": 2899, "date": "2026-09-21"}
+{"sku": "487209", "type": "nuevo", "title": "Member's Selection Luces LED Navideñas con 4 Funciones de Color ", "price": 2599, "date": "2026-09-21"}
+{"sku": "471873", "type": "nuevo", "title": "Member's Selection Luces LED Blancas en Forma de Carámbano", "price": 3199, "date": "2026-09-21"}
+{"sku": "475551", "type": "bajo", "title": "Lubriderm Crema Corporal Humectación Diaria 946 mL", "from": 1949, "to": 1649, "delta": -300, "pct": -15.4, "date": "2026-09-21"}
+{"sku": "475551", "type": "oferta", "title": "Lubriderm Crema Corporal Humectación Diaria 946 mL", "saving": 3.0, "price": 1649, "date": "2026-09-21"}
+{"sku": "480814", "type": "bajo", "title": "Gillette Venus Máquina De Afeitar Para Mujer Venus Comfortglide White Tea / 12 Cartuchos Humectantes", "from": 3149, "to": 2449, "delta": -700, "pct": -22.2, "date": "2026-09-21"}
+{"sku": "480814", "type": "oferta", "title": "Gillette Venus Máquina De Afeitar Para Mujer Venus Comfortglide White Tea / 12 Cartuchos Humectantes", "saving": 7.0, "price": 2449, "date": "2026-09-21"}
+{"sku": "29284", "type": "bajo", "title": "Degree Cool Rush Desodorante 5 Unidades / 76 g / 2.7 oz", "from": 1849, "to": 1419, "delta": -430, "pct": -23.3, "date": "2026-09-21"}
+{"sku": "29284", "type": "oferta", "title": "Degree Cool Rush Desodorante 5 Unidades / 76 g / 2.7 oz", "saving": 4.3, "price": 1419, "date": "2026-09-21"}
+{"sku": "528520", "type": "bajo", "title": "Saba Protectores Diarios Cur-V 200 Unidades", "from": 949, "to": 739, "delta": -210, "pct": -22.1, "date": "2026-09-21"}
+{"sku": "528520", "type": "oferta", "title": "Saba Protectores Diarios Cur-V 200 Unidades", "saving": 2.1, "price": 739, "date": "2026-09-21"}
+{"sku": "901414", "type": "bajo", "title": "Coast Jabón de Baño con Aroma Pacific Force 16 Unidades / 113 g / 4 oz", "from": 1099, "to": 899, "delta": -200, "pct": -18.2, "date": "2026-09-21"}
+{"sku": "901414", "type": "oferta", "title": "Coast Jabón de Baño con Aroma Pacific Force 16 Unidades / 113 g / 4 oz", "saving": 2.0, "price": 899, "date": "2026-09-21"}
+{"sku": "363749", "type": "bajo", "title": "Tena Pañal para Adulto 48 Unidades Talla G", "from": 4199, "to": 3349, "delta": -850, "pct": -20.2, "date": "2026-09-21"}
+{"sku": "363749", "type": "oferta", "title": "Tena Pañal para Adulto 48 Unidades Talla G", "saving": 8.5, "price": 3349, "date": "2026-09-21"}
+{"sku": "363748", "type": "bajo", "title": "Tena Pañal para Adulto 48 Unidades Talla M", "from": 4199, "to": 3349, "delta": -850, "pct": -20.2, "date": "2026-09-21"}
+{"sku": "363748", "type": "oferta", "title": "Tena Pañal para Adulto 48 Unidades Talla M", "saving": 8.5, "price": 3349, "date": "2026-09-21"}
+{"sku": "23728", "type": "bajo", "title": "Tampax Tampones Pearl Super Absorbentes 96 Unidades", "from": 2199, "to": 1749, "delta": -450, "pct": -20.5, "date": "2026-09-21"}
+{"sku": "23728", "type": "oferta", "title": "Tampax Tampones Pearl Super Absorbentes 96 Unidades", "saving": 4.5, "price": 1749, "date": "2026-09-21"}
+{"sku": "522910", "type": "subio", "title": "Ensure Advance Nutrición Completa y Balanceada Sabor Fresa 2 Unidades / 850 g", "from": 8329, "to": 9799, "delta": 1470, "pct": 17.6, "date": "2026-09-21"}
+{"sku": "522910", "type": "oferta_termino", "title": "Ensure Advance Nutrición Completa y Balanceada Sabor Fresa 2 Unidades / 850 g", "price": 9799, "date": "2026-09-21"}
+{"sku": "453550", "type": "subio", "title": "Crest Crema Dental Blanqueadora Scope Outlast 5 Unidades / 178 g / 6.3 oz", "from": 1049, "to": 1299, "delta": 250, "pct": 23.8, "date": "2026-09-21"}
+{"sku": "453550", "type": "oferta_termino", "title": "Crest Crema Dental Blanqueadora Scope Outlast 5 Unidades / 178 g / 6.3 oz", "price": 1299, "date": "2026-09-21"}
+{"sku": "508124", "type": "subio", "title": "Olay Jabón Líquido Corporal Fresh Radiance 2 Unidades / 1.03 L / 35 oz", "from": 1449, "to": 1899, "delta": 450, "pct": 31.1, "date": "2026-09-21"}
+{"sku": "508124", "type": "oferta_termino", "title": "Olay Jabón Líquido Corporal Fresh Radiance 2 Unidades / 1.03 L / 35 oz", "price": 1899, "date": "2026-09-21"}
+{"sku": "317163", "type": "subio", "title": "Crest Enjuague Bucal Scope Outlast 3 Unidades / 1 L / 33.81 oz", "from": 1199, "to": 1469, "delta": 270, "pct": 22.5, "date": "2026-09-21"}
+{"sku": "317163", "type": "oferta_termino", "title": "Crest Enjuague Bucal Scope Outlast 3 Unidades / 1 L / 33.81 oz", "price": 1469, "date": "2026-09-21"}
+{"sku": "297333", "type": "subio", "title": "Tylenol Acetaminofen Extra Fuerte 100 Unidades", "from": 1349, "to": 1599, "delta": 250, "pct": 18.5, "date": "2026-09-21"}
+{"sku": "297333", "type": "oferta_termino", "title": "Tylenol Acetaminofen Extra Fuerte 100 Unidades", "price": 1599, "date": "2026-09-21"}
+{"sku": "473158", "type": "subio", "title": "Old Spice High Endurance Desodorante para Hombre Esencia Original 5 Unidades / 85 g / 3 oz", "from": 1449, "to": 1749, "delta": 300, "pct": 20.7, "date": "2026-09-21"}
+{"sku": "473158", "type": "oferta_termino", "title": "Old Spice High Endurance Desodorante para Hombre Esencia Original 5 Unidades / 85 g / 3 oz", "price": 1749, "date": "2026-09-21"}
+{"sku": "514275", "type": "subio", "title": "Head & Shoulders Shampoo Control Caspa con Extracto de Rosa Francesa 1.19 L / 40.24 oz", "from": 1399, "to": 1749, "delta": 350, "pct": 25.0, "date": "2026-09-21"}
+{"sku": "514275", "type": "oferta_termino", "title": "Head & Shoulders Shampoo Control Caspa con Extracto de Rosa Francesa 1.19 L / 40.24 oz", "price": 1749, "date": "2026-09-21"}
+{"sku": "336663", "type": "subio", "title": "Ensure Advance Suplemento en Polvo 2 Unidades / 850 g", "from": 8329, "to": 9799, "delta": 1470, "pct": 17.6, "date": "2026-09-21"}
+{"sku": "336663", "type": "oferta_termino", "title": "Ensure Advance Suplemento en Polvo 2 Unidades / 850 g", "price": 9799, "date": "2026-09-21"}
+{"sku": "379124", "type": "subio", "title": "Ensure Advance Suplemento en Polvo Sabor Fresa 2 Unidades / 850 g / 30 oz", "from": 8329, "to": 9799, "delta": 1470, "pct": 17.6, "date": "2026-09-21"}
+{"sku": "484143", "type": "bajo", "title": "Degree Desodorante Shower Clean para Mujer 5 Unidades / 74 g / 2.6 oz", "from": 1749, "to": 1349, "delta": -400, "pct": -22.9, "date": "2026-09-21"}
+{"sku": "484143", "type": "oferta", "title": "Degree Desodorante Shower Clean para Mujer 5 Unidades / 74 g / 2.6 oz", "saving": 4.0, "price": 1349, "date": "2026-09-21"}
+{"sku": "520374", "type": "agotado", "title": "Garnier Fructis Shampoo Control Grasa Purificante 650 mL + Acondicionador 350 mL", "price": 1229, "date": "2026-09-21"}
+{"sku": "489094", "type": "agotado", "title": "Beauty Gummy Colágeno + Biotina Suplemento Alimentario 300 g", "price": 2599, "date": "2026-09-21"}
+{"sku": "514684", "type": "salio_del_catalogo", "title": "Novaterra Asado de Tira de Res Fresco Empacado al Vacío", "price": 1417, "date": "2026-09-21"}
+{"sku": "475630", "type": "salio_del_catalogo", "title": "Posta de Gallina de Res Caja", "price": 26960, "date": "2026-09-21"}
+{"sku": "512851", "type": "salio_del_catalogo", "title": "Gorina Picanha de Res Fresca Caja", "price": 26422, "date": "2026-09-21"}
+{"sku": "351002", "type": "salio_del_catalogo", "title": "Tomate Cherry 567 g / 1.25 lb", "price": 419, "date": "2026-09-21"}
+{"sku": "498421", "type": "salio_del_catalogo", "title": "JVC 81 cm / 32\" Pulgadas Smart Google HD TV Multi H2 Series LT-32KM158", "price": 12499, "date": "2026-09-21"}
+{"sku": "518589", "type": "salio_del_catalogo", "title": "Febreze Ambientador en Spray Air Effects Fragancias de Temporada 4 Unidades / 230 g / 8.1 oz ", "price": 1399, "date": "2026-09-21"}
+{"sku": "499363", "type": "salio_del_catalogo", "title": "Home Retreat Almohada de Espuma Viscoelástica 58 cm x 35 cm x 12 cm / 22\" x 13.77\" x 4.72\"", "price": 2799, "date": "2026-09-21"}
+{"sku": "481953", "type": "salio_del_catalogo", "title": "Farberwore Centrifugador de Frutas y Vegetales con Capacidad de 6.25 L / 1.65 gal", "price": 777, "date": "2026-09-21"}
+{"sku": "489301-0197502086172", "type": "salio_del_catalogo", "title": "Member's Selection Alfombra para Baño con Funda Removible 50.8 cm x 81.2 cm / 20\" x 32\"", "price": 977, "date": "2026-09-21"}
+{"sku": "503951-0885837054286", "type": "salio_del_catalogo", "title": "GreenPan Juego de Sartenes de Cerámica 11 Piezas", "price": 19977, "date": "2026-09-21"}
+{"sku": "509276", "type": "salio_del_catalogo", "title": "Powershots Set Figuras de Fútbol con 4 Balones ", "price": 977, "date": "2026-09-21"}
+{"sku": "316864", "type": "salio_del_catalogo", "title": "Mia Freixenet Vino Espumoso Moscato 750 mL / 25.36 oz", "price": 1299, "date": "2026-09-21"}
+{"sku": "511768-0197057795116", "type": "salio_del_catalogo", "title": "Hurley Camiseta Estampada Manga Corta  para Hombre", "price": 977, "date": "2026-09-21"}
+{"sku": "504229-0628263092299", "type": "salio_del_catalogo", "title": "Boston Traders Blusa Campesina Manga Corta para Mujer", "price": 477, "date": "2026-09-21"}
+{"sku": "509477-0770701335236", "type": "salio_del_catalogo", "title": "Urban Star Pantalón Azul Oscuro para Hombre ", "price": 1599, "date": "2026-09-21"}
+{"sku": "508731-0702576451254", "type": "salio_del_catalogo", "title": "Mario Serrani Blusa a Rayas para Mujer", "price": 1177, "date": "2026-09-21"}
+{"sku": "497825-0810172156463", "type": "salio_del_catalogo", "title": "Body Glove Set de Boxers para Hombres 4 Unidades", "price": 1099, "date": "2026-09-21"}
+{"sku": "509556-0770701335526", "type": "salio_del_catalogo", "title": "Urban Star Pantalón Color Beige de Tela Flexible con 5 Bolsillos para Hombre", "price": 1599, "date": "2026-09-21"}
+{"sku": "508247-0609475998326", "type": "salio_del_catalogo", "title": "Leo and Nicole Jeans para Mujer con Bota Enrollada", "price": 1799, "date": "2026-09-21"}
+{"sku": "519638", "type": "salio_del_catalogo", "title": "Gillette SkinGuard Máquina de Afeitar para Piel Sensible con 13 Cartuchos + Mango", "price": 2999, "date": "2026-09-21"}
+{"sku": "777860", "type": "salio_del_catalogo", "title": "Member's Selection Toallitas Desechables 8 Paquetes / 60 Unidades", "price": 1477, "date": "2026-09-21"}
