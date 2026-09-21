@@ -349,7 +349,7 @@ document.querySelector(".tab").classList.add("on");
 const idxTxt = D.indice==null ? "—"
   : (D.indice>0?"+":"")+D.indice+"%";
 $("#kpis").innerHTML = [
-  [D.n_products,"productos en línea base","explorar"],
+  [D.n_products,"productos en el catálogo","explorar"],
   [D.ofertas.length,"ofertas activas","ofertas"],
   [D.n_stockout,"sin stock hoy","stock"],
   [byType("bajo").length + byType("rebaja").length,"bajaron de precio","cambios","bajo"],
@@ -663,7 +663,7 @@ function openProd(sku){
   const clubRows = Object.entries(clubs);
   $("#dclubs").innerHTML = clubRows.length
     ? "<h2 style='margin-top:14px'>Disponibilidad en clubes</h2><table><tr><th>Club</th><th>Stock</th></tr>" +
-      clubRows.map(([n,c])=>`<tr><td>${n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td></tr>`).join("") + "</table>"
+      clubRows.map(([n,c])=>`<tr><td>${n==="El Salvador"?"Total (nacional)":n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td></tr>`).join("") + "</table>"
     : "<p class='meta' style='margin-top:10px'>Stock por club aún no consultado (solo se consulta para productos con oferta o eventos).</p>";
   $("#dtable").innerHTML = "<tr><th>Fecha</th><th>Precio</th><th>Ahorro</th><th>Stock</th></tr>" +
     s.slice(-12).reverse().map(([d,pr,st,sv]) =>
@@ -686,6 +686,12 @@ function openProd(sku){
     $("#chart").style.display="none";
   }
 }
+// clic fuera del modal (backdrop) lo cierra
+for (const d of [dlg, lgDlg]) d.addEventListener("click", e => {
+  const r = d.getBoundingClientRect();
+  if (e.clientX < r.left || e.clientX > r.right
+      || e.clientY < r.top || e.clientY > r.bottom) d.close();
+});
 render();
 // deep link compartible: ?sku=498227 abre la ficha directo
 const qs = new URLSearchParams(location.search).get("sku");
