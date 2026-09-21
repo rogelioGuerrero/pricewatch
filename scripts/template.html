@@ -521,6 +521,9 @@ function verdict(sku){
   if (save>0 && s.length>=3 && a.pct_min<=0)
     return {rank:0, cls:"real", label:"buen momento",
             tip:`oferta real: ahorra $${(+save).toFixed(2)} y está en su mínimo`};
+  if (PAID[sku] && l[1] <= PAID[sku].paid*100)
+    return {rank:1, cls:"real", label:"resurtir",
+            tip:`está a lo que pagaste ($${(+PAID[sku].paid).toFixed(2)}) o menos`+ofTip(a)};
   if (save>0) return {rank:1, cls:"oferta", label:"en oferta",
                       tip:`ahorra $${(+save).toFixed(2)}`+ofTip(a)};
   if (a.pct_min!=null && a.pct_min<=0)
@@ -599,7 +602,7 @@ const COLS_BASE = ["sku","producto","marca","categoria","precio","ahorro",
                    "desc_pct","stock"];
 const COLS_ADV = ["min_hist","max_hist","pct_sobre_min","vs_tipico_pct",
                   "n_cambios","ult_cambio","oferta_cada_d","ult_oferta_d",
-                  "ahorro_tipico","pct_dias_stock","dias_agotado",
+                  "n_ofertas","ahorro_tipico","pct_dias_stock","dias_agotado",
                   "n_veces_agotado"];
 async function loadExplorer(attempt=0){
   if (pvDone) return;
@@ -626,6 +629,7 @@ async function loadExplorer(attempt=0){
         vs_tipico_pct: a.vs_med ?? null,
         n_cambios: a.n_ch ?? null, ult_cambio: a.last_ch||"",
         oferta_cada_d: a.of_every ?? null, ult_oferta_d: a.of_last ?? null,
+        n_ofertas: a.n_of ?? null,
         ahorro_tipico: a.of_save ?? null,
         pct_dias_stock: a.pct_stock ?? null, dias_agotado: a.d_out ?? 0,
         n_veces_agotado: a.n_out ?? 0};
@@ -638,7 +642,8 @@ async function loadExplorer(attempt=0){
                       columns: COLS_BASE,
                       aggregates: {precio:"avg", pct_sobre_min:"avg",
                         vs_tipico_pct:"avg", ahorro:"sum", desc_pct:"avg",
-                        n_cambios:"sum", dias_agotado:"avg"}});
+                        n_cambios:"sum", dias_agotado:"avg",
+                        oferta_cada_d:"avg", n_ofertas:"sum"}});
     pvDone = true;
     pane.querySelector(".pv-status")?.remove();
     document.getElementById("grp1").onchange = e =>
@@ -679,9 +684,10 @@ function openProd(sku){
   ds.className = "star" + (FAV.has(sku) ? " on" : "");
   ds.onclick = () => toggleFav(sku, {stopPropagation(){}}) || openProd(sku);
   const dvs = $("#dvs"), dagg = D.agg[sku]||{};
-  dvs.innerHTML = dagg.vs_med != null
+  dvs.innerHTML = (dagg.vs_med != null
     ? `<span style="color:${dagg.vs_med<=0?"var(--down)":"var(--up)"}">${dagg.vs_med>0?"+":""}${dagg.vs_med}% vs precio típico (${fmt(dagg.med)})</span>`
-    : "";
+    : "")
+    + (dagg.of_every ? ` <span class="meta">· en oferta cada ~${dagg.of_every}d${dagg.of_save?` (ahorra ~$${(+dagg.of_save).toFixed(2)})`:""}</span>` : "");
   const db = $("#dbuy");
   db.checked = COMPRAS.some(c => c.sku === sku);
   db.onchange = () => buyToggled(sku, db);
