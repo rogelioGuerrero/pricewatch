@@ -411,11 +411,40 @@ def record_history(products, date):
     conn.close()
 
 
-def stock_candidates(today, products):
-    """SKUs a vigilar diario: ofertas activas del ultimo snapshot +
+def favs_remote():
+    """SKUs de la lista del usuario en Appwrite (si hay API key en env).
+    La tabla es del proyecto personal: una sola usuaria, pocos rows."""
+    ep, pid, key = (os.environ.get("APPWRITE_ENDPOINT"),
+                    os.environ.get("APPWRITE_PROJECT_ID"),
+                    os.environ.get("APPWRITE_API_KEY"))
+    if not (ep and pid and key):
+        return set()
+    try:
+        req = Request(f"{ep}/tablesdb/pricewatch/tables/favs/rows"
+                      "?queries%5B%5D=limit%28500%29",
+                      headers={"X-Appwrite-Project": pid,
+                               "X-Appwrite-Key": key})
+        rows = json.load(urlopen(req, timeout=15)).get("rows", [])
+        return {str(r.get("sku")) for r in rows if r.get("sku")}
+    except Exception as e:
+        print(f"  (favs remotos no disponibles: {e})")
+        return set()
+
+
+def _priority_watch(pri, rest, cap):
+    """Ofertas + lista del usuario nunca quedan fuera del cap; los
+    eventos recientes llenan el resto."""
+    return set(sorted(pri)
+               + [s for s in sorted(rest) if s not in pri][:cap])
+
+
+def stock_candidates(today, products, favs=None):
+    """SKUs a vigilar diario: ofertas activas + lista del usuario +
     cualquier producto con evento en los ultimos 14 dias."""
-    cands = {s for s, p in products.items()
-             if (p.get("saving_usd") or 0) > 0}
+    pri = {s for s, p in products.items()
+           if (p.get("saving_usd") or 0) > 0}
+    pri |= favs or set()
+    rest = set()
     try:
         from datetime import timedelta
         lim = (datetime.strptime(today, "%Y-%m-%d")
@@ -427,10 +456,10 @@ def stock_candidates(today, products):
                 except Exception:
                     continue
                 if e.get("date", "") >= lim and e.get("sku"):
-                    cands.add(e["sku"])
+                    rest.add(e["sku"])
     except Exception:
         pass
-    return cands
+    return _priority_watch(pri, rest, 400)
 
 
 def append_events(events, today):
@@ -465,10 +494,9 @@ def main():
         # sin barrer el catalogo. Detecta velocidad de venta (se_agota).
         prev_name, prev_full = load_previous_snapshot()
         cur = prev_full["products"] if prev_full else {}
-        cands = stock_candidates(today, cur)
-        cands = set(sorted(cands)[:400])
+        cands = stock_candidates(today, cur, favs_remote())
         print(f"[{today}] Stock-check: {len(cands)} candidatos "
-              f"(ofertas + eventos recientes)")
+              f"(ofertas + lista + eventos recientes)")
         fetch_club_stock(cands, today)
         events = club_stock_diff(today, cands, cur)
         print(f"Transiciones/velocidad: {len(events)}")
@@ -523,14 +551,15 @@ def main():
     if len(events) > 15:
         print(f"  ... y {len(events)-15} mas")
 
-    # Nivel 2: stock por club para lo que importa (eventos + ofertas)
+    # Nivel 2: stock por club para lo que importa (ofertas + lista + eventos)
     if "--dry" not in sys.argv:
-        skus_ev = {e["sku"] for e in events}
-        skus_ev |= {s for s, p in cur.items() if (p.get("saving_usd") or 0) > 0}
-        skus_ev = set(sorted(skus_ev)[:300])
+        pri = {s for s, p in cur.items() if (p.get("saving_usd") or 0) > 0}
+        pri |= favs_remote()
+        rest = {e["sku"] for e in events} - pri
+        skus_ev = _priority_watch(pri, rest, 400)
         if skus_ev:
             print(f"Detalle por club para {len(skus_ev)} productos "
-                  "(eventos + ofertas)…")
+                  "(ofertas + lista + eventos)…")
             fetch_club_stock(skus_ev, today)
             club_ev = club_stock_diff(today, skus_ev, cur)
             if club_ev:

@@ -712,7 +712,7 @@ function openProd(sku){
   $("#dclubs").innerHTML = clubRows.length
     ? "<h2 style='margin-top:14px'>Disponibilidad en clubes</h2><table><tr><th>Club</th><th>Stock</th></tr>" +
       clubRows.map(([n,c])=>`<tr><td>${n==="El Salvador"?"Total (nacional)":n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td></tr>`).join("") + "</table>"
-    : "<p class='meta' style='margin-top:10px'>Stock por club aún no consultado (solo se consulta para productos con oferta o eventos).</p>";
+    : "<p class='meta' style='margin-top:10px'>Sin dato de stock por club todavía — se consulta solo para ofertas, movimientos y tu lista.</p>";
   $("#dtable").innerHTML = "<tr><th>Fecha</th><th>Precio</th><th>Ahorro</th><th>Stock</th></tr>" +
     s.slice(-12).reverse().map(([d,pr,st,sv]) =>
       `<tr><td>${d}</td><td>${fmt(pr)}</td><td>${sv?"$"+(+sv).toFixed(2):"—"}</td><td>${st?"✓":"✗"}</td></tr>`).join("");

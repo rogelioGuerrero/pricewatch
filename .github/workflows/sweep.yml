@@ -25,6 +25,10 @@ jobs:
           python-version: '3.12'
 
       - name: Sweep catalog + diff + rebuild dashboard
+        env:
+          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
         run: |
           python scripts/sweep.py
           python scripts/build_site.py
