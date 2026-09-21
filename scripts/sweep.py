@@ -196,6 +196,14 @@ def _days_between(d_old, d_new):
         return None
 
 
+def _move_type(p_new, p_old, sv_new):
+    """Bajada sin letrero de ahorro = 'rebaja' (rebaja silenciosa, suele
+    ser permanente); con letrero es mecanica de promo ('bajo')."""
+    if p_new < p_old:
+        return "rebaja" if not sv_new else "bajo"
+    return "subio"
+
+
 def diff(prev, cur, today=None, known=None, last=None, last_in=None):
     """Genera eventos comparando snapshots {sku: {price_SV, inventory_SV,...}}.
 
@@ -258,12 +266,12 @@ def diff(prev, cur, today=None, known=None, last=None, last_in=None):
                 if price_changed:
                     events.append({
                         "sku": sku,
-                        "type": "bajo" if p_new < p_old else "subio",
+                        "type": _move_type(p_new, p_old, sv_new),
                         "title": p["title"], "from": p_old, "to": p_new,
                         "delta": p_new - p_old, "pct": pct})
         elif price_changed:
             events.append({
-                "sku": sku, "type": "bajo" if p_new < p_old else "subio",
+                "sku": sku, "type": _move_type(p_new, p_old, sv_new),
                 "title": p["title"], "from": p_old, "to": p_new,
                 "delta": p_new - p_old, "pct": pct})
         # Oferta con letrero: cambia el ahorro sin que cambie el precio
@@ -506,7 +514,7 @@ def main():
         by_type[e["type"]] = by_type.get(e["type"], 0) + 1
     print(f"\nEventos vs snapshot anterior ({prev_name}): {by_type}")
     for e in events[:15]:
-        if e["type"] in ("bajo", "subio"):
+        if e["type"] in ("bajo", "subio", "rebaja"):
             print(f"  {e['type']:>10} | {e['title'][:55]} | "
                   f"${e['from']/100:.2f} -> ${e['to']/100:.2f} ({e['pct']}%)")
         else:

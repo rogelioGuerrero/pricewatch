@@ -63,6 +63,7 @@
   .tag.nuevo { background:#14532d; color:#86efac }
   .tag.salio_del_catalogo { background:#374151; color:#9ca3af }
   .tag.oferta_termino { background:#374151; color:#9ca3af }
+  .tag.rebaja { background:#052e16; color:#4ade80 }
   .tag.club_volvio { background:#422006; color:var(--warn) }
   .tag.club_agotado { background:#3f3f46; color:#d4d4d8 }
   .tag.se_agota { background:#7c2d12; color:#fdba74 }
@@ -103,6 +104,7 @@
     <div class="filters" id="f-cambios">
       <span class="chip on" data-cf="all">todas</span>
       <span class="chip" data-cf="bajo">bajaron</span>
+      <span class="chip" data-cf="rebaja">rebajas</span>
       <span class="chip" data-cf="subio">subieron</span>
       <span class="chip" data-cf="oferta_termino">fin de oferta</span>
       <span class="chip" data-cf="fav">★ mi lista</span>
@@ -320,7 +322,7 @@ async function doAuth(reg){
 
 const TABS = [
   ["favs","Mi lista", FAV.size],
-  ["cambios","Movimientos", byType("bajo").length + byType("subio").length + byType("oferta_termino").length],
+  ["cambios","Movimientos", byType("bajo").length + byType("subio").length + byType("oferta_termino").length + byType("rebaja").length],
   ["ofertas","Ofertas", D.ofertas.length],
   ["stock","Se acabó / Volvió",
    byType("agotado").length + byType("reaparecio").length
@@ -350,7 +352,7 @@ $("#kpis").innerHTML = [
   [D.n_products,"productos en línea base","explorar"],
   [D.ofertas.length,"ofertas activas","ofertas"],
   [D.n_stockout,"sin stock hoy","stock"],
-  [byType("bajo").length,"bajaron de precio","cambios","bajo"],
+  [byType("bajo").length + byType("rebaja").length,"bajaron de precio","cambios","bajo"],
   [byType("subio").length,"subieron de precio","cambios","subio"],
   [idxTxt,"índice del catálogo"],
 ].map(([b,s,tab,cf]) =>
@@ -369,7 +371,7 @@ document.querySelectorAll(".kpi[data-tab]").forEach(k => k.onclick = () => {
 
 const LABEL = {agotado:"se acabó", reaparecio:"volvió",
   salio_del_catalogo:"salió del catálogo", regreso:"regresó al catálogo",
-  nuevo:"nuevo", oferta_termino:"terminó oferta",
+  nuevo:"nuevo", oferta_termino:"terminó oferta", rebaja:"rebaja",
   club_volvio:"volvió a", club_agotado:"se acabó en",
   se_agota:"se agota en"};
 function card(e){
@@ -378,7 +380,7 @@ function card(e){
   if (e.from != null && e.to != null)
     price = `<span class="old">${fmt(e.from)}</span> → <span class="pr">${fmt(e.to)}</span>
       <span class="tag ${e.type}">${e.pct>0?"+":""}${e.pct}%</span>
-      ${["reaparecio","regreso","oferta_termino"].includes(e.type)?`<span class="tag ${e.type}">${LABEL[e.type]}</span>`:""}`;
+      ${["reaparecio","regreso","oferta_termino","rebaja"].includes(e.type)?`<span class="tag ${e.type}">${LABEL[e.type]}</span>`:""}`;
   else if (e.type==="oferta"){
     const a = D.agg[e.sku]||{}, hist = (D.series[e.sku]||[]).length>=3;
     price = `<span class="pr">${fmt(e.price)}</span> <span class="tag oferta">ahorra $${(+e.saving).toFixed(2)}</span>`
@@ -389,22 +391,25 @@ function card(e){
   else
     price = `<span class="pr">${fmt(e.price)}</span> <span class="tag ${e.type}">${(LABEL[e.type]||e.type)}${e.club?" "+e.club:""}</span>`;
   const dias = e.days_out != null ? ` · ${e.days_out}d fuera` : "";
-  const oe = e.type==="oferta_termino" && (D.agg[e.sku]||{}).of_end;
+  const ea = D.agg[e.sku]||{};
+  const oe = e.type==="oferta_termino" && ea.of_end;
   const odur = oe ? ` · oferta ${oe[0].slice(5)}→${oe[1].slice(5)}` : "";
+  const ocd = oe && ea.of_every ? ` · vuelve ~cada ${ea.of_every}d` : "";
   return `<div class="card" onclick="openProd('${e.sku}')">
     ${star(e.sku)}
     ${img(e.sku)?`<img src="${img(e.sku)}" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
       <div class="t">${e.title||p.title||e.sku}</div><div>${price}</div>
-      <div class="meta">${e.date||""}${dias}${odur} · ${p.category||""}</div>
+      <div class="meta">${e.date||""}${dias}${odur}${ocd} · ${p.category||""}</div>
       <div class="spark" data-sku="${e.sku}"></div></div></div>`;
 }
 function render(){
   const q = $("#q").value.toLowerCase();
   const f = e => !q || (e.title||"").toLowerCase().includes(q)
                    || (D.products[e.sku]||{}).title?.toLowerCase().includes(q);
-  $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio","oferta_termino"].includes(e.type)
-    && (cf==="all" ? true : cf==="fav" ? FAV.has(e.sku) : e.type===cf)
+  $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio","oferta_termino","rebaja"].includes(e.type)
+    && (cf==="all" ? true : cf==="fav" ? FAV.has(e.sku)
+        : cf==="bajo" ? ["bajo","rebaja"].includes(e.type) : e.type===cf)
     && f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios</p>";
   const ofIni = {}; ev.filter(e=>e.type==="oferta")
     .forEach(e => ofIni[e.sku] = e.date);
