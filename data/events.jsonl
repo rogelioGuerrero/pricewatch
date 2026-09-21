@@ -421,3 +421,12 @@
 {"sku": "508247-0609475998326", "type": "salio_del_catalogo", "title": "Leo and Nicole Jeans para Mujer con Bota Enrollada", "price": 1799, "date": "2026-09-21"}
 {"sku": "519638", "type": "salio_del_catalogo", "title": "Gillette SkinGuard Máquina de Afeitar para Piel Sensible con 13 Cartuchos + Mango", "price": 2999, "date": "2026-09-21"}
 {"sku": "777860", "type": "salio_del_catalogo", "title": "Member's Selection Toallitas Desechables 8 Paquetes / 60 Unidades", "price": 1477, "date": "2026-09-21"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Ana", "qty_from": 36, "qty_to": 5, "prev_date": "2026-09-20", "date": "2026-09-21"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Los Héroes", "qty_from": 57, "qty_to": 34, "prev_date": "2026-09-20", "date": "2026-09-21"}
+{"sku": "195666", "type": "se_agota", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "Santa Elena", "qty_from": 84, "qty_to": 29, "prev_date": "2026-09-20", "date": "2026-09-21"}
+{"sku": "195666", "type": "se_agota", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "El Salvador", "qty_from": 268, "qty_to": 160, "prev_date": "2026-09-20", "date": "2026-09-21"}
+{"sku": "244383", "type": "club_volvio", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 879, "club": "Santa Elena", "prev_date": "2026-09-20", "date": "2026-09-21"}
+{"sku": "244383", "type": "club_volvio", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 879, "club": "Santa Ana", "prev_date": "2026-09-20", "date": "2026-09-21"}
+{"sku": "244383", "type": "club_volvio", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 879, "club": "San Miguel", "prev_date": "2026-09-20", "date": "2026-09-21"}
+{"sku": "259017", "type": "club_volvio", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "club": "Los Héroes", "prev_date": "2026-09-20", "date": "2026-09-21"}
+{"sku": "259017", "type": "club_volvio", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "club": "San Miguel", "prev_date": "2026-09-20", "date": "2026-09-21"}
