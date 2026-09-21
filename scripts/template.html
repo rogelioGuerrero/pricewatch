@@ -353,6 +353,9 @@ async function doAuth(reg){
 const TABS = [
   ["favs","Mi lista", FAV.size],
   ["cambios","Movimientos", byType("bajo").length + byType("subio").length + byType("oferta_termino").length + byType("rebaja").length],
+  ["mejores","Mejores precios",
+   Object.keys(D.agg).filter(s=>(D.series[s]||[]).length>=3
+     && D.agg[s].pct_min<=0 && D.agg[s].d_out===0).length],
   ["ofertas","Ofertas", D.ofertas.length],
   ["stock","Se acabó / Volvió",
    byType("agotado").length + byType("reaparecio").length
@@ -360,9 +363,6 @@ const TABS = [
    + byType("club_agotado").length + byType("club_volvio").length
    + byType("se_agota").length],
   ["nuevos","Nuevos", byType("nuevo").length],
-  ["mejores","Mejores precios",
-   Object.keys(D.agg).filter(s=>(D.series[s]||[]).length>=3
-     && D.agg[s].pct_min<=0 && D.agg[s].d_out===0).length],
   ["explorar","Catálogo", D.n_products],
 ];
 $("#tabs").innerHTML = TABS.map(([id,n,nr]) =>
@@ -433,10 +433,16 @@ function card(e){
       <div class="meta">${e.date||""}${dias}${odur}${ocd} · ${p.category||""}${ea.temp?" · de temporada":""}</div>
       <div class="spark" data-sku="${e.sku}"></div></div></div>`;
 }
+// busqueda: sin tildes, todas las palabras deben aparecer (cualquier orden)
+const norm = s => (s||"").toLowerCase().normalize("NFD")
+  .replace(/[\u0300-\u036f]/g,"");
+const matchQ = (q, ...fields) => {
+  const hay = norm(fields.filter(Boolean).join(" "));
+  return norm(q).split(/\s+/).filter(Boolean).every(t => hay.includes(t));
+};
 function render(){
-  const q = $("#q").value.toLowerCase();
-  const f = e => !q || (e.title||"").toLowerCase().includes(q)
-                   || (D.products[e.sku]||{}).title?.toLowerCase().includes(q);
+  const q = $("#q").value.trim();
+  const f = e => !q || matchQ(q, e.title, (D.products[e.sku]||{}).title);
   $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio","oferta_termino","rebaja"].includes(e.type)
     && (cf==="all" ? true : cf==="fav" ? FAV.has(e.sku)
         : cf==="bajo" ? e.type==="rebaja" : e.type===cf)
@@ -444,7 +450,7 @@ function render(){
   const ofIni = {}; ev.filter(e=>e.type==="oferta")
     .forEach(e => ofIni[e.sku] = e.date);
   $("#g-ofertas").innerHTML = D.ofertas
-    .filter(o=>!q||o.title?.toLowerCase().includes(q))
+    .filter(o=>!q||matchQ(q, o.title))
     .sort((a,b)=>(b.saving||0)-(a.saving||0))
     .map(o=>card({sku:o.sku,type:"oferta",saving:o.saving,price:o.price,
                  title:o.title,date:(D.agg[o.sku]||{}).of_cur||ofIni[o.sku]}))
@@ -454,7 +460,7 @@ function render(){
   $("#g-mejores").innerHTML = Object.entries(D.agg)
     .filter(([s,a]) => a.pct_min<=0 && a.d_out===0
             && (D.series[s]||[]).length>=3
-            && (!q || (D.products[s]||{}).title?.toLowerCase().includes(q)))
+            && (!q || matchQ(q, (D.products[s]||{}).title)))
     .sort((x,y)=>x[1].vs_med-y[1].vs_med).slice(0,90)
     .map(([s,a])=>{
       const p=D.products[s]||{}, l=(D.series[s]||[]).slice(-1)[0];
@@ -485,9 +491,7 @@ function render(){
   if (q.length >= 2) {
     $("#g-buscar").innerHTML = Object.keys(D.products)
       .filter(s => { const p = D.products[s]||{};
-        return (p.title||"").toLowerCase().includes(q) || s.includes(q)
-          || (p.brand||"").toLowerCase().includes(q)
-          || (p.category||"").toLowerCase().includes(q); })
+        return matchQ(q, p.title, p.brand, p.category, s); })
       .slice(0, 60).map(favCard).join("")
       || "<p class='meta'>Sin coincidencias en el catálogo</p>";
   }
