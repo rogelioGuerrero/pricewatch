@@ -666,7 +666,8 @@ function openProd(sku){
   const last = s.slice(-1)[0];
   $("#dimg").src = img(sku); $("#dimg").style.display = img(sku)?"":"none";
   $("#dtitle").textContent = p.title||sku;
-  $("#dmeta").textContent = `${p.brand||""} · ${p.category||""} · SKU ${sku}`;
+  $("#dmeta").textContent = `${p.brand||""} · ${p.category||""} · SKU ${sku}`
+    + (s.length && s[s.length-1][0] < D.generated ? ` · última vez en catálogo: ${s[s.length-1][0]}` : "");
   $("#dprice").textContent = last ? fmt(last[1]) : "—";
   const dl = $("#dlink");
   if (p.slug){ dl.style.display=""; dl.href =

@@ -8,7 +8,7 @@ import os
 import sqlite3
 import statistics
 from collections import defaultdict
-from datetime import date
+from datetime import date, timedelta
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB = os.path.join(ROOT, "data", "prices.db")
@@ -67,6 +67,18 @@ if os.path.exists(MIS_COMPRAS):
 ofertas = [{"sku": s, "saving": r["saving"], "price": r["price"],
             **products.get(s, {})}
            for s, r in latest.items() if (r["saving"] or 0) > 0]
+
+# Archivo: el PWA solo embebe productos vistos en los ultimos 45 dias
+# (o referenciados por eventos/compras, para que sus cards tengan titulo).
+# prices.db conserva la historia completa para siempre (deteccion de
+# 'regreso', ficha historica); el payload no se llena de muertos.
+gen = max((r[0] for s in series.values() for r in s), default="")
+if gen:
+    cutoff = (date.fromisoformat(gen) - timedelta(days=45)).isoformat()
+    keep = {s for s, ser in series.items() if ser[-1][0] >= cutoff}
+    keep |= {e["sku"] for e in events} | {m["sku"] for m in mis}
+    series = {s: v for s, v in series.items() if s in keep}
+    products = {s: p for s, p in products.items() if s in keep}
 
 # Agregados historicos por sku: lo que pricesmart.com no puede mostrar
 agg = {}
@@ -145,7 +157,7 @@ if os.path.isdir(SNAP_DIR):
 data = {
     "generated": max((r[0] for s in series.values() for r in s), default=""),
     "demo": demo,
-    "n_products": len(products),
+    "n_products": len(latest),
     "n_stockout": sum(1 for r in latest.values() if not r["in_stock"]),
     "products": products, "series": series, "events": events,
     "mis": mis, "ofertas": ofertas, "clubs": clubs, "agg": agg,
