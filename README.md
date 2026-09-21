@@ -14,6 +14,8 @@ sweep.py (cron mar/jue)          → catálogo completo SV vía API interna
   └─ data/events.jsonl                  (bajo/subio/oferta/agotado/reaparecio/nuevo/salio)
 build_site.py                    → docs/index.html (dashboard estático)
 GitHub Pages                     → publicación
+Appwrite Cloud                   → sync de Mi lista + compras entre
+                                   dispositivos (botón "cuenta" en la app)
 ```
 
 ## Uso local

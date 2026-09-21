@@ -10,8 +10,9 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>PriceWatch SV — Qué cambió en PriceSmart</title>
+<title>PriceWatch SV</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/appwrite@26.2.0"></script>
 <link rel="stylesheet" crossorigin="anonymous"
       href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.8.0/dist/css/themes.css">
 <style>
@@ -89,6 +90,7 @@
 <body>
 <div class="wrap">
   <header>
+    <span id="acct" class="chip" style="float:right;margin-top:6px;display:none">cuenta</span>
     <h1>PriceWatch SV</h1>
     <p>PriceSmart El Salvador · datos al <b id="gen"></b></p>
     <span class="demo" id="demo-banner" style="display:none">DEMO — el historial es sintético hasta acumular corridas reales (mar/jue)</span>
@@ -146,6 +148,24 @@
   <p class="meta" id="dbuys" style="margin-top:8px"></p>
   <table id="dtable"></table>
 </dialog>
+<dialog id="dlg-login">
+  <span class="close" onclick="lgDlg.close()">✕</span>
+  <h2>Cuenta</h2>
+  <p class="meta">Tu lista y tus compras se sincronizan entre teléfono y PC.</p>
+  <div id="lg-form">
+    <input id="lg-email" type="email" placeholder="correo" style="width:100%;margin-top:10px">
+    <input id="lg-pass" type="password" placeholder="contraseña" style="width:100%;margin-top:8px">
+    <div style="margin-top:12px;display:flex;gap:10px">
+      <span class="chip on" id="lg-in">Entrar</span>
+      <span class="chip" id="lg-up">Crear cuenta</span>
+    </div>
+  </div>
+  <div id="lg-out" style="display:none;margin-top:12px">
+    <p id="lg-who"></p>
+    <span class="chip" id="lg-off">Salir</span>
+  </div>
+  <p class="meta" id="lg-msg" style="margin-top:10px"></p>
+</dialog>
 <script>
 const D = __DATA__;
 const $ = s => document.querySelector(s);
@@ -169,7 +189,9 @@ const rebuildPaid = () => {
 };
 rebuildPaid();
 const delCompra = (i, sku) => {
+  const c = COMPRAS[i];
   COMPRAS.splice(i, 1);
+  if (AW.user && c && c.rid) compraDown(c.rid);
   localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
   rebuildPaid(); render(); openProd(sku);
 };
@@ -181,14 +203,119 @@ const comprar = sku => {
   if (!(paid > 0)) return;
   const r = {sku, paid, date: new Date().toISOString().slice(0,10)};
   COMPRAS.push(r); PAID[sku] = r;
+  if (AW.user) compraUp(r)
+    .then(d => { r.rid = d.$id;
+      localStorage.setItem("pw-compras", JSON.stringify(COMPRAS)); })
+    .catch(()=>{});
   localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
   render();
 };
 const toggleFav = (sku,e)=>{e.stopPropagation();
-  FAV.has(sku)?FAV.delete(sku):FAV.add(sku);
+  const on = !FAV.has(sku);
+  on ? FAV.add(sku) : FAV.delete(sku);
+  if (AW.user) on ? favUp(sku) : favDown(sku);
   localStorage.setItem("pw-favs",JSON.stringify([...FAV]));render();};
 const star = sku =>
   `<span class="star ${FAV.has(sku)?"on":""}" onclick="toggleFav('${sku}',event)">${FAV.has(sku)?"★":"☆"}</span>`;
+
+// ---- sync Appwrite: favs + compras entre dispositivos (opcional) ----
+const AW = {ok:false, user:null};
+try {
+  const c = new Appwrite.Client()
+    .setEndpoint("https://sfo.cloud.appwrite.io/v1")
+    .setProject("6ab1922d00020f5a2e99");
+  AW.acc = new Appwrite.Account(c);
+  AW.dbs = new Appwrite.TablesDB(c);
+  AW.ok = true;
+} catch(e) {}
+const AW_DB = "pricewatch", COL_F = "favs", COL_C = "compras";
+const docPerms = uid => ["read","update","delete"]
+  .map(p => Appwrite.Permission[p](Appwrite.Role.user(uid)));
+const favId = sku => `${AW.user.$id}-${sku}`;
+const listAll = tableId => AW.dbs
+  .listRows({databaseId: AW_DB, tableId,
+             queries: [Appwrite.Query.limit(500)]})
+  .then(r => r.rows);
+const favUp = sku => AW.dbs.createRow({databaseId: AW_DB, tableId: COL_F,
+  rowId: favId(sku), data: {sku}, permissions: docPerms(AW.user.$id)})
+  .catch(()=>{});
+const favDown = sku => AW.dbs.deleteRow({databaseId: AW_DB, tableId: COL_F,
+  rowId: favId(sku)}).catch(()=>{});
+const compraUp = c => AW.dbs.createRow({databaseId: AW_DB, tableId: COL_C,
+  rowId: Appwrite.ID.unique(),
+  data: {sku:c.sku, paid:c.paid, date:c.date||"1970-01-01"},
+  permissions: docPerms(AW.user.$id)});
+const compraDown = rid => AW.dbs.deleteRow({databaseId: AW_DB, tableId: COL_C,
+  rowId: rid}).catch(()=>{});
+const ckey = c => `${c.sku}|${c.date||""}|${c.paid}`;
+async function syncAll(){
+  if (!AW.user) return;
+  // la semilla del repo (mis-compras.json) se migra a la cuenta la 1a vez
+  for (const m of (D.mis||[]))
+    if (!COMPRAS.some(c => c.sku===m.sku && c.date===m.date && c.paid===m.paid))
+      COMPRAS.push({sku:String(m.sku), paid:m.paid, date:m.date});
+  const [rf, rc] = await Promise.all([listAll(COL_F), listAll(COL_C)]);
+  const rset = new Set(rf.map(d=>d.sku));
+  for (const s of [...FAV]) if (!rset.has(s)) await favUp(s);
+  for (const d of rf) FAV.add(d.sku);
+  const rmap = {}; rc.forEach(d => rmap[ckey(d)] = d.$id);
+  for (const c of COMPRAS) {
+    const k = ckey(c);
+    if (rmap[k]) c.rid = rmap[k];
+    else { const d = await compraUp(c).catch(()=>null); if (d) c.rid = d.$id; }
+  }
+  for (const d of rc)
+    if (!COMPRAS.some(c => ckey(c) === ckey(d)))
+      COMPRAS.push({sku:d.sku, paid:d.paid, date:d.date, rid:d.$id});
+  localStorage.setItem("pw-favs", JSON.stringify([...FAV]));
+  localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
+  rebuildPaid(); render();
+}
+const lgDlg = document.getElementById("dlg-login");
+const acctBtn = document.getElementById("acct");
+const lgMsg = t => document.getElementById("lg-msg").textContent = t;
+function paintAcct(){
+  if (!AW.ok) return;
+  acctBtn.style.display = "";
+  acctBtn.textContent = AW.user ? "☁ " + AW.user.email : "cuenta";
+  document.getElementById("lg-form").style.display = AW.user ? "none" : "";
+  document.getElementById("lg-out").style.display = AW.user ? "" : "none";
+  if (AW.user)
+    document.getElementById("lg-who").textContent =
+      AW.user.email + " — sincronizado";
+}
+acctBtn.onclick = () => { lgMsg(""); paintAcct(); lgDlg.showModal(); };
+document.getElementById("lg-in").onclick = () => doAuth(false);
+document.getElementById("lg-up").onclick = () => doAuth(true);
+document.getElementById("lg-off").onclick = async () => {
+  await AW.acc.deleteSession("current").catch(()=>{});
+  AW.user = null; paintAcct();
+  lgMsg("sesión cerrada — los datos quedan en este dispositivo");
+};
+async function doAuth(reg){
+  const em = document.getElementById("lg-email").value.trim(),
+        pw = document.getElementById("lg-pass").value;
+  if (!em || !pw) return lgMsg("falta correo o contraseña");
+  lgMsg("…");
+  try {
+    if (reg) await AW.acc.create({userId: Appwrite.ID.unique(),
+                                  email: em, password: pw});
+    try { await AW.acc.deleteSession("current"); } catch(e) {}
+    await AW.acc.createEmailPasswordSession({email: em, password: pw});
+    AW.user = await AW.acc.get();
+    lgMsg("sincronizando…");
+    await syncAll();
+    lgDlg.close();
+  } catch(e) {
+    lgMsg(e.code === 401 ? "correo o contraseña incorrectos"
+                         : String(e.message||"error").slice(0,140));
+  }
+}
+(async () => {
+  if (!AW.ok) return;
+  try { AW.user = await AW.acc.get(); await syncAll(); } catch(e) {}
+  paintAcct();
+})();
 
 const TABS = [
   ["favs","Mi lista", FAV.size],
@@ -299,7 +426,7 @@ function render(){
     }).join("") || "<p class='meta'>Nada en su mínimo hoy</p>";
   const favList = [...FAV].sort((x,y)=>verdict(x).rank-verdict(y).rank);
   $("#g-favs").innerHTML = favList.map(favCard).join("")
-    || "<p class='meta'>Marca productos con ☆ para seguirlos aquí. La lista vive en tu teléfono, sin cuenta.</p>";
+    || "<p class='meta'>Marca productos con ☆ para seguirlos aquí. Con 'cuenta' se sincronizan entre teléfono y PC.</p>";
   const nChFav = ev.filter(e=>["bajo","subio"].includes(e.type)&&FAV.has(e.sku)).length;
   const favN = document.querySelector('.tab[data-t="favs"] .n');
   if (favN) favN.textContent = FAV.size + (nChFav ? ` ⚡${nChFav}` : "");
