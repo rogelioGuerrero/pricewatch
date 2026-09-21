@@ -86,6 +86,15 @@
   .plink { display:inline-block; margin-top:10px; color:var(--info);
            font-size:13px }
   .tag.real { background:#064e3b; color:#86efac }
+  .sw { display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+        font-size:12px; color:var(--mut); user-select:none }
+  .sw input { display:none }
+  .sw i { width:34px; height:19px; border-radius:99px; background:#3f3f46;
+          position:relative; transition:.2s; flex:none }
+  .sw i::after { content:""; position:absolute; width:15px; height:15px;
+                 border-radius:50%; background:#d4d4d8; top:2px; left:2px; transition:.2s }
+  .sw input:checked + i { background:#064e3b }
+  .sw input:checked + i::after { left:17px; background:#4ade80 }
 </style>
 </head>
 <body>
@@ -104,7 +113,6 @@
     <div class="filters" id="f-cambios">
       <span class="chip on" data-cf="all">todas</span>
       <span class="chip" data-cf="bajo">bajaron</span>
-      <span class="chip" data-cf="rebaja">rebajas</span>
       <span class="chip" data-cf="subio">subieron</span>
       <span class="chip" data-cf="oferta_termino">fin de oferta</span>
       <span class="chip" data-cf="fav">★ mi lista</span>
@@ -140,13 +148,14 @@
   <span class="close" onclick="dlg.close()">✕</span>
   <div style="display:flex;gap:12px;align-items:start">
     <img id="dimg" style="width:80px;height:80px;object-fit:contain;background:#fff;border-radius:8px">
-    <div style="flex:1"><h2 id="dtitle"></h2><div class="meta" id="dmeta"></div><div class="bigprice" id="dprice"></div></div>
+    <div style="flex:1"><h2 id="dtitle"></h2><div class="meta" id="dmeta"></div><div class="bigprice" id="dprice"></div><div class="meta" id="dvs"></div></div>
     <span id="dstar" class="star" style="position:static;font-size:26px"></span>
   </div>
   <div id="chart"></div>
   <div id="dclubs"></div>
   <a id="dlink" class="plink" target="_blank" rel="noopener">Ver en pricesmart.com ↗</a>
-  <a id="dbuy" class="plink" style="margin-left:14px;cursor:pointer">✓ lo compré</a>
+  <label class="sw" style="margin-left:14px"><input type="checkbox" id="dbuy"><i></i>lo compré</label>
+  <a id="dmore" class="plink" style="margin-left:10px;cursor:pointer;display:none">+ otra</a>
   <a id="dshare" class="plink" style="margin-left:14px;cursor:pointer">Copiar enlace</a>
   <p class="meta" id="dbuys" style="margin-top:8px"></p>
   <table id="dtable"></table>
@@ -201,9 +210,9 @@ const delCompra = (i, sku) => {
 const comprar = sku => {
   const l = (D.series[sku]||[]).slice(-1)[0];
   const v = prompt("¿A cuánto lo pagaste?", l ? (l[1]/100).toFixed(2) : "");
-  if (v == null) return;
+  if (v == null) return false;
   const paid = parseFloat(v);
-  if (!(paid > 0)) return;
+  if (!(paid > 0)) return false;
   const r = {sku, paid, date: new Date().toISOString().slice(0,10)};
   COMPRAS.push(r); PAID[sku] = r;
   if (AW.user) compraUp(r)
@@ -212,7 +221,28 @@ const comprar = sku => {
     .catch(()=>{});
   localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
   render();
+  return true;
 };
+const descomprar = sku => {  // quita la compra mas reciente de ese sku
+  for (let i = COMPRAS.length - 1; i >= 0; i--)
+    if (COMPRAS[i].sku === sku) {
+      const c = COMPRAS.splice(i, 1)[0];
+      if (AW.user && c && c.rid) compraDown(c.rid);
+      break;
+    }
+  localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
+  rebuildPaid(); render();
+  if (dlg.open) openProd(sku);
+};
+const buyToggled = (sku, el) => {
+  if (el.checked) {
+    if (!comprar(sku)) { el.checked = false; return; }
+    if (dlg.open) openProd(sku);
+  } else descomprar(sku);
+};
+const buySwitch = (sku, bought) =>
+  `<label class="sw" onclick="event.stopPropagation()"><input type="checkbox"
+   ${bought?"checked":""} onchange="buyToggled('${sku}',this)"><i></i>lo compré</label>`;
 const toggleFav = (sku,e)=>{e.stopPropagation();
   const on = !FAV.has(sku);
   on ? FAV.add(sku) : FAV.delete(sku);
@@ -352,7 +382,7 @@ $("#kpis").innerHTML = [
   [D.n_products,"productos en el catálogo","explorar"],
   [D.ofertas.length,"ofertas activas","ofertas"],
   [D.n_stockout,"sin stock hoy","stock"],
-  [byType("bajo").length + byType("rebaja").length,"bajaron de precio","cambios","bajo"],
+  [byType("rebaja").length,"bajaron de precio","cambios","bajo"],
   [byType("subio").length,"subieron de precio","cambios","subio"],
   [idxTxt,"índice del catálogo"],
 ].map(([b,s,tab,cf]) =>
@@ -409,7 +439,7 @@ function render(){
                    || (D.products[e.sku]||{}).title?.toLowerCase().includes(q);
   $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio","oferta_termino","rebaja"].includes(e.type)
     && (cf==="all" ? true : cf==="fav" ? FAV.has(e.sku)
-        : cf==="bajo" ? ["bajo","rebaja"].includes(e.type) : e.type===cf)
+        : cf==="bajo" ? e.type==="rebaja" : e.type===cf)
     && f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios</p>";
   const ofIni = {}; ev.filter(e=>e.type==="oferta")
     .forEach(e => ofIni[e.sku] = e.date);
@@ -522,8 +552,9 @@ function favCard(sku){
       ${m&&l?`<div class="meta">pagaste $${(+m.paid).toFixed(2)}${m.date?" el "+m.date:""}
         → ${l[1]>=m.paid*100?"+":""}${Math.round((l[1]-m.paid*100)/(m.paid*100)*100)}% hoy
         ${nBuys>1?`· ${nBuys} compras`:""}</div>`:""}
-      <div class="meta" style="margin-top:4px"><a class="plink" style="margin:0;cursor:pointer"
-        onclick="event.stopPropagation();comprar('${sku}')">✓ lo compré</a></div>
+      <div class="meta" style="margin-top:4px">${buySwitch(sku,nBuys>0)}
+        ${nBuys>0?`<a class="plink" style="margin:0 0 0 10px;cursor:pointer"
+        onclick="event.stopPropagation();comprar('${sku}')">+ otra</a>`:""}</div>
       <div style="margin-top:5px">${clubChips(sku)}</div>
       <div class="spark" data-sku="${sku}"></div></div></div>`;
 }
@@ -645,7 +676,16 @@ function openProd(sku){
   ds.textContent = FAV.has(sku) ? "★" : "☆";
   ds.className = "star" + (FAV.has(sku) ? " on" : "");
   ds.onclick = () => toggleFav(sku, {stopPropagation(){}}) || openProd(sku);
-  $("#dbuy").onclick = () => comprar(sku);
+  const dvs = $("#dvs"), dagg = D.agg[sku]||{};
+  dvs.innerHTML = dagg.vs_med != null
+    ? `<span style="color:${dagg.vs_med<=0?"var(--down)":"var(--up)"}">${dagg.vs_med>0?"+":""}${dagg.vs_med}% vs precio típico (${fmt(dagg.med)})</span>`
+    : "";
+  const db = $("#dbuy");
+  db.checked = COMPRAS.some(c => c.sku === sku);
+  db.onchange = () => buyToggled(sku, db);
+  const dm = $("#dmore");
+  dm.style.display = COMPRAS.some(c => c.sku === sku) ? "" : "none";
+  dm.onclick = () => { if (comprar(sku)) openProd(sku); };
   const buys = COMPRAS.map((c,i)=>({c,i})).filter(x=>x.c.sku===sku);
   $("#dbuys").innerHTML = buys.length
     ? "Lo compraste: " + buys.map(x=>
@@ -671,6 +711,13 @@ function openProd(sku){
   if (!dlg.open) dlg.showModal();
   if (s.length >= 2){
     $("#chart").style.display="block";
+    // bandas azules = dias con letrero de oferta
+    const ofRuns=[]; let orun=null;
+    s.forEach((pt,i)=>{
+      if ((pt[3]||0) > 0){ if(!orun) orun=pt[0]; }
+      else if (orun){ ofRuns.push([{xAxis:orun},{xAxis:s[i-1][0]}]); orun=null; }
+    });
+    if (orun) ofRuns.push([{xAxis:orun},{xAxis:s[s.length-1][0]}]);
     chart = chart || echarts.init(document.getElementById("chart"), null, {renderer:"svg"});
     chart.setOption({
       grid:{left:55,right:15,top:20,bottom:30},
@@ -679,7 +726,10 @@ function openProd(sku){
       series:[{type:"line",step:"end",data:s.map(p=>+(p[1]/100).toFixed(2)),showSymbol:true,symbolSize:5,
         lineStyle:{color:"#60a5fa"},areaStyle:{color:"#60a5fa18"},
         markLine:{silent:true,data:[{yAxis:+(Math.min(...s.map(p=>p[1]))/100).toFixed(2)}],
-          lineStyle:{color:"#34d399",type:"dashed"},label:{formatter:"mín",color:"#34d399"}}}],
+          lineStyle:{color:"#34d399",type:"dashed"},label:{formatter:"mín",color:"#34d399"}},
+        markArea:{silent:true,itemStyle:{color:"#3b82f622"},
+          label:{color:"#93c5fd",fontSize:9,position:"top",formatter:"oferta"},
+          data:ofRuns}}],
       tooltip:{trigger:"axis",valueFormatter:v=>"$"+v},
     }, true); chart.resize();
   } else {
