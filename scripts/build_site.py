@@ -131,6 +131,10 @@ for sku, s in series.items():
                     - date.fromisoformat(last_of)).days if last_of else None,
         "of_save": round(statistics.median(saves), 2) if saves else None,
         "of_cur": run, "of_end": last_run,
+        # vida corta y ya salio del catalogo = producto de temporada
+        "temp": (sku not in latest
+                 and (date.fromisoformat(s[-1][0])
+                      - date.fromisoformat(s[0][0])).days < 60) or None,
     }
 
 # Indice PriceWatch: % mediano de cambio de precio entre las 2 ultimas

@@ -430,7 +430,7 @@ function card(e){
     ${img(e.sku)?`<img src="${img(e.sku)}" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
       <div class="t">${e.title||p.title||e.sku}</div><div>${price}</div>
-      <div class="meta">${e.date||""}${dias}${odur}${ocd} · ${p.category||""}</div>
+      <div class="meta">${e.date||""}${dias}${odur}${ocd} · ${p.category||""}${ea.temp?" · de temporada":""}</div>
       <div class="spark" data-sku="${e.sku}"></div></div></div>`;
 }
 function render(){
@@ -667,7 +667,8 @@ function openProd(sku){
   $("#dimg").src = img(sku); $("#dimg").style.display = img(sku)?"":"none";
   $("#dtitle").textContent = p.title||sku;
   $("#dmeta").textContent = `${p.brand||""} · ${p.category||""} · SKU ${sku}`
-    + (s.length && s[s.length-1][0] < D.generated ? ` · última vez en catálogo: ${s[s.length-1][0]}` : "");
+    + (s.length && s[s.length-1][0] < D.generated ? ` · última vez en catálogo: ${s[s.length-1][0]}` : "")
+    + ((D.agg[sku]||{}).temp ? " · de temporada" : "");
   $("#dprice").textContent = last ? fmt(last[1]) : "—";
   const dl = $("#dlink");
   if (p.slug){ dl.style.display=""; dl.href =
