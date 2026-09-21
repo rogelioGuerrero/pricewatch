@@ -319,7 +319,7 @@ async function doAuth(reg){
 
 const TABS = [
   ["favs","Mi lista", FAV.size],
-  ["cambios","Cambios de precio", byType("bajo").length + byType("subio").length],
+  ["cambios","Cambios de precio", byType("bajo").length + byType("subio").length + byType("oferta_termino").length],
   ["ofertas","Ofertas", D.ofertas.length],
   ["stock","Se acabó / Volvió",
    byType("agotado").length + byType("reaparecio").length
@@ -377,7 +377,7 @@ function card(e){
   if (e.from != null && e.to != null)
     price = `<span class="old">${fmt(e.from)}</span> → <span class="pr">${fmt(e.to)}</span>
       <span class="tag ${e.type}">${e.pct>0?"+":""}${e.pct}%</span>
-      ${["reaparecio","regreso"].includes(e.type)?`<span class="tag ${e.type}">${LABEL[e.type]}</span>`:""}`;
+      ${["reaparecio","regreso","oferta_termino"].includes(e.type)?`<span class="tag ${e.type}">${LABEL[e.type]}</span>`:""}`;
   else if (e.type==="oferta"){
     const a = D.agg[e.sku]||{}, hist = (D.series[e.sku]||[]).length>=3;
     price = `<span class="pr">${fmt(e.price)}</span> <span class="tag oferta">ahorra $${(+e.saving).toFixed(2)}</span>`
@@ -400,11 +400,19 @@ function render(){
   const q = $("#q").value.toLowerCase();
   const f = e => !q || (e.title||"").toLowerCase().includes(q)
                    || (D.products[e.sku]||{}).title?.toLowerCase().includes(q);
-  $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio"].includes(e.type)
-    && (cf==="all" ? true : cf==="fav" ? FAV.has(e.sku) : e.type===cf)
+  $("#g-cambios").innerHTML = ev.filter(e=>["bajo","subio","oferta_termino"].includes(e.type)
+    && (cf==="all" ? true : cf==="fav" ? FAV.has(e.sku)
+        : cf==="subio" ? ["subio","oferta_termino"].includes(e.type)
+        : e.type===cf)
     && f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios</p>";
-  $("#g-ofertas").innerHTML = ev.filter(e=>["oferta","oferta_termino"].includes(e.type)&&f(e)).map(e=>card(e)).join("")
-    || D.ofertas.filter(o=>!q||o.title?.toLowerCase().includes(q)).map(o=>card({sku:o.sku,type:"oferta",saving:o.saving,price:o.price,title:o.title})).join("");
+  const ofIni = {}; ev.filter(e=>e.type==="oferta")
+    .forEach(e => ofIni[e.sku] = e.date);
+  $("#g-ofertas").innerHTML = D.ofertas
+    .filter(o=>!q||o.title?.toLowerCase().includes(q))
+    .sort((a,b)=>(b.saving||0)-(a.saving||0))
+    .map(o=>card({sku:o.sku,type:"oferta",saving:o.saving,price:o.price,
+                 title:o.title,date:ofIni[o.sku]}))
+    .join("") || "<p class='meta'>Sin ofertas activas hoy</p>";
   $("#g-stock").innerHTML = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo","regreso","club_agotado","club_volvio","se_agota"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios de disponibilidad</p>";
   $("#g-nuevos").innerHTML = ev.filter(e=>e.type==="nuevo"&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin productos nuevos</p>";
   $("#g-mejores").innerHTML = Object.entries(D.agg)

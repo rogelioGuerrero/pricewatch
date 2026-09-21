@@ -230,6 +230,17 @@ def diff(prev, cur, today=None, known=None, last=None, last_in=None):
         # filtro de ruido: jitter <1% no es evento (movimientos que importan)
         if pct is not None and abs(pct) < MIN_MOVE_PCT:
             price_changed, pct = False, None
+        sv_new, sv_old = p.get("saving_usd") or 0, old.get("saving_usd") or 0
+        # Si el precio sube justo hasta el precio regular (lo que costaba
+        # sin el letrero), no "subio": termino la oferta. Un solo evento.
+        offer_reverted = (sv_old > 0 and sv_new < sv_old
+                          and price_changed and p_new > p_old
+                          and p_new <= p_old + round(sv_old * 100) + 1)
+        if offer_reverted:
+            events.append({"sku": sku, "type": "oferta_termino",
+                           "title": p["title"], "price": p_new,
+                           "from": p_old, "to": p_new, "pct": pct})
+            price_changed = False
         s_new = p.get("inventory_SV") == "in stock"
         s_old = old.get("inventory_SV") == "in stock"
         if s_new != s_old:
@@ -256,13 +267,12 @@ def diff(prev, cur, today=None, known=None, last=None, last_in=None):
                 "title": p["title"], "from": p_old, "to": p_new,
                 "delta": p_new - p_old, "pct": pct})
         # Oferta con letrero: cambia el ahorro sin que cambie el precio
-        sv_new, sv_old = p.get("saving_usd") or 0, old.get("saving_usd") or 0
         if sv_new != sv_old:
             if sv_new > sv_old:
                 events.append({"sku": sku, "type": "oferta",
                                "title": p["title"], "saving": sv_new,
                                "price": p_new})
-            else:
+            elif not offer_reverted:
                 events.append({"sku": sku, "type": "oferta_termino",
                                "title": p["title"], "price": p_new})
     for sku, old in prev.items():
