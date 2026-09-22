@@ -322,3 +322,20 @@
 {"sku": "495533", "type": "salio_del_catalogo", "title": "Nexgrill Parilla de Gas 2 Quemadores", "price": 26999, "date": "2026-09-22"}
 {"sku": "509725-0628263093395", "type": "salio_del_catalogo", "title": "Boston Traders Camisa de Botones Manga Corta para Hombre", "price": 1177, "date": "2026-09-22"}
 {"sku": "510307-0882931248962", "type": "salio_del_catalogo", "title": "Mondetta Sudadera Manga Larga Cuello Redondo para Niña", "price": 677, "date": "2026-09-22"}
+{"sku": "171889", "type": "club_agotado", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Ana", "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "El Salvador", "qty_from": 68, "qty_to": 28, "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Los Héroes", "qty_from": 34, "qty_to": 18, "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "195666", "type": "club_agotado", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "Santa Elena", "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "244383", "type": "se_agota", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 879, "club": "Los Héroes", "qty_from": 16, "qty_to": 8, "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "244383", "type": "club_agotado", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 879, "club": "San Miguel", "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "259017", "type": "club_volvio", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "club": "Santa Elena", "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "259017", "type": "club_agotado", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "club": "Santa Ana", "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "259017", "type": "se_agota", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "club": "Los Héroes", "qty_from": 456, "qty_to": 165, "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "259017", "type": "se_agota", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "club": "San Miguel", "qty_from": 1199, "qty_to": 149, "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "378350", "type": "club_agotado", "title": "Kreef Lomo de Cerdo Ahumado 907 g / 2 lb", "price": 849, "club": "Los Héroes", "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "378706", "type": "se_agota", "title": "Lysol Desinfectante para Inodoros 4 Unidades / 946 mL / 32 oz", "price": 1699, "club": "Santa Elena", "qty_from": 78, "qty_to": 45, "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "487242", "type": "club_volvio", "title": "Mueble Recibidor en Madera con 6 Cajones", "price": 43999, "club": "Los Héroes", "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "495435", "type": "club_volvio", "title": "OmniBreeze Ventilador de Torre de 5 Velocidades con Control Remoto 97.31 cm / 38.31\"", "price": 5999, "club": "San Miguel", "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "495873", "type": "club_volvio", "title": "Zucaritas Cereal Frosted Flakes 2 Unidades / 1.2 kg / 42 oz", "price": 1349, "club": "Los Héroes", "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "514001", "type": "club_volvio", "title": "Montchevre Queso de Cabra con Arándanos y Vainilla 298 g / 10.51 oz", "price": 829, "club": "Los Héroes", "prev_date": "2026-09-21", "date": "2026-09-22"}
+{"sku": "515570-0714370911742", "type": "club_volvio", "title": "Flora Nikrooz Set de Pijama de para Mujer 2 Piezas ", "price": 1699, "club": "Los Héroes", "prev_date": "2026-09-21", "date": "2026-09-22"}
