@@ -121,6 +121,9 @@
                border-radius:9px; background:var(--up); color:#fff;
                font-size:11px; font-weight:700; line-height:18px;
                text-align:center; margin-left:6px }
+  .navsec { color:var(--mut); font-size:11px; text-transform:uppercase;
+            letter-spacing:.6px; padding:14px 4px 6px }
+  .navitem.res { border-left:3px solid var(--warn); padding-left:10px }
   #sw-sug { position:absolute; top:100%; left:0; right:0; z-index:30;
             background:var(--card); border:1px solid var(--line);
             border-radius:8px; display:none; max-height:260px;
@@ -171,6 +174,7 @@
   <div class="pane on" id="pane-favs">
     <p class="meta" id="favs-sum" style="margin-bottom:10px"></p>
     <span class="chip" id="shopmode">🛒 comprando</span>
+    <span class="chip on" id="fav-filter" style="display:none"></span>
     <div class="grid" id="g-favs"></div>
   </div>
   <div class="pane" id="pane-siman">
@@ -223,7 +227,7 @@
   <table id="dtable"></table>
 </dialog>
 <button class="fab" id="fab" aria-label="secciones"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg><span id="fab-label"></span><span id="fab-badge"></span></button>
-<dialog id="dlg-nav" class="sheet"><div id="navitems"></div></dialog>
+<dialog id="dlg-nav" class="sheet"><div id="navres"></div><div id="navitems"></div></dialog>
 <div id="shopbar"><span id="shop-tot"></span>
   <span><span class="chip" id="cart-clear">vaciar</span>
   <span class="chip on" id="done-btn">terminé — pagué ✓</span></span></div>
@@ -256,6 +260,18 @@ if (D.demo) document.getElementById("demo-banner").style.display = "";
 const img = sku => (D.products[sku]||{}).image || "";
 const ev = D.events.slice().reverse();
 const byType = t => ev.filter(e=>e.type===t);
+const lastOf = s => (D.series[s]||[]).slice(-1)[0];
+// Mi lista filtrada: cada alerta del Resumen abre un subconjunto de favs
+let favFilter = "all";
+const FAVFF = {
+  oferta:   s => (lastOf(s)?.[3]||0) > 0,
+  resurtir: s => verdict(s).label === "resurtir",
+  sinstock: s => { const l = lastOf(s); return l && !l[2]; },
+  clubout:  s => { const c = (D.clubs[s]||{})[MYCLUB];
+                   return c && !c.in_stock; },
+};
+// lo que muestra la hoja del FAB (se llena en render)
+let RESUMEN = [];
 
 const FAV = new Set(JSON.parse(localStorage.getItem("pw-favs")||"[]"));
 // historial de compras: log append-only en el teléfono {sku, paid, date}
@@ -641,6 +657,8 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   localStorage.setItem("pw-tab", t.dataset.t);
   const lbl = TABS.find(x=>x[0]===t.dataset.t);
   $("#fab-label").textContent = lbl ? lbl[1] : "";
+  if (t.dataset.t==="favs" && favFilter!=="all") {
+    favFilter = "all"; render(); }
   if (t.dataset.t==="explorar") loadExplorer();
 });
 // abre en el ultimo tab usado (o Mi lista)
@@ -671,23 +689,39 @@ const setCf = v => { cf = v;
     .forEach(x => x.classList.toggle("on", x.dataset.cf === v)); };
 document.querySelectorAll("#f-cambios .chip")
   .forEach(c => c.onclick = () => { setCf(c.dataset.cf); render(); });
-// FAB + hoja de secciones (movil)
+// FAB + hoja movil: arriba el Resumen accionable, abajo las secciones
 const dlgNav = document.getElementById("dlg-nav");
 $("#fab").onclick = () => {
-  $("#navitems").innerHTML = TABS.map(([id,n,nr]) =>
-    `<div class="navitem${document.querySelector(`.tab[data-t="${id}"]`).classList.contains("on")?" on":""}"
-      data-t="${id}"><span>${n}</span><span class="meta">${nr}</span></div>`).join("");
+  $("#navres").innerHTML = RESUMEN.length
+    ? `<div class="navsec">Resumen · datos al ${+_d} ${MESES[+_m-1]}</div>`
+      + RESUMEN.map(([t,tab,cf,ff]) =>
+        `<div class="navitem res" data-t="${tab}" data-cf="${cf||""}"
+           data-ff="${ff||""}"><span>${t}</span>
+           <span class="meta">›</span></div>`).join("")
+    : "";
+  $("#navitems").innerHTML = `<div class="navsec">Secciones</div>`
+    + TABS.map(([id,n,nr]) =>
+      `<div class="navitem${document.querySelector(`.tab[data-t="${id}"]`).classList.contains("on")?" on":""}"
+        data-t="${id}"><span>${n}</span>
+        <span class="meta">${nr}</span></div>`).join("");
   dlgNav.showModal();
 };
-$("#navitems").onclick = e => {
+$("#dlg-nav").onclick = e => {
   const it = e.target.closest(".navitem"); if (!it) return;
-  dlgNav.close(); goTab(it.dataset.t);
+  dlgNav.close();
+  if (it.dataset.t === "cambios") setCf(it.dataset.cf || "all");
+  goTab(it.dataset.t);
+  favFilter = it.dataset.ff || "all";
+  render();
 };
 $("#alerts").onclick = e => {
   const a = e.target.closest(".alert"); if (!a) return;
   if (a.dataset.tab === "cambios") setCf(a.dataset.cf || "all");
-  goTab(a.dataset.tab); render();
+  goTab(a.dataset.tab);
+  if (a.dataset.ff) favFilter = a.dataset.ff;
+  render();
 };
+$("#fav-filter").onclick = () => { favFilter = "all"; render(); };
 
 const LABEL = {agotado:"se acabó", reaparecio:"volvió",
   salio_del_catalogo:"salió del catálogo", regreso:"regresó al catálogo",
@@ -771,34 +805,45 @@ function render(){
   const favList = [...FAV].sort((x,y)=>verdict(x).rank-verdict(y).rank);
   if (SHOP) favList.sort((x,y)=>(CART.has(x)?1:0)-(CART.has(y)?1:0));
   // alertas accionables: solo ocupan espacio cuando hay algo que hacer
-  const alerts = [], lastOf = s => (D.series[s]||[]).slice(-1)[0];
-  const favOf  = favList.filter(s => (lastOf(s)?.[3]||0) > 0),
-        resu   = favList.filter(s => verdict(s).label === "resurtir"),
-        favOut = favList.filter(s => { const l = lastOf(s); return l && !l[2]; });
-  if (favOf.length)  alerts.push([`${favOf.length} de tu lista en oferta`,"favs"]);
-  if (resu.length)   alerts.push([`${resu.length} para resurtir`,"favs"]);
-  if (favOut.length) alerts.push([`${favOut.length} de tu lista sin stock`,"favs"]);
+  const alerts = [];
+  const favOf   = favList.filter(FAVFF.oferta),
+        resu    = favList.filter(FAVFF.resurtir),
+        favOut  = favList.filter(FAVFF.sinstock),
+        clubOut = favList.filter(FAVFF.clubout);
+  if (favOf.length)  alerts.push([`${favOf.length} de tu lista en oferta`,"favs","","oferta"]);
+  if (resu.length)   alerts.push([`${resu.length} para resurtir`,"favs","","resurtir"]);
+  if (favOut.length) alerts.push([`${favOut.length} de tu lista sin stock`,"favs","","sinstock"]);
+  if (MYCLUB && clubOut.length)
+    alerts.push([`${clubOut.length} de tu lista agotado en ${MYCLUB}`,"favs","","clubout"]);
   const nReb = byType("rebaja").length;
   if (nReb) alerts.push([`${nReb} rebaja${nReb>1?"s":""} silenciosa${nReb>1?"s":""}`,"cambios","bajo"]);
-  if (MYCLUB) {
-    const n = favList.filter(s => { const c = (D.clubs[s]||{})[MYCLUB];
-      return c && !c.in_stock; }).length;
-    if (n) alerts.push([`${n} de tu lista agotado en ${MYCLUB}`,"favs"]);
-  }
   const nSiman = simanAlerts().length;
   if (nSiman) alerts.push([`${nSiman} ganga${nSiman>1?"s":""} en Siman`,"siman"]);
-  $("#alerts").innerHTML = alerts.map(([t,tab,cf]) =>
-    `<span class="alert" data-tab="${tab}" data-cf="${cf||""}">${t}</span>`).join("");
+  RESUMEN = alerts;
+  $("#alerts").innerHTML = alerts.map(([t,tab,cf,ff]) =>
+    `<span class="alert" data-tab="${tab}" data-cf="${cf||""}"
+       data-ff="${ff||""}">${t}</span>`).join("");
+  // badge del FAB = articulos unicos de tu lista que piden atencion
   const fb = $("#fab-badge");
-  fb.style.display = alerts.length ? "inline-block" : "none";
-  fb.textContent = alerts.length;
+  const nAct = new Set([...favOf, ...resu, ...favOut, ...clubOut]).size;
+  fb.style.display = nAct ? "inline-block" : "none";
+  fb.textContent = nAct;
   const bar = $("#shopbar");
   if (SHOP) {
     const tot = [...CART].reduce((t,s)=>{const l=lastOf(s);return t+(l?l[1]:0)},0)/100;
     bar.style.display = "flex";
     $("#shop-tot").textContent = `🛒 ${CART.size} · $${tot.toFixed(2)}`;
   } else bar.style.display = "none";
-  $("#g-favs").innerHTML = favList.map(favCard).join("")
+  const show = favFilter === "all" ? favList
+             : favList.filter(FAVFF[favFilter] || (()=>true));
+  const ffEl = $("#fav-filter");
+  ffEl.style.display = favFilter === "all" ? "none" : "";
+  if (favFilter !== "all") {
+    const lbl = {oferta:"en oferta", resurtir:"para resurtir",
+      sinstock:"sin stock", clubout:`agotado en ${MYCLUB}`}[favFilter];
+    ffEl.textContent = `viendo: ${lbl} · ${show.length} ✕`;
+  }
+  $("#g-favs").innerHTML = show.map(favCard).join("")
     || "<p class='meta'>Marca productos con ☆ para seguirlos aquí. Con 'cuenta' se sincronizan entre teléfono y PC.</p>";
   // siman: solo alertas (rompe minimo u oferta declarada, tu talla, no muteado)
   $("#g-siman").innerHTML = simanAlerts().map(sCard).join("")
@@ -820,8 +865,9 @@ function render(){
     const ok = vs.filter(v=>v.rank<=4).length,
           up = vs.filter(v=>v.rank===6).length,
           out = vs.filter(v=>v.rank>=8).length;
-    $("#favs-sum").textContent =
-      `${ok} en buen precio · ${up} subieron · ${out} sin stock — ordenados por conveniencia`;
+    $("#favs-sum").textContent = favFilter === "all"
+      ? `${ok} en buen precio · ${up} subieron · ${out} sin stock — ordenados por conveniencia`
+      : `viendo ${show.length} de ${FAV.size} en tu lista`;
   } else $("#favs-sum").textContent = "";
   if (q.length >= 2) {
     $("#g-buscar").innerHTML = Object.keys(D.products)
