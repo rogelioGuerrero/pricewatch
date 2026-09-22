@@ -165,6 +165,19 @@
     <span class="chip" id="shopmode">🛒 comprando</span>
     <div class="grid" id="g-favs"></div>
   </div>
+  <div class="pane" id="pane-siman">
+    <p class="meta" id="siman-sum"></p>
+    <div id="siman-watches" style="margin-bottom:8px"></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <input id="sw-q" type="search" autocomplete="off"
+        placeholder="vigilar: marca o artículo (ej. adidas, micro sd)"
+        style="flex:1;min-width:180px">
+      <input id="sw-t" type="text" autocomplete="off" placeholder="talla"
+        style="width:80px">
+      <span class="chip on" id="sw-add" style="cursor:pointer">+ vigilar</span>
+    </div>
+    <div class="grid" id="g-siman"></div>
+  </div>
   <div class="pane" id="pane-explorar">
     <div class="filters">Agrupar:
       <select id="grp1" style="background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 10px;font-size:13px">
@@ -322,6 +335,27 @@ $("#done-btn").onclick = () => {
   $("#shopmode").classList.remove("on");
   render();
 };
+// siman: alta/baja de busquedas vigiladas (si hay sesion, sube a la nube
+// y el sweep la usa en la proxima corrida)
+$("#sw-add").onclick = () => {
+  const q = $("#sw-q").value.trim();
+  if (!q) return;
+  const w = {q: q.toLowerCase()};
+  const t = $("#sw-t").value.trim();
+  if (t) w.talla = t;
+  SWATCH.push(w); saveSWatch();
+  if (AW.user) watchUp(w);
+  $("#sw-q").value = ""; $("#sw-t").value = "";
+  render();
+};
+$("#siman-watches").onclick = e => {
+  const a = e.target.closest("a[data-wq]");
+  if (!a) return;
+  const q = a.dataset.wq;
+  SWATCH = SWATCH.filter(w => w.q !== q); saveSWatch();
+  if (AW.user) watchDown(q);
+  render();
+};
 const toggleFav = (sku,e)=>{e.stopPropagation();
   const on = !FAV.has(sku);
   on ? FAV.add(sku) : FAV.delete(sku);
@@ -360,6 +394,82 @@ const compraUp = c => AW.dbs.createRow({databaseId: AW_DB, tableId: COL_C,
 const compraDown = rid => AW.dbs.deleteRow({databaseId: AW_DB, tableId: COL_C,
   rowId: rid}).catch(()=>{});
 const ckey = c => `${c.sku}|${c.date||""}|${c.paid}`;
+// ---- Siman (VTEX): radar de ofertas reales por busqueda ----
+// La vigilancia es por busqueda (marca/tipo); el itemId es efimero
+// (Siman recodifica). 'no me gusta' mutea por titulo normalizado —
+// sobrevive recodificados. 'ya lo vi' reavisa solo si baja mas.
+const SIMAN = D.siman || {items:[], events:[], watches:[]};
+const tkeyJS = s => (s||"").toLowerCase().normalize("NFD")
+  .replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g," ").trim();
+const SMUTE = new Set(JSON.parse(localStorage.getItem("pw-siman-mute")||"[]"));
+const SSEEN = JSON.parse(localStorage.getItem("pw-siman-seen")||"{}");
+let SWATCH = JSON.parse(localStorage.getItem("pw-siman-watch")||"null")
+  || SIMAN.watches || [];
+const saveSMute = () =>
+  localStorage.setItem("pw-siman-mute", JSON.stringify([...SMUTE]));
+const saveSSeen = () =>
+  localStorage.setItem("pw-siman-seen", JSON.stringify(SSEEN));
+const saveSWatch = () =>
+  localStorage.setItem("pw-siman-watch", JSON.stringify(SWATCH));
+const h16 = s => { let h=5381;
+  for (const c of s) h = (h*33 ^ c.charCodeAt(0)) >>> 0;
+  return h.toString(36); };
+const muteUp = t => AW.dbs.createRow({databaseId:AW_DB,tableId:"siman_muted",
+  rowId:`${AW.user.$id}-${h16(t)}`, data:{tkey:t},
+  permissions:docPerms(AW.user.$id)}).catch(()=>{});
+const seenUp = (t,p) => {
+  const rid = `${AW.user.$id}-${h16(t)}`;
+  const data = {price:p, date:new Date().toISOString().slice(0,10)};
+  AW.dbs.updateRow({databaseId:AW_DB, tableId:"siman_seen", rowId:rid, data})
+    .catch(()=>AW.dbs.createRow({databaseId:AW_DB, tableId:"siman_seen",
+      rowId:rid, data:{tkey:t,...data},
+      permissions:docPerms(AW.user.$id)}).catch(()=>{}));
+};
+const watchUp = w => AW.dbs.createRow({databaseId:AW_DB,tableId:"siman_watch",
+  rowId:`${AW.user.$id}-${h16(w.q)}`,
+  data:{q:w.q, talla:w.talla||"", filtro:(w.solo||[]).join(",")},
+  permissions:docPerms(AW.user.$id)}).catch(()=>{});
+const watchDown = q => AW.dbs.deleteRow({databaseId:AW_DB,
+  tableId:"siman_watch", rowId:`${AW.user.$id}-${h16(q)}`}).catch(()=>{});
+const yaLoVi = (t,p) => {
+  SSEEN[t] = p; saveSSeen();
+  if (AW.user) seenUp(t, p);
+  render();
+};
+const noMeGusta = t => {
+  SMUTE.add(t); saveSMute();
+  if (AW.user) muteUp(t);
+  render();
+};
+const simanAlerts = () => SIMAN.items.filter(p =>
+  p.avail && (p.broke || p.decl)
+  && !(p.ta && !p.ok)
+  && !SMUTE.has(tkeyJS(p.t))
+  && !(SSEEN[tkeyJS(p.t)] != null && p.p != null
+       && p.p >= SSEEN[tkeyJS(p.t)]));
+function sCard(p){
+  const tk = tkeyJS(p.t), tags = [];
+  if (p.broke) tags.push(`<span class="tag real">mín histórico</span>`);
+  if (p.decl && !p.broke)
+    tags.push(`<span class="tag oferta">oferta declarada</span>`);
+  if (p.crd) tags.push(`<span class="tag oferta">con CrediSiman</span>`);
+  if (p.ta) tags.push(`<span class="tag ${p.ok?"nuevo":"agotado"}">talla ${esc(p.ta)} ${p.ok?"✓":"✗"}</span>`);
+  return `<div class="card">
+    ${p.img?`<img src="${p.img}" loading="lazy" onerror="this.remove()">`:""}
+    <div style="flex:1;min-width:0">
+      <div class="t">${esc(p.t)}</div>
+      <div><span class="pr">${p.p!=null?fmt(Math.round(p.p*100)):"—"}</span>
+        ${p.lp&&p.p&&p.lp>p.p?` <span class="old">${fmt(Math.round(p.lp*100))}</span>`:""}
+        ${tags.join("")}</div>
+      <div class="meta">${p.b?esc(p.b)+" · ":""}vigilado por "${esc(p.w||"")}"${p.n>1?` · ${p.n} obs`:""}</div>
+      <div style="margin-top:6px">
+        ${p.l?`<a class="plink" href="${p.l}" target="_blank" rel="noopener">Ver en Siman ↗</a>`:""}
+        <a class="plink" style="margin-left:10px;cursor:pointer"
+           onclick="event.stopPropagation();yaLoVi('${tk}',${p.p||0})">ya lo vi</a>
+        <a class="plink" style="margin-left:10px;cursor:pointer;color:var(--up)"
+           onclick="event.stopPropagation();noMeGusta('${tk}')">no me gusta</a>
+      </div></div></div>`;
+}
 async function syncAll(){
   if (!AW.user) return;
   // la semilla del repo (mis-compras.json) se migra a la cuenta la 1a vez
@@ -379,6 +489,20 @@ async function syncAll(){
   for (const d of rc)
     if (!COMPRAS.some(c => ckey(c) === ckey(d)))
       COMPRAS.push({sku:d.sku, paid:d.paid, date:d.date, rid:d.$id});
+  // siman: watches/mutes/seen compartidos; la watchlist local se sube
+  // la primera vez (semilla)
+  const tryList = t => listAll(t).catch(()=>[]);
+  const [rw, rm, rs] = await Promise.all(
+    [tryList("siman_watch"), tryList("siman_muted"), tryList("siman_seen")]);
+  if (rw.length) {
+    SWATCH = rw.map(d => ({q:d.q, talla:d.talla||undefined,
+      solo:d.filtro?d.filtro.split(",").filter(Boolean):undefined}));
+  } else {
+    for (const w of SWATCH) await watchUp(w);
+  }
+  rm.forEach(d => SMUTE.add(d.tkey));
+  rs.forEach(d => { SSEEN[d.tkey] = d.price; });
+  saveSMute(); saveSSeen(); saveSWatch();
   localStorage.setItem("pw-favs", JSON.stringify([...FAV]));
   localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
   rebuildPaid(); render();
@@ -442,6 +566,7 @@ const TABS = [
    + byType("club_agotado").length + byType("club_volvio").length
    + byType("se_agota").length],
   ["nuevos","Nuevos", byType("nuevo").length],
+  ["siman","Siman", simanAlerts().length],
   ["explorar","Catálogo", D.n_products],
 ];
 $("#tabs").innerHTML = TABS.map(([id,n,nr]) =>
@@ -598,6 +723,8 @@ function render(){
       return c && !c.in_stock; }).length;
     if (n) alerts.push([`${n} de tu lista agotado en ${MYCLUB}`,"favs"]);
   }
+  const nSiman = simanAlerts().length;
+  if (nSiman) alerts.push([`${nSiman} ganga${nSiman>1?"s":""} en Siman`,"siman"]);
   $("#alerts").innerHTML = alerts.map(([t,tab,cf]) =>
     `<span class="alert" data-tab="${tab}" data-cf="${cf||""}">${t}</span>`).join("");
   const fb = $("#fab-badge");
@@ -611,6 +738,16 @@ function render(){
   } else bar.style.display = "none";
   $("#g-favs").innerHTML = favList.map(favCard).join("")
     || "<p class='meta'>Marca productos con ☆ para seguirlos aquí. Con 'cuenta' se sincronizan entre teléfono y PC.</p>";
+  // siman: solo alertas (rompe minimo u oferta declarada, tu talla, no muteado)
+  $("#g-siman").innerHTML = simanAlerts().map(sCard).join("")
+    || "<p class='meta'>Sin ofertas reales por ahora — el radar sigue vigilando.</p>";
+  $("#siman-sum").textContent =
+    `vigilando ${SWATCH.length} búsquedas · ${SIMAN.n_items||0} artículos`
+    + (AW.user ? "" : " · (sin sesión: lista local)");
+  $("#siman-watches").innerHTML = SWATCH.map(w =>
+    `<span class="chip on">${esc(w.q)}${w.talla?` · t${esc(w.talla)}`:""}
+     <a style="cursor:pointer;color:var(--up)" data-wq="${esc(w.q)}">✕</a></span>`
+  ).join(" ");
   const nChFav = ev.filter(e=>["bajo","subio"].includes(e.type)&&FAV.has(e.sku)).length;
   const favN = document.querySelector('.tab[data-t="favs"] .n');
   if (favN) favN.textContent = FAV.size + (nChFav ? ` ⚡${nChFav}` : "");

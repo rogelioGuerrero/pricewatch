@@ -76,7 +76,10 @@ else:
            "pricewatch (tablesdb)")
 
 print("Tablas:")
-for t, name in [("favs", "Favoritos"), ("compras", "Compras")]:
+for t, name in [("favs", "Favoritos"), ("compras", "Compras"),
+                ("siman_watch", "Siman busquedas vigiladas"),
+                ("siman_muted", "Siman productos muteados"),
+                ("siman_seen", "Siman alertas vistas")]:
     _, code = api("GET", f"/tablesdb/{DB}/tables/{t}")
     if code == 200:
         print(f"  = {t}: ya existe")
@@ -101,6 +104,13 @@ col("favs", "string", "sku", size=36, required=True)
 col("compras", "string", "sku", size=36, required=True)
 col("compras", "float", "paid", required=True)
 col("compras", "string", "date", size=10, required=True)
+col("siman_watch", "string", "q", size=120, required=True)
+col("siman_watch", "string", "talla", size=12, required=False)
+col("siman_watch", "string", "filtro", size=200, required=False)
+col("siman_muted", "string", "tkey", size=250, required=True)
+col("siman_seen", "string", "tkey", size=250, required=True)
+col("siman_seen", "float", "price", required=True)
+col("siman_seen", "string", "date", size=10, required=True)
 
 # las columnas se crean async; esperar a que queden available
 st = {}

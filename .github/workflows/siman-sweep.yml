@@ -1,0 +1,42 @@
+name: PriceWatch Siman Sweep
+
+on:
+  schedule:
+    # Diario 7am GMT-6 = 13:00 UTC (una hora despues del sweep de PriceSmart)
+    - cron: '0 13 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pricewatch-siman
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Siman watchlist sweep + rebuild dashboard
+        env:
+          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          python scripts/sweep_siman.py
+          python scripts/build_site.py
+
+      - name: Commit data + dashboard
+        run: |
+          git config user.name "pricewatch-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/ docs/index.html
+          git diff --staged --quiet || git commit -m "siman sweep: $(date +%F)"
+          git push
