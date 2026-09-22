@@ -136,6 +136,19 @@
          text-decoration:none }
   .sic:hover { color:var(--txt) }
   .sic.neg:hover { color:var(--up) }
+  .acc { margin-bottom:8px }
+  .acc summary { cursor:pointer; padding:10px 12px; background:var(--card);
+                 border:1px solid var(--line); border-radius:10px;
+                 font-weight:600; font-size:13px; list-style:none;
+                 display:flex; justify-content:space-between;
+                 align-items:center; gap:8px }
+  .acc summary::-webkit-details-marker { display:none }
+  .acc summary::before { content:"▸"; color:var(--mut); margin-right:2px }
+  .acc[open] summary::before { content:"▾" }
+  .acc[open] summary { border-radius:10px 10px 0 0; border-bottom:0 }
+  .acc .grid { padding:8px; background:var(--card);
+               border:1px solid var(--line); border-top:0;
+               border-radius:0 0 10px 10px; gap:8px }
   .sw { display:inline-flex; align-items:center; gap:6px; cursor:pointer;
         font-size:12px; color:var(--mut); user-select:none }
   .sw input { display:none }
@@ -544,11 +557,13 @@ const STERM = (() => {
   for (const [t,n] of Object.entries(bi)) if (n >= 2) out.push([t,n]);
   return out;
 })();
+// descuento declarado como fraccion (0 si no hay o lp no supera al precio)
+const sDisc = p => (p.lp && p.p && p.lp > p.p) ? 1 - p.p/p.lp : 0;
 function sCard(p){
   const tk = tkeyJS(p.t), tags = [];
   if (p.broke) tags.push(`<span class="tag real">mín histórico</span>`);
   // el descuento declarado ya lo dice el precio tachado; -N% lo cuantifica
-  const disc = (p.lp && p.p && p.lp > p.p) ? Math.round((1-p.p/p.lp)*100) : 0;
+  const disc = Math.round(sDisc(p)*100);
   if (disc) tags.push(`<span class="tag oferta">-${disc}%</span>`);
   if (p.crd) tags.push(`<span class="tag oferta">con CrediSiman</span>`);
   if (p.ta) tags.push(`<span class="tag ${p.ok?"nuevo":"agotado"}">talla ${esc(p.ta)} ${p.ok?"✓":"✗"}</span>`);
@@ -864,8 +879,25 @@ function render(){
   }
   $("#g-favs").innerHTML = show.map(favCard).join("")
     || "<p class='meta'>Marca productos con ☆ para seguirlos aquí. Con 'cuenta' se sincronizan entre teléfono y PC.</p>";
-  // siman: solo alertas (rompe minimo u oferta declarada, tu talla, no muteado)
-  $("#g-siman").innerHTML = simAl.map(sCard).join("")
+  // siman: alertas agrupadas por busqueda vigilada (acordeon);
+  // los grupos con rompe-minimo van primero, dentro por descuento
+  const sGroups = {};
+  simAl.forEach(p =>
+    (sGroups[(p.w||"otros") + (p.ta ? " · "+p.ta : "")] ??= []).push(p));
+  const sKeys = Object.keys(sGroups).sort((a,b) =>
+    sGroups[b].filter(x=>x.broke).length - sGroups[a].filter(x=>x.broke).length
+    || sGroups[b].length - sGroups[a].length);
+  $("#g-siman").innerHTML = sKeys.map(k => {
+    const items = sGroups[k]
+      .sort((a,b) => (b.broke-a.broke) || sDisc(b)-sDisc(a));
+    const min = Math.min(...items.map(p => p.p ?? Infinity));
+    return `<details class="acc"${items.length<=3?" open":""}>
+      <summary>${esc(k)}
+        <span class="meta">${items.length}${min<Infinity
+          ? " · desde "+fmt(Math.round(min*100)) : ""}</span></summary>
+      <div class="grid">${items.map(sCard).join("")}</div>
+    </details>`;
+  }).join("")
     || `<p class='meta'>Sin alertas hoy — ${SIMAN.n_items||0} variantes `
     + `bajo vigilancia.</p>`;
   $("#siman-sum").textContent =
