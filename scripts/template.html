@@ -120,6 +120,7 @@
 <body>
 <div class="wrap">
   <header>
+    <select id="clubsel" class="chip" style="float:right;margin-top:6px;margin-left:8px"></select>
     <span id="acct" class="chip" style="float:right;margin-top:6px;display:none">cuenta</span>
     <h1>PriceWatch SV</h1>
     <p>PriceSmart El Salvador · datos al <b id="gen"></b></p>
@@ -395,9 +396,11 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   document.querySelectorAll(".pane").forEach(x=>x.classList.remove("on"));
   t.classList.add("on");
   document.getElementById("pane-"+t.dataset.t).classList.add("on");
+  localStorage.setItem("pw-tab", t.dataset.t);
   if (t.dataset.t==="explorar") loadExplorer();
 });
-document.querySelector(".tab").classList.add("on");
+// abre en el ultimo tab usado (o Mi lista)
+document.querySelector(`.tab[data-t="${localStorage.getItem("pw-tab")||"favs"}"]`)?.click();
 
 const idxTxt = D.indice==null ? "—"
   : (D.indice>0?"+":"")+D.indice+"%";
@@ -527,6 +530,11 @@ function render(){
   if (favOut.length) alerts.push([`${favOut.length} de tu lista sin stock`,"favs"]);
   const nReb = byType("rebaja").length;
   if (nReb) alerts.push([`${nReb} rebaja${nReb>1?"s":""} silenciosa${nReb>1?"s":""}`,"cambios","bajo"]);
+  if (MYCLUB) {
+    const n = favList.filter(s => { const c = (D.clubs[s]||{})[MYCLUB];
+      return c && !c.in_stock; }).length;
+    if (n) alerts.push([`${n} de tu lista agotado en ${MYCLUB}`,"favs"]);
+  }
   $("#alerts").innerHTML = alerts.map(([t,tab,cf]) =>
     `<span class="alert" data-tab="${tab}" data-cf="${cf||""}">${t}</span>`).join("");
   $("#g-favs").innerHTML = favList.map(favCard).join("")
@@ -551,17 +559,23 @@ function render(){
   }
   sparks();
 }
-// clubes del usuario: match por nombre del canal
-const CLUB_MATCH = [["Santa Elena","elena"],["Los Héroes","héroe|heroe"],
-                    ["San Miguel","miguel"]];
+// clubes: el tuyo primero con marca; el resto ordenado
+const CLUBS = ["Santa Elena","Santa Ana","Los Héroes","San Miguel"];
+let MYCLUB = localStorage.getItem("pw-club") || "";
+const clubSel = $("#clubsel");
+clubSel.innerHTML = `<option value="">club…</option>`
+  + CLUBS.map(c=>`<option${c===MYCLUB?" selected":""}>${c}</option>`).join("");
+clubSel.onchange = () => { MYCLUB = clubSel.value;
+  localStorage.setItem("pw-club", MYCLUB); render(); };
 function clubChips(sku){
   const cl = D.clubs[sku]||{};
-  if (!Object.keys(cl).length)
+  const keys = Object.keys(cl).filter(n=>n!=="El Salvador");
+  if (!keys.length)
     return `<span class="meta">sin dato de club aún</span>`;
-  return CLUB_MATCH.map(([label,pat])=>{
-    const k = Object.keys(cl).find(n=>new RegExp(pat,"i").test(n));
-    const c = k ? cl[k] : null;
-    return `<span class="tag ${c&&c.in_stock?"bajo":"agotado"}">${label} ${c?(c.in_stock?"✓":"✗"):"—"}</span>`;
+  keys.sort((a,b)=> a===MYCLUB?-1 : b===MYCLUB?1 : a.localeCompare(b));
+  return keys.map(k=>{
+    const c = cl[k];
+    return `<span class="tag ${c.in_stock?"bajo":"agotado"}">${k===MYCLUB?"📍":""}${k} ${c.in_stock?"✓":"✗"}</span>`;
   }).join(" ");
 }
 // veredicto de compra: ¿conviene hoy o no? (menor rank = mejor momento)
@@ -766,10 +780,11 @@ function openProd(sku){
     setTimeout(()=>$("#dshare").textContent="Copiar enlace", 1500);
   };
   const clubs = D.clubs[sku]||{};
-  const clubRows = Object.entries(clubs);
+  const clubRows = Object.entries(clubs)
+    .sort(([a],[b]) => a===MYCLUB?-1 : b===MYCLUB?1 : 0);
   $("#dclubs").innerHTML = clubRows.length
     ? "<h2 style='margin-top:14px'>Disponibilidad en clubes</h2><table><tr><th>Club</th><th>Stock</th></tr>" +
-      clubRows.map(([n,c])=>`<tr><td>${n==="El Salvador"?"Total (nacional)":n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td></tr>`).join("") + "</table>"
+      clubRows.map(([n,c])=>`<tr${n===MYCLUB?' style="color:var(--warn)"':""}><td>${n===MYCLUB?"📍 ":""}${n==="El Salvador"?"Total (nacional)":n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td></tr>`).join("") + "</table>"
     : "<p class='meta' style='margin-top:10px'>Sin dato de stock por club todavía — se consulta solo para ofertas, movimientos y tu lista.</p>";
   $("#dtable").innerHTML = "<tr><th>Fecha</th><th>Precio</th><th>Ahorro</th><th>Stock</th></tr>" +
     s.slice(-12).reverse().map(([d,pr,st,sv]) =>
