@@ -132,6 +132,14 @@
                display:flex; justify-content:space-between; gap:8px }
   #sw-sug .s:hover { background:var(--line) }
   #sw-sug .s small { color:var(--mut) }
+  .slink { position:absolute; top:8px; right:10px; color:var(--mut);
+           font-size:14px }
+  .sact { display:flex; justify-content:space-between; align-items:center;
+          margin-top:8px }
+  .sic { cursor:pointer; font-size:16px; color:var(--mut); padding:4px 6px;
+         text-decoration:none }
+  .sic:hover { color:var(--txt) }
+  .sic.neg:hover { color:var(--up) }
   .sw { display:inline-flex; align-items:center; gap:6px; cursor:pointer;
         font-size:12px; color:var(--mut); user-select:none }
   .sw input { display:none }
@@ -180,7 +188,10 @@
   <div class="pane" id="pane-siman">
     <p class="meta" style="margin-bottom:8px"><a id="siman-tog"
       style="cursor:pointer">▸</a> <span id="siman-sum"></span></p>
-    <div id="siman-watches" style="margin-bottom:8px;display:none"></div>
+    <div id="siman-panel" style="margin-bottom:8px;display:none">
+      <div id="siman-watches" style="margin-bottom:6px"></div>
+      <div id="siman-muted"></div>
+    </div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <div style="flex:1;min-width:180px;position:relative">
         <input id="sw-q" type="search" autocomplete="off"
@@ -411,9 +422,17 @@ document.addEventListener("click", e => {
     $("#sw-sug").style.display = "none";
 });
 $("#siman-tog").onclick = () => {
-  const w = $("#siman-watches"), open = w.style.display !== "none";
+  const w = $("#siman-panel"), open = w.style.display !== "none";
   w.style.display = open ? "none" : "";
   $("#siman-tog").textContent = open ? "▸" : "▾";
+};
+// restaurar un silenciado: sale de SMUTE y baja el doc de la nube
+$("#siman-muted").onclick = e => {
+  const a = e.target.closest("a[data-mu]");
+  if (!a) return;
+  SMUTE.delete(a.dataset.mu); saveSMute();
+  if (AW.user) muteDown(a.dataset.mu);
+  render();
 };
 const toggleFav = (sku,e)=>{e.stopPropagation();
   const on = !FAV.has(sku);
@@ -476,6 +495,9 @@ const h16 = s => { let h=5381;
 const muteUp = t => AW.dbs.createRow({databaseId:AW_DB,tableId:"siman_muted",
   rowId:`${AW.user.$id}-${h16(t)}`, data:{tkey:t},
   permissions:docPerms(AW.user.$id)}).catch(()=>{});
+const muteDown = t => AW.dbs.deleteRow({databaseId:AW_DB,
+  tableId:"siman_muted",
+  rowId:`${AW.user.$id}-${h16(t)}`}).catch(()=>{});
 const seenUp = (t,p) => {
   const rid = `${AW.user.$id}-${h16(t)}`;
   const data = {price:p, date:new Date().toISOString().slice(0,10)};
@@ -528,11 +550,14 @@ const STERM = (() => {
 function sCard(p){
   const tk = tkeyJS(p.t), tags = [];
   if (p.broke) tags.push(`<span class="tag real">mín histórico</span>`);
-  if (p.decl && !p.broke)
-    tags.push(`<span class="tag oferta">oferta declarada</span>`);
+  // el descuento declarado ya lo dice el precio tachado; -N% lo cuantifica
+  const disc = (p.lp && p.p && p.lp > p.p) ? Math.round((1-p.p/p.lp)*100) : 0;
+  if (disc) tags.push(`<span class="tag oferta">-${disc}%</span>`);
   if (p.crd) tags.push(`<span class="tag oferta">con CrediSiman</span>`);
   if (p.ta) tags.push(`<span class="tag ${p.ok?"nuevo":"agotado"}">talla ${esc(p.ta)} ${p.ok?"✓":"✗"}</span>`);
-  return `<div class="card">
+  return `<div class="card" ${p.l?`data-l="${esc(p.l)}"
+    onclick="window.open(this.dataset.l,'_blank','noopener')"`:''}>
+    ${p.l?`<span class="slink">↗</span>`:""}
     ${p.img?`<img src="${p.img}" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
       <div class="t">${esc(p.t)}</div>
@@ -540,12 +565,11 @@ function sCard(p){
         ${p.lp&&p.p&&p.lp>p.p?` <span class="old">${fmt(Math.round(p.lp*100))}</span>`:""}
         ${tags.join("")}</div>
       <div class="meta">${p.b?esc(p.b)+" · ":""}vigilado por "${esc(p.w||"")}"${p.n>1?` · ${p.n} obs`:""}</div>
-      <div style="margin-top:6px">
-        ${p.l?`<a class="plink" href="${p.l}" target="_blank" rel="noopener">Ver en Siman ↗</a>`:""}
-        <a class="plink" style="margin-left:10px;cursor:pointer"
-           onclick="event.stopPropagation();yaLoVi('${tk}',${p.p||0})">ya lo vi</a>
-        <a class="plink" style="margin-left:10px;cursor:pointer;color:var(--up)"
-           onclick="event.stopPropagation();noMeGusta('${tk}')">no me gusta</a>
+      <div class="sact">
+        <a class="sic" title="ya lo vi — reavisa si baja más"
+           onclick="event.stopPropagation();yaLoVi('${tk}',${p.p||0})">👁</a>
+        <a class="sic neg" title="no me gusta — no volver a mostrar (restaurable en ▸)"
+           onclick="event.stopPropagation();noMeGusta('${tk}')">👎</a>
       </div></div></div>`;
 }
 async function syncAll(){
@@ -817,7 +841,7 @@ function render(){
     alerts.push([`${clubOut.length} de tu lista agotado en ${MYCLUB}`,"favs","","clubout"]);
   const nReb = byType("rebaja").length;
   if (nReb) alerts.push([`${nReb} rebaja${nReb>1?"s":""} silenciosa${nReb>1?"s":""}`,"cambios","bajo"]);
-  const nSiman = simanAlerts().length;
+  const simAl = simanAlerts(), nSiman = simAl.length;
   if (nSiman) alerts.push([`${nSiman} ganga${nSiman>1?"s":""} en Siman`,"siman"]);
   RESUMEN = alerts;
   $("#alerts").innerHTML = alerts.map(([t,tab,cf,ff]) =>
@@ -846,10 +870,11 @@ function render(){
   $("#g-favs").innerHTML = show.map(favCard).join("")
     || "<p class='meta'>Marca productos con ☆ para seguirlos aquí. Con 'cuenta' se sincronizan entre teléfono y PC.</p>";
   // siman: solo alertas (rompe minimo u oferta declarada, tu talla, no muteado)
-  $("#g-siman").innerHTML = simanAlerts().map(sCard).join("")
-    || "<p class='meta'>Sin ofertas reales por ahora — el radar sigue vigilando.</p>";
+  $("#g-siman").innerHTML = simAl.map(sCard).join("")
+    || `<p class='meta'>Sin alertas hoy — ${SIMAN.n_items||0} variantes `
+    + `bajo vigilancia.</p>`;
   $("#siman-sum").textContent =
-    `radar: ${SWATCH.length} búsquedas · ${SIMAN.n_items||0} artículos`;
+    `vigilando ${SWATCH.length} artículos · ${nSiman} alertan`;
   $("#siman-watches").innerHTML = SWATCH.map(w =>
     `<span class="chip on">${esc(w.q)}${w.talla?` · ${esc(w.talla)}`:""}
      <a style="cursor:pointer;color:var(--up)"
@@ -857,6 +882,13 @@ function render(){
   ).join(" ")
     + (AW.user ? "" :
        " <span class='meta'>sin sesión: cambios solo locales</span>");
+  // silenciados (👎): restaurables; el muteo es por titulo y es permanente
+  $("#siman-muted").innerHTML = SMUTE.size
+    ? `<span class="meta">silenciados:</span> ` + [...SMUTE].map(t =>
+        `<span class="chip">${esc(t)}
+         <a style="cursor:pointer;color:var(--down)"
+            data-mu="${esc(t)}">✕</a></span>`).join(" ")
+    : "";
   const nChFav = ev.filter(e=>["bajo","subio"].includes(e.type)&&FAV.has(e.sku)).length;
   const favN = document.querySelector('.tab[data-t="favs"] .n');
   if (favN) favN.textContent = FAV.size + (nChFav ? ` ⚡${nChFav}` : "");
