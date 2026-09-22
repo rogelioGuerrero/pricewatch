@@ -76,8 +76,13 @@ def fetch_category(cat_key):
         req = Request(API, data=json.dumps(body).encode(),
                       headers={"content-type": "application/json",
                                "cookie": COOKIE, "accept": "application/json"})
-        with urlopen(req, timeout=30) as r:
-            resp = json.loads(r.read())["response"]
+        try:
+            with urlopen(req, timeout=30) as r:
+                resp = json.loads(r.read())["response"]
+        except Exception:
+            time.sleep(3)
+            with urlopen(req, timeout=30) as r:  # un reintento por pagina
+                resp = json.loads(r.read())["response"]
         if num_found is None:
             num_found = resp["numFound"]
         docs.extend(resp["docs"])
@@ -89,13 +94,15 @@ def fetch_category(cat_key):
 
 
 def sweep():
-    """Fetch del catalogo completo; devuelve {sku: producto}."""
-    products = {}
+    """Fetch del catalogo completo; devuelve ({sku: producto},
+    {categorias que fallaron})."""
+    products, failed = {}, set()
     for cat_key, cat_name in CATEGORIES.items():
         try:
             docs, num_found = fetch_category(cat_key)
         except Exception as e:
             print(f"  ! {cat_name}: fallo ({e})")
+            failed.add(cat_name)
             continue
         for d in docs:
             sku = str(d.get("master_sku") or d.get("pid"))
@@ -112,7 +119,7 @@ def sweep():
         print(f"  {cat_name}: {len(docs)}/{num_found} docs "
               f"({len(products)} unicos acumulados)")
         time.sleep(SLEEP)
-    return products
+    return products, failed
 
 
 def _is_synthetic(path):
@@ -386,8 +393,10 @@ def fetch_club_stock(skus, date):
     conn.close()
 
 
-def record_history(products, date):
-    """Anexa el snapshot a prices.db: historia longitudinal por sku/dia."""
+def record_history(products, date, skip=None):
+    """Anexa el snapshot a prices.db: historia longitudinal por sku/dia.
+    'skip' excluye skus heredados de categorias que no respondieron
+    (no se observaron hoy: no se fabrica un dato)."""
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""CREATE TABLE IF NOT EXISTS prices (
         sku TEXT, date TEXT, price INT, sign_price INT, saving REAL,
@@ -400,6 +409,8 @@ def record_history(products, date):
     except sqlite3.OperationalError:
         pass  # columna ya existe
     for sku, p in products.items():
+        if skip and sku in skip:
+            continue
         conn.execute(
             "INSERT OR REPLACE INTO prices VALUES (?,?,?,?,?,?)",
             (sku, date, p.get("price_SV"), p.get("sign_price_SV"),
@@ -513,15 +524,32 @@ def main():
         prev_name, prev_full = load_previous_snapshot()  # antes de escribir
         prev = prev_full["products"] if prev_full else {}
         print(f"[{today}] Sweep catalogo SV...")
-        cur = sweep()
-        print(f"Total: {len(cur)} productos unicos")
+        cur, failed = sweep()
+        print(f"Total: {len(cur)} productos unicos"
+              + (f" ({len(failed)} categorias sin respuesta)"
+                 if failed else ""))
+        # Categorias que no respondieron: heredar sus productos del
+        # snapshot anterior para no declararlos 'salio_del_catalogo' por
+        # un fallo de red (ni 'regreso' falso cuando la categoria vuelva).
+        # Max 3 corridas seguidas: si la categoria sigue caida, se
+        # declaran fuera. No se graban en prices.db (no se observaron).
+        inherited = {}
+        for sku, p in prev.items():
+            if p.get("category") in failed and sku not in cur:
+                n = (p.get("_carried") or 0) + 1
+                if n <= 3:
+                    inherited[sku] = {**p, "_carried": n}
+        if inherited:
+            cur.update(inherited)
+            print(f"  ! {len(inherited)} productos heredados de "
+                  f"{', '.join(sorted(failed))} (no verificados hoy)")
         snap_file = os.path.join(SNAP_DIR, f"{today}.json")
         with open(snap_file, "w") as f:
             json.dump({"date": today, "products": cur}, f)
         print(f"Snapshot: {snap_file}")
         # indice de historia ANTES de grabar hoy (last = ultimo estado previo)
         hist_idx = history_index()
-        record_history(cur, today)
+        record_history(cur, today, skip=set(inherited))
         print(f"Historia actualizada en {DB_PATH}")
         cleanup_synthetic()
         prune_snapshots()
@@ -555,7 +583,8 @@ def main():
 
     # Nivel 2: stock por club para lo que importa (ofertas + lista + eventos)
     if "--dry" not in sys.argv:
-        pri = {s for s, p in cur.items() if (p.get("saving_usd") or 0) > 0}
+        pri = {s for s, p in cur.items()
+               if (p.get("saving_usd") or 0) > 0} - set(inherited)
         pri |= favs_remote()
         rest = {e["sku"] for e in events} - pri
         skus_ev = _priority_watch(pri, rest, 400)

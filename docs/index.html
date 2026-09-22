@@ -310,7 +310,8 @@ $("#shopmode").onclick = () => {
 $("#cart-clear").onclick = () => { CART.clear(); saveCart(); render(); };
 $("#done-btn").onclick = () => {
   if (!CART.size) return;
-  if (!confirm(`¿Registrar ${CART.size} compras al precio de hoy?`)) return;
+  const n = [...CART].filter(s => (D.series[s]||[]).length).length;
+  if (!confirm(`¿Registrar ${n} compras al precio de hoy?`)) return;
   [...CART].forEach(comprarAuto);
   CART.clear(); saveCart();
   SHOP = false; document.body.classList.remove("shop");
@@ -457,6 +458,7 @@ document.querySelector(`.tab[data-t="${localStorage.getItem("pw-tab")||"favs"}"]
 const idxTxt = D.indice==null ? "—"
   : (D.indice>0?"+":"")+D.indice+"%";
 const tkHtml = [
+  [`${_d}/${_m}`,"datos del"],
   [D.n_products,"productos","explorar"],
   [D.ofertas.length,"ofertas","ofertas"],
   [D.n_stockout,"sin stock","stock"],
@@ -526,10 +528,13 @@ function card(e){
     ${star(e.sku)}
     ${img(e.sku)?`<img src="${img(e.sku)}" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
-      <div class="t">${e.title||p.title||e.sku}</div><div>${price}</div>
+      <div class="t">${esc(e.title||p.title||e.sku)}</div><div>${price}</div>
       <div class="meta">${e.date||""}${dias}${odur}${ocd} · ${p.category||""}${ea.temp?" · de temporada":""}</div>
       <div class="spark" data-sku="${e.sku}"></div></div></div>`;
 }
+// escape: titulos del API van a innerHTML
+const esc = s => String(s||"").replace(/[&<>"]/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 // busqueda: sin tildes, todas las palabras deben aparecer (cualquier orden)
 const norm = s => (s||"").toLowerCase().normalize("NFD")
   .replace(/[\u0300-\u036f]/g,"");
@@ -549,6 +554,7 @@ function render(){
   $("#g-ofertas").innerHTML = D.ofertas
     .filter(o=>!q||matchQ(q, o.title))
     .sort((a,b)=>(b.saving||0)-(a.saving||0))
+    .sort((a,b)=>(b.saving||0)-(a.saving||0))
     .map(o=>card({sku:o.sku,type:"oferta",saving:o.saving,price:o.price,
                  title:o.title,date:(D.agg[o.sku]||{}).of_cur||ofIni[o.sku]}))
     .join("") || "<p class='meta'>Sin ofertas activas hoy</p>";
@@ -564,7 +570,7 @@ function render(){
       return `<div class="card" onclick="openProd('${s}')">
         ${img(s)?`<img src="${img(s)}" loading="lazy" onerror="this.remove()">`:""}
         <div style="flex:1;min-width:0">
-          <div class="t">${p.title||s}</div>
+          <div class="t">${esc(p.title||s)}</div>
           <div><span class="pr">${l?fmt(l[1]):"—"}</span>
             <span class="tag nuevo">mín histórico</span>
             ${a.vs_med<0?`<span class="tag bajo">${a.vs_med}% vs típico</span>`:""}</div>
@@ -680,7 +686,7 @@ function favCard(sku){
       onclick="event.stopPropagation();cartToggle('${sku}',this.checked)">`:star(sku)}
     ${img(sku)?`<img src="${img(sku)}" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
-      <div class="t">${p.title||sku}</div>
+      <div class="t">${esc(p.title||sku)}</div>
       <div><span class="pr">${l?fmt(l[1]):"—"}</span>
         <span class="tag ${v.cls}">${v.label}</span>
         ${l&&l[3]>0?`<span class="tag oferta">-$${(+l[3]).toFixed(2)}</span>`:""}</div>
