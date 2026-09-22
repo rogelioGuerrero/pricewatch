@@ -278,8 +278,6 @@ const FAVFF = {
   clubout:  s => { const c = (D.clubs[s]||{})[MYCLUB];
                    return c && !c.in_stock; },
 };
-FAVFF.pendientes = s => FAVFF.oferta(s) || FAVFF.resurtir(s)
-                     || FAVFF.sinstock(s) || FAVFF.clubout(s);
 // lo que muestra la hoja del FAB (se llena en render)
 let RESUMEN = [], RESUMEN_N = 0;
 
@@ -715,16 +713,9 @@ document.querySelectorAll("#f-cambios .chip")
 // FAB + hoja movil: arriba el Resumen accionable, abajo las secciones
 const dlgNav = document.getElementById("dlg-nav");
 $("#fab").onclick = () => {
-  // fila "todos los pendientes" solo si hay mas de una categoria
-  const union = RESUMEN.filter(r => r[3]).length >= 2
-    ? `<div class="navitem res" data-t="favs" data-ff="pendientes">
-         <span>${RESUMEN_N} de tu lista piden atención</span>
-         <span class="meta">›</span></div>` : "";
   $("#navres").innerHTML = RESUMEN.length
-    ? `<div class="navsec">Resumen${RESUMEN_N
-        ? ` · ${RESUMEN_N} pendiente${RESUMEN_N>1?"s":""}` : ""}
+    ? `<div class="navsec">Resumen${RESUMEN_N ? " "+RESUMEN_N : ""}
         · datos al ${+_d} ${MESES[+_m-1]}</div>`
-      + union
       + RESUMEN.map(([t,tab,cf,ff]) =>
         `<div class="navitem res" data-t="${tab}" data-cf="${cf||""}"
            data-ff="${ff||""}"><span>${t}</span>
@@ -868,8 +859,7 @@ function render(){
   ffEl.style.display = favFilter === "all" ? "none" : "";
   if (favFilter !== "all") {
     const lbl = {oferta:"en oferta", resurtir:"para resurtir",
-      sinstock:"sin stock", clubout:`agotado en ${MYCLUB}`,
-      pendientes:"pendientes"}[favFilter];
+      sinstock:"sin stock", clubout:`agotado en ${MYCLUB}`}[favFilter];
     ffEl.textContent = `viendo: ${lbl} · ${show.length} ✕`;
   }
   $("#g-favs").innerHTML = show.map(favCard).join("")
