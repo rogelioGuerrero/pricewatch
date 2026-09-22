@@ -1,6 +1,6 @@
 // PriceWatch SV — cache-first: la app abre con el último snapshot
 // aunque no haya señal dentro del club. En background revalida.
-const CACHE = "pricewatch-v8";
+const CACHE = "pricewatch-v9";
 const CORE = ["./", "./index.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", e => {

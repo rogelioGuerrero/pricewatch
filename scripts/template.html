@@ -121,6 +121,14 @@
                border-radius:9px; background:var(--up); color:#fff;
                font-size:11px; font-weight:700; line-height:18px;
                text-align:center; margin-left:6px }
+  #sw-sug { position:absolute; top:100%; left:0; right:0; z-index:30;
+            background:var(--card); border:1px solid var(--line);
+            border-radius:8px; display:none; max-height:260px;
+            overflow:auto; box-shadow:0 8px 20px #0008 }
+  #sw-sug .s { padding:8px 12px; font-size:13px; cursor:pointer;
+               display:flex; justify-content:space-between; gap:8px }
+  #sw-sug .s:hover { background:var(--line) }
+  #sw-sug .s small { color:var(--mut) }
   .sw { display:inline-flex; align-items:center; gap:6px; cursor:pointer;
         font-size:12px; color:var(--mut); user-select:none }
   .sw input { display:none }
@@ -166,14 +174,17 @@
     <div class="grid" id="g-favs"></div>
   </div>
   <div class="pane" id="pane-siman">
-    <p class="meta" id="siman-sum"></p>
-    <div id="siman-watches" style="margin-bottom:8px"></div>
+    <p class="meta" style="margin-bottom:8px"><a id="siman-tog"
+      style="cursor:pointer">▸</a> <span id="siman-sum"></span></p>
+    <div id="siman-watches" style="margin-bottom:8px;display:none"></div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      <input id="sw-q" type="search" autocomplete="off"
-        placeholder="vigilar: marca o artículo (ej. adidas, micro sd)"
-        style="flex:1;min-width:180px">
-      <input id="sw-t" type="text" autocomplete="off" placeholder="talla"
-        style="width:80px">
+      <div style="flex:1;min-width:180px;position:relative">
+        <input id="sw-q" type="search" autocomplete="off"
+          placeholder="vigilar: marca o artículo (ej. adidas, micro sd)">
+        <div id="sw-sug"></div>
+      </div>
+      <input id="sw-t" type="text" autocomplete="off"
+        placeholder="talla (opcional)" style="width:110px">
       <span class="chip on" id="sw-add" style="cursor:pointer">+ vigilar</span>
     </div>
     <div class="grid" id="g-siman"></div>
@@ -356,6 +367,35 @@ $("#siman-watches").onclick = e => {
   if (AW.user) watchDown(q);
   render();
 };
+// sugerencias del buscador de vigilancia: solo terminos que existen en
+// la data; si no hay match, se avisa que el termino es nuevo
+$("#sw-q").addEventListener("input", () => {
+  const q = tkeyJS($("#sw-q").value), box = $("#sw-sug");
+  if (q.length < 2) { box.style.display = "none"; return; }
+  const hits = STERM.filter(([t]) =>
+      t.split(" ").some(w => w.startsWith(q)) || t.startsWith(q))
+    .sort((a,b) => b[1] - a[1]).slice(0, 8);
+  box.innerHTML = hits.map(([t,n]) =>
+      `<div class="s" data-q="${t}"><span>${t}</span><small>${n} productos</small></div>`).join("")
+    + `<div class="s" data-q="${q}"><span>vigilar "${esc(q)}"</span>`
+    + `<small>${hits.length ? "" : "término nuevo — se verifica mañana"}</small></div>`;
+  box.style.display = "block";
+});
+$("#sw-sug").onclick = e => {
+  const s = e.target.closest(".s");
+  if (!s) return;
+  $("#sw-q").value = s.dataset.q;
+  $("#sw-sug").style.display = "none";
+};
+document.addEventListener("click", e => {
+  if (!e.target.closest("#sw-sug") && e.target.id !== "sw-q")
+    $("#sw-sug").style.display = "none";
+});
+$("#siman-tog").onclick = () => {
+  const w = $("#siman-watches"), open = w.style.display !== "none";
+  w.style.display = open ? "none" : "";
+  $("#siman-tog").textContent = open ? "▸" : "▾";
+};
 const toggleFav = (sku,e)=>{e.stopPropagation();
   const on = !FAV.has(sku);
   on ? FAV.add(sku) : FAV.delete(sku);
@@ -447,6 +487,24 @@ const simanAlerts = () => SIMAN.items.filter(p =>
   && !SMUTE.has(tkeyJS(p.t))
   && !(SSEEN[tkeyJS(p.t)] != null && p.p != null
        && p.p >= SSEEN[tkeyJS(p.t)]));
+// sugerencias del buscador: terminos reales de los titulos vigilados
+const SSTOP = new Set(("para del la el con sin en un una por color hombre "
+  + "mujer caballero dama unisex pack set los las y al de es s l m xl xxl")
+  .split(" "));
+const STERM = (() => {
+  const uni = {}, bi = {};
+  for (const p of SIMAN.items) {
+    const toks = tkeyJS(p.t).split(" ")
+      .filter(x => x.length > 2 && !SSTOP.has(x));
+    toks.forEach(x => uni[x] = (uni[x]||0) + 1);
+    for (let i = 0; i < toks.length - 1; i++) {
+      const b = toks[i] + " " + toks[i+1]; bi[b] = (bi[b]||0) + 1; }
+  }
+  const out = [];
+  for (const [t,n] of Object.entries(uni)) if (n >= 3) out.push([t,n]);
+  for (const [t,n] of Object.entries(bi)) if (n >= 2) out.push([t,n]);
+  return out;
+})();
 function sCard(p){
   const tk = tkeyJS(p.t), tags = [];
   if (p.broke) tags.push(`<span class="tag real">mín histórico</span>`);
@@ -742,12 +800,13 @@ function render(){
   $("#g-siman").innerHTML = simanAlerts().map(sCard).join("")
     || "<p class='meta'>Sin ofertas reales por ahora — el radar sigue vigilando.</p>";
   $("#siman-sum").textContent =
-    `vigilando ${SWATCH.length} búsquedas · ${SIMAN.n_items||0} artículos`
-    + (AW.user ? "" : " · (sin sesión: lista local)");
+    `radar: ${SWATCH.length} búsquedas · ${SIMAN.n_items||0} artículos`;
   $("#siman-watches").innerHTML = SWATCH.map(w =>
-    `<span class="chip on">${esc(w.q)}${w.talla?` · t${esc(w.talla)}`:""}
+    `<span class="chip on">${esc(w.q)}${w.talla?` · ${esc(w.talla)}`:""}
      <a style="cursor:pointer;color:var(--up)" data-wq="${esc(w.q)}">✕</a></span>`
-  ).join(" ");
+  ).join(" ")
+    + (AW.user ? "" :
+       " <span class='meta'>sin sesión: cambios solo locales</span>");
   const nChFav = ev.filter(e=>["bajo","subio"].includes(e.type)&&FAV.has(e.sku)).length;
   const favN = document.querySelector('.tab[data-t="favs"] .n');
   if (favN) favN.textContent = FAV.size + (nChFav ? ` ⚡${nChFav}` : "");
