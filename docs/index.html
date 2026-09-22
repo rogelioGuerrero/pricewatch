@@ -354,6 +354,8 @@ $("#sw-add").onclick = () => {
   const w = {q: q.toLowerCase()};
   const t = $("#sw-t").value.trim();
   if (t) w.talla = t;
+  if (SWATCH.some(x => x.q === w.q && (x.talla||"") === (w.talla||""))) {
+    $("#sw-q").value = ""; $("#sw-t").value = ""; return; }
   SWATCH.push(w); saveSWatch();
   if (AW.user) watchUp(w);
   $("#sw-q").value = ""; $("#sw-t").value = "";
@@ -362,9 +364,10 @@ $("#sw-add").onclick = () => {
 $("#siman-watches").onclick = e => {
   const a = e.target.closest("a[data-wq]");
   if (!a) return;
-  const q = a.dataset.wq;
-  SWATCH = SWATCH.filter(w => w.q !== q); saveSWatch();
-  if (AW.user) watchDown(q);
+  const [q, t] = a.dataset.wq.split("|");
+  SWATCH = SWATCH.filter(w => !(w.q === q && (w.talla||"") === (t||"")));
+  saveSWatch();
+  if (AW.user) watchDown(q, t);
   render();
 };
 // sugerencias del buscador de vigilancia: solo terminos que existen en
@@ -466,11 +469,12 @@ const seenUp = (t,p) => {
       permissions:docPerms(AW.user.$id)}).catch(()=>{}));
 };
 const watchUp = w => AW.dbs.createRow({databaseId:AW_DB,tableId:"siman_watch",
-  rowId:`${AW.user.$id}-${h16(w.q)}`,
+  rowId:`${AW.user.$id}-${h16(w.q+"|"+(w.talla||""))}`,
   data:{q:w.q, talla:w.talla||"", filtro:(w.solo||[]).join(",")},
   permissions:docPerms(AW.user.$id)}).catch(()=>{});
-const watchDown = q => AW.dbs.deleteRow({databaseId:AW_DB,
-  tableId:"siman_watch", rowId:`${AW.user.$id}-${h16(q)}`}).catch(()=>{});
+const watchDown = (q,t) => AW.dbs.deleteRow({databaseId:AW_DB,
+  tableId:"siman_watch",
+  rowId:`${AW.user.$id}-${h16(q+"|"+(t||""))}`}).catch(()=>{});
 const yaLoVi = (t,p) => {
   SSEEN[t] = p; saveSSeen();
   if (AW.user) seenUp(t, p);
@@ -803,7 +807,8 @@ function render(){
     `radar: ${SWATCH.length} búsquedas · ${SIMAN.n_items||0} artículos`;
   $("#siman-watches").innerHTML = SWATCH.map(w =>
     `<span class="chip on">${esc(w.q)}${w.talla?` · ${esc(w.talla)}`:""}
-     <a style="cursor:pointer;color:var(--up)" data-wq="${esc(w.q)}">✕</a></span>`
+     <a style="cursor:pointer;color:var(--up)"
+        data-wq="${esc(w.q)}|${esc(w.talla||"")}">✕</a></span>`
   ).join(" ")
     + (AW.user ? "" :
        " <span class='meta'>sin sesión: cambios solo locales</span>");
