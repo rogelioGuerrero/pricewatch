@@ -117,6 +117,10 @@
   .card.incart { opacity:.55 }
   body.shop .fab { bottom:70px }
   body.shop .wrap { padding-bottom:70px }
+  #fab-badge { display:none; min-width:18px; height:18px; padding:0 4px;
+               border-radius:9px; background:var(--up); color:#fff;
+               font-size:11px; font-weight:700; line-height:18px;
+               text-align:center; margin-left:6px }
   .sw { display:inline-flex; align-items:center; gap:6px; cursor:pointer;
         font-size:12px; color:var(--mut); user-select:none }
   .sw input { display:none }
@@ -190,11 +194,11 @@
   <a id="dlink" class="plink" target="_blank" rel="noopener">Ver en pricesmart.com ↗</a>
   <label class="sw" style="margin-left:14px"><input type="checkbox" id="dbuy"><i></i>lo compré</label>
   <a id="dmore" class="plink" style="margin-left:10px;cursor:pointer;display:none">+ otra</a>
-  <a id="dshare" class="plink" style="margin-left:14px;cursor:pointer">Copiar enlace</a>
+  <a id="dshare" class="plink" style="margin-left:14px;cursor:pointer">Compartir</a>
   <p class="meta" id="dbuys" style="margin-top:8px"></p>
   <table id="dtable"></table>
 </dialog>
-<button class="fab" id="fab" aria-label="secciones"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg><span id="fab-label"></span></button>
+<button class="fab" id="fab" aria-label="secciones"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg><span id="fab-label"></span><span id="fab-badge"></span></button>
 <dialog id="dlg-nav" class="sheet"><div id="navitems"></div></dialog>
 <div id="shopbar"><span id="shop-tot"></span>
   <span><span class="chip" id="cart-clear">vaciar</span>
@@ -596,6 +600,9 @@ function render(){
   }
   $("#alerts").innerHTML = alerts.map(([t,tab,cf]) =>
     `<span class="alert" data-tab="${tab}" data-cf="${cf||""}">${t}</span>`).join("");
+  const fb = $("#fab-badge");
+  fb.style.display = alerts.length ? "inline-block" : "none";
+  fb.textContent = alerts.length;
   const bar = $("#shopbar");
   if (SHOP) {
     const tot = [...CART].reduce((t,s)=>{const l=lastOf(s);return t+(l?l[1]:0)},0)/100;
@@ -689,7 +696,10 @@ function favCard(sku){
       <div class="t">${esc(p.title||sku)}</div>
       <div><span class="pr">${l?fmt(l[1]):"—"}</span>
         <span class="tag ${v.cls}">${v.label}</span>
-        ${l&&l[3]>0?`<span class="tag oferta">-$${(+l[3]).toFixed(2)}</span>`:""}</div>
+        ${l&&l[3]>0?`<span class="tag oferta">-$${(+l[3]).toFixed(2)}</span>`:""}
+        ${l&&!l[2]?`<span class="tag agotado">agotado</span>`:""}
+        ${SHOP&&MYCLUB&&(D.clubs[sku]||{})[MYCLUB]&&!(D.clubs[sku][MYCLUB].in_stock)
+          ?`<span class="tag agotado">📍 sin stock en ${MYCLUB}</span>`:""}</div>
       ${v.tip?`<div class="meta">${v.tip}</div>`:""}
       ${m&&l?`<div class="meta">pagaste $${(+m.paid).toFixed(2)}${m.date?" el "+m.date:""}
         → ${l[1]>=m.paid*100?"+":""}${Math.round((l[1]-m.paid*100)/(m.paid*100)*100)}% hoy
@@ -842,9 +852,14 @@ function openProd(sku){
     : "";
   $("#dshare").onclick = () => {
     const url = `${location.origin}${location.pathname}?sku=${sku}`;
-    navigator.clipboard?.writeText(url);
-    $("#dshare").textContent = "¡Copiado!";
-    setTimeout(()=>$("#dshare").textContent="Copiar enlace", 1500);
+    const txt = `${p.title||sku} — ${last?fmt(last[1]):""} | PriceWatch SV`;
+    if (navigator.share) {
+      navigator.share({title: "PriceWatch SV", text: txt, url}).catch(()=>{});
+    } else {
+      navigator.clipboard?.writeText(`${txt}\n${url}`);
+      $("#dshare").textContent = "¡Copiado!";
+      setTimeout(()=>$("#dshare").textContent="Compartir", 1500);
+    }
   };
   const clubs = D.clubs[sku]||{};
   const clubRows = Object.entries(clubs)
