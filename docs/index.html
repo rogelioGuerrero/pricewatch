@@ -887,7 +887,8 @@ function render(){
     ? `<span class="meta">silenciados:</span> ` + [...SMUTE].map(t =>
         `<span class="chip">${esc(t)}
          <a style="cursor:pointer;color:var(--down)"
-            data-mu="${esc(t)}">✕</a></span>`).join(" ")
+            title="restaurar a las alertas"
+            data-mu="${esc(t)}">↩</a></span>`).join(" ")
     : "";
   const nChFav = ev.filter(e=>["bajo","subio"].includes(e.type)&&FAV.has(e.sku)).length;
   const favN = document.querySelector('.tab[data-t="favs"] .n');
