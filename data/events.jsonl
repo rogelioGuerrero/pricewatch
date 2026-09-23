@@ -410,3 +410,20 @@
 {"sku": "454313", "type": "club_volvio", "title": "Pepsi Soda Black Cero Azúcar 12 Unidades / 355 mL / 12 oz", "price": 639, "club": "Los Héroes", "prev_date": "2026-09-22", "date": "2026-09-23"}
 {"sku": "519698", "type": "club_agotado", "title": "Salutaris Gaseosa Ginger Ale 24 Unidades / 355 mL", "price": 1059, "club": "Santa Elena", "prev_date": "2026-09-22", "date": "2026-09-23"}
 {"sku": "519710", "type": "se_agota", "title": "Salutaris Toronjada con Soda Bebida Carbonatada 24 Unidades / 355 mL", "price": 1059, "club": "Los Héroes", "qty_from": 34, "qty_to": 14, "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "171889", "type": "club_volvio", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Elena", "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "San Miguel", "qty_from": 10, "qty_to": 1, "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "195666", "type": "club_volvio", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "Santa Elena", "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "233434", "type": "se_agota", "title": "Maizena Fécula De Maíz 2.3 kg / 5 lb", "price": 1749, "club": "Santa Ana", "qty_from": 25, "qty_to": 7, "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "244383", "type": "se_agota", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 879, "club": "Santa Ana", "qty_from": 7, "qty_to": 4, "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "244383", "type": "se_agota", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 879, "club": "Los Héroes", "qty_from": 8, "qty_to": 2, "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "259017", "type": "se_agota", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "club": "El Salvador", "qty_from": 1246, "qty_to": 606, "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "259017", "type": "club_agotado", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "club": "Los Héroes", "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "259017", "type": "club_agotado", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "club": "San Miguel", "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "362345", "type": "club_volvio", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "club": "Santa Elena", "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "362345", "type": "club_volvio", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "club": "Los Héroes", "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "362346", "type": "club_volvio", "title": "Termogreen Contenedores Térmicos Desechables 120 Unidades", "price": 999, "club": "Santa Elena", "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "362346", "type": "club_volvio", "title": "Termogreen Contenedores Térmicos Desechables 120 Unidades", "price": 999, "club": "Los Héroes", "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "487242", "type": "club_volvio", "title": "Mueble Recibidor en Madera con 6 Cajones", "price": 43999, "club": "El Salvador", "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "488967", "type": "club_volvio", "title": "Special K Cereal Fusion Frutal 3 Unidades / 340 g / 12 oz", "price": 1399, "club": "San Miguel", "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "526238", "type": "se_agota", "title": "Sello de Oro Pollo Marinado Sabor al Pastor 1.36 kg / 3 lb", "price": 1099, "club": "Santa Elena", "qty_from": 15, "qty_to": 8, "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "526238", "type": "se_agota", "title": "Sello de Oro Pollo Marinado Sabor al Pastor 1.36 kg / 3 lb", "price": 1099, "club": "El Salvador", "qty_from": 15, "qty_to": 9, "prev_date": "2026-09-22", "date": "2026-09-23"}
