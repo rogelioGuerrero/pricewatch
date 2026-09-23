@@ -1,6 +1,6 @@
-// PriceWatch SV — cache-first: la app abre con el último snapshot
-// aunque no haya señal dentro del club. En background revalida.
-const CACHE = "pricewatch-v13";
+// PriceWatch SV — navegación network-first (abrir la app trae la
+// versión fresca); sin señal cae al último snapshot cacheado.
+const CACHE = "pricewatch-v14";
 const CORE = ["./", "./index.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", e => {
@@ -16,19 +16,34 @@ self.addEventListener("activate", e => {
   self.clients.claim();
 });
 
-// Cache-first para la página y datos; network-first para la API del CDN
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
   if (e.request.method !== "GET") return;
-  if (url.origin === location.origin) {
+  if (url.origin !== location.origin) return;
+
+  // version.json nunca se cachea: es el detector de builds nuevos
+  if (url.pathname.endsWith("version.json")) return;
+
+  // navegación: red primero, último snapshot si no hay señal
+  if (e.request.mode === "navigate") {
     e.respondWith(
-      caches.match(e.request).then(hit => {
-        const net = fetch(e.request).then(r => {
-          if (r.ok) caches.open(CACHE).then(c => c.put(e.request, r.clone()));
-          return r;
-        }).catch(() => hit);
-        return hit || net;
-      })
+      fetch(e.request).then(r => {
+        if (r.ok) caches.open(CACHE).then(c => c.put(e.request, r.clone()));
+        return r;
+      }).catch(() =>
+        caches.match(e.request).then(h => h || caches.match("./index.html")))
     );
+    return;
   }
+
+  // resto same-origin: cache-first con revalidación en background
+  e.respondWith(
+    caches.match(e.request).then(hit => {
+      const net = fetch(e.request).then(r => {
+        if (r.ok) caches.open(CACHE).then(c => c.put(e.request, r.clone()));
+        return r;
+      }).catch(() => hit);
+      return hit || net;
+    })
+  );
 });

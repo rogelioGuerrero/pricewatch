@@ -8,7 +8,7 @@ import os
 import sqlite3
 import statistics
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB = os.path.join(ROOT, "data", "prices.db")
@@ -229,6 +229,7 @@ if os.path.isdir(SNAP_DIR):
 
 data = {
     "generated": max((r[0] for s in series.values() for r in s), default=""),
+    "built": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     "demo": demo,
     "n_products": len(latest),
     "n_stockout": sum(1 for r in latest.values() if not r["in_stock"]),
@@ -243,4 +244,9 @@ with open(os.path.join(ROOT, "scripts", "template.html"),
     html = f.read().replace("__DATA__", json.dumps(data, ensure_ascii=False))
 with open(OUT, "w", encoding="utf-8") as f:
     f.write(html)
+# version.json: ~50 bytes que el PWA consulta (sin pasar por el cache
+# del service worker) para detectar que hay un build mas nuevo
+with open(os.path.join(ROOT, "docs", "version.json"), "w",
+          encoding="utf-8") as f:
+    json.dump({"built": data["built"]}, f)
 print(f"Dashboard: {OUT}")
