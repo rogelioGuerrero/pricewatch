@@ -217,6 +217,13 @@
       <span class="chip on" id="sw-add"
         style="cursor:pointer;flex:none">+ vigilar</span>
     </div>
+    <div class="meta" id="siman-sort" style="margin:8px 0">
+      ordenar:
+      <span class="chip" data-ss="count" style="cursor:pointer">más alertas</span>
+      <span class="chip" data-ss="disc" style="cursor:pointer">mayor descuento</span>
+      <span class="chip" data-ss="price" style="cursor:pointer">menor precio</span>
+      <span class="chip" data-ss="az" style="cursor:pointer">A-Z</span>
+    </div>
     <div class="grid" id="g-siman"></div>
   </div>
   <div class="pane" id="pane-explorar">
@@ -450,6 +457,14 @@ $("#siman-muted").onclick = e => {
   if (AW.user) muteDown(a.dataset.mu);
   render();
 };
+// orden de los acordeones de Siman
+$("#siman-sort").onclick = e => {
+  const c = e.target.closest("[data-ss]");
+  if (!c) return;
+  SSORT = c.dataset.ss;
+  localStorage.setItem("pw-siman-sort", SSORT);
+  render();
+};
 const toggleFav = (sku,e)=>{e.stopPropagation();
   const on = !FAV.has(sku);
   on ? FAV.add(sku) : FAV.delete(sku);
@@ -545,6 +560,9 @@ const simanAlerts = () => SIMAN.items.filter(p =>
   && !SMUTE.has(tkeyJS(p.t))
   && !(SSEEN[tkeyJS(p.t)] != null && p.p != null
        && p.p >= SSEEN[tkeyJS(p.t)]));
+// orden de los grupos del acordeon (persiste) y cuales estan abiertos
+let SSORT = localStorage.getItem("pw-siman-sort") || "count";
+const ACC_OPEN = {};
 // sugerencias del buscador: terminos reales de los titulos vigilados
 const SSTOP = new Set(("para del la el con sin en un una por color hombre "
   + "mujer caballero dama unisex pack set los las y al de es s l m xl xxl")
@@ -885,19 +903,31 @@ function render(){
   }
   $("#g-favs").innerHTML = show.map(favCard).join("")
     || "<p class='meta'>Marca productos con ☆ para seguirlos aquí. Con 'cuenta' se sincronizan entre teléfono y PC.</p>";
-  // siman: alertas agrupadas por busqueda vigilada (acordeon);
-  // los grupos con rompe-minimo van primero, dentro por descuento
+  // siman: alertas agrupadas por busqueda vigilada (acordeon).
+  // se conserva que grupos tiene abiertos el usuario entre renders
   const sGroups = {};
   simAl.forEach(p =>
     (sGroups[(p.w||"otros") + (p.ta ? " · "+p.ta : "")] ??= []).push(p));
-  const sKeys = Object.keys(sGroups).sort((a,b) =>
-    sGroups[b].filter(x=>x.broke).length - sGroups[a].filter(x=>x.broke).length
-    || sGroups[b].length - sGroups[a].length);
+  document.querySelectorAll("#g-siman details.acc").forEach(d =>
+    ACC_OPEN[d.dataset.k] = d.open);
+  const gMin = k => Math.min(...sGroups[k].map(p => p.p ?? Infinity));
+  const gDisc = k => Math.max(...sGroups[k].map(sDisc));
+  const sKeys = Object.keys(sGroups).sort({
+    count: (a,b) => sGroups[b].length - sGroups[a].length
+             || sGroups[b].filter(x=>x.broke).length
+                - sGroups[a].filter(x=>x.broke).length,
+    disc:  (a,b) => gDisc(b) - gDisc(a)
+             || sGroups[b].length - sGroups[a].length,
+    price: (a,b) => gMin(a) - gMin(b)
+             || sGroups[b].length - sGroups[a].length,
+    az:    (a,b) => a.localeCompare(b),
+  }[SSORT]);
   $("#g-siman").innerHTML = sKeys.map(k => {
     const items = sGroups[k]
       .sort((a,b) => (b.broke-a.broke) || sDisc(b)-sDisc(a));
-    const min = Math.min(...items.map(p => p.p ?? Infinity));
-    return `<details class="acc"${items.length<=3?" open":""}>
+    const min = gMin(k);
+    const open = k in ACC_OPEN ? ACC_OPEN[k] : items.length <= 3;
+    return `<details class="acc" data-k="${esc(k)}"${open?" open":""}>
       <summary>${esc(k)}
         <span class="meta">${items.length}${min<Infinity
           ? " · desde "+fmt(Math.round(min*100)) : ""}</span></summary>
@@ -906,6 +936,8 @@ function render(){
   }).join("")
     || `<p class='meta'>Sin alertas hoy — ${SIMAN.n_items||0} variantes `
     + `bajo vigilancia.</p>`;
+  document.querySelectorAll("#siman-sort .chip").forEach(c =>
+    c.classList.toggle("on", c.dataset.ss === SSORT));
   $("#siman-sum").textContent =
     `vigilando ${SWATCH.length} artículos · ${nSiman} alertan`;
   $("#siman-watches").innerHTML = SWATCH.map(w =>
