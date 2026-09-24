@@ -505,8 +505,10 @@ const compraDown = rid => AW.dbs.deleteRow({databaseId: AW_DB, tableId: COL_C,
 const ckey = c => `${c.sku}|${c.date||""}|${c.paid}`;
 // ---- Siman (VTEX): radar de ofertas reales por busqueda ----
 // La vigilancia es por busqueda (marca/tipo); el itemId es efimero
-// (Siman recodifica). 'no me gusta' mutea por titulo normalizado —
-// sobrevive recodificados. 'ya lo vi' reavisa solo si baja mas.
+// (Siman recodifica). 'no me gusta' y 'ya lo vi' usan reglas duales
+// "pid|tkey": el producto coincide por su id de producto O por titulo
+// normalizado — asi sobrevive recodificados (mismo titulo) y ediciones
+// de titulo (mismo pid). Reglas viejas sin "|" = tkey plano.
 const SIMAN = D.siman || {items:[], events:[], watches:[]};
 const tkeyJS = s => (s||"").toLowerCase().normalize("NFD")
   .replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g," ").trim();
@@ -520,6 +522,47 @@ const saveSSeen = () =>
   localStorage.setItem("pw-siman-seen", JSON.stringify(SSEEN));
 const saveSWatch = () =>
   localStorage.setItem("pw-siman-watch", JSON.stringify(SWATCH));
+const sKey = p => `${p.pid}|${tkeyJS(p.t)}`;
+const ruleHit = (rule, p, tk) => {
+  const i = rule.indexOf("|");
+  if (i < 0) return rule === tk;                       // legacy: tkey
+  return rule.slice(0, i) === String(p.pid)            // v2: pid O tkey
+      || rule.slice(i + 1) === tk;
+};
+const isMuted = p => {
+  const tk = tkeyJS(p.t);
+  for (const r of SMUTE) if (ruleHit(r, p, tk)) return true;
+  return false;
+};
+// mayor precio "visto" entre las reglas que matchean — reavisa solo si
+// el precio actual queda por debajo de lo que ya reconociste
+const seenAt = p => {
+  const tk = tkeyJS(p.t);
+  let best = null;
+  for (const r in SSEEN)
+    if (ruleHit(r, p, tk) && (best === null || SSEEN[r] > best))
+      best = SSEEN[r];
+  return best;
+};
+// migra reglas viejas (tkey plano) a "pid|tkey" cuando el producto sigue
+// en la data — quedan blindadas tambien contra ediciones de titulo
+{
+  const upg = r => {
+    if (r.includes("|")) return r;
+    const p = SIMAN.items.find(x => tkeyJS(x.t) === r);
+    return p ? sKey(p) : r;
+  };
+  let dirty = false;
+  for (const r of [...SMUTE]) {
+    const u = upg(r);
+    if (u !== r) { SMUTE.delete(r); SMUTE.add(u); dirty = true; }
+  }
+  for (const r of Object.keys(SSEEN)) {
+    const u = upg(r);
+    if (u !== r) { SSEEN[u] = SSEEN[r]; delete SSEEN[r]; dirty = true; }
+  }
+  if (dirty) { saveSMute(); saveSSeen(); }
+}
 const h16 = s => { let h=5381;
   for (const c of s) h = (h*33 ^ c.charCodeAt(0)) >>> 0;
   return h.toString(36); };
@@ -544,22 +587,22 @@ const watchUp = w => AW.dbs.createRow({databaseId:AW_DB,tableId:"siman_watch",
 const watchDown = (q,t) => AW.dbs.deleteRow({databaseId:AW_DB,
   tableId:"siman_watch",
   rowId:`${AW.user.$id}-${h16(q+"|"+(t||""))}`}).catch(()=>{});
-const yaLoVi = (t,p) => {
-  SSEEN[t] = p; saveSSeen();
-  if (AW.user) seenUp(t, p);
+const yaLoVi = (rule,p) => {
+  SSEEN[rule] = p; saveSSeen();
+  if (AW.user) seenUp(rule, p);
   render();
 };
-const noMeGusta = t => {
-  SMUTE.add(t); saveSMute();
-  if (AW.user) muteUp(t);
+const noMeGusta = rule => {
+  SMUTE.add(rule); saveSMute();
+  if (AW.user) muteUp(rule);
   render();
 };
-const simanAlerts = () => SIMAN.items.filter(p =>
-  p.avail && (p.broke || p.decl)
-  && !(p.ta && !p.ok)
-  && !SMUTE.has(tkeyJS(p.t))
-  && !(SSEEN[tkeyJS(p.t)] != null && p.p != null
-       && p.p >= SSEEN[tkeyJS(p.t)]));
+const simanAlerts = () => SIMAN.items.filter(p => {
+  if (!p.avail || !(p.broke || p.decl) || (p.ta && !p.ok)) return false;
+  if (isMuted(p)) return false;
+  const sp = seenAt(p);
+  return !(sp != null && p.p != null && p.p >= sp);
+});
 // orden de los grupos del acordeon (persiste) y cuales estan abiertos
 let SSORT = localStorage.getItem("pw-siman-sort") || "count";
 const ACC_OPEN = {};
@@ -603,9 +646,9 @@ function sCard(p){
       <div class="meta">${p.b?esc(p.b)+" · ":""}vigilado por "${esc(p.w||"")}"${p.n>1?` · ${p.n} obs`:""}</div>
       <div class="sact">
         <a class="sic" title="ya lo vi — reavisa si baja más"
-           onclick="event.stopPropagation();yaLoVi('${tk}',${p.p||0})">👁</a>
+           onclick="event.stopPropagation();yaLoVi('${p.pid}|${tk}',${p.p||0})">👁</a>
         <a class="sic neg" title="no me gusta — no volver a mostrar (restaurable en ▸)"
-           onclick="event.stopPropagation();noMeGusta('${tk}')">👎</a>
+           onclick="event.stopPropagation();noMeGusta('${p.pid}|${tk}')">👎</a>
       </div></div></div>`;
 }
 async function syncAll(){
@@ -627,19 +670,27 @@ async function syncAll(){
   for (const d of rc)
     if (!COMPRAS.some(c => ckey(c) === ckey(d)))
       COMPRAS.push({sku:d.sku, paid:d.paid, date:d.date, rid:d.$id});
-  // siman: watches/mutes/seen compartidos; la watchlist local se sube
-  // la primera vez (semilla)
+  // siman: union bidireccional — baja lo de la nube y sube lo que solo
+  // existe local (mutes/vistos/watches hechos sin sesion no se pierden
+  // al entrar desde otro dispositivo)
   const tryList = t => listAll(t).catch(()=>[]);
   const [rw, rm, rs] = await Promise.all(
     [tryList("siman_watch"), tryList("siman_muted"), tryList("siman_seen")]);
-  if (rw.length) {
-    SWATCH = rw.map(d => ({q:d.q, talla:d.talla||undefined,
-      solo:d.filtro?d.filtro.split(",").filter(Boolean):undefined}));
-  } else {
-    for (const w of SWATCH) await watchUp(w);
+  const wKey = w => w.q + "|" + (w.talla || "");
+  const rwSet = new Set(rw.map(wKey));
+  for (const d of rw) {
+    const w = {q: d.q, talla: d.talla || undefined,
+      solo: d.filtro ? d.filtro.split(",").filter(Boolean) : undefined};
+    if (!SWATCH.some(x => wKey(x) === wKey(w))) SWATCH.push(w);
   }
+  for (const w of SWATCH) if (!rwSet.has(wKey(w))) await watchUp(w);
   rm.forEach(d => SMUTE.add(d.tkey));
   rs.forEach(d => { SSEEN[d.tkey] = d.price; });
+  const rmSet = new Set(rm.map(d => d.tkey));
+  for (const t of SMUTE) if (!rmSet.has(t)) await muteUp(t);
+  const rsSet = new Set(rs.map(d => d.tkey));
+  for (const [t, p] of Object.entries(SSEEN))
+    if (!rsSet.has(t)) await seenUp(t, p);
   saveSMute(); saveSSeen(); saveSWatch();
   localStorage.setItem("pw-favs", JSON.stringify([...FAV]));
   localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
@@ -947,13 +998,13 @@ function render(){
   ).join(" ")
     + (AW.user ? "" :
        " <span class='meta'>sin sesión: cambios solo locales</span>");
-  // silenciados (👎): restaurables; el muteo es por titulo y es permanente
+  // silenciados (👎): restaurables; cada regla "pid|tkey" muestra el titulo
   $("#siman-muted").innerHTML = SMUTE.size
-    ? `<span class="meta">silenciados:</span> ` + [...SMUTE].map(t =>
-        `<span class="chip">${esc(t)}
+    ? `<span class="meta">silenciados:</span> ` + [...SMUTE].map(r =>
+        `<span class="chip">${esc(r.split("|")[1] || r)}
          <a style="cursor:pointer;color:var(--down)"
             title="restaurar a las alertas"
-            data-mu="${esc(t)}">↩</a></span>`).join(" ")
+            data-mu="${esc(r)}">↩</a></span>`).join(" ")
     : "";
   const nChFav = ev.filter(e=>["bajo","subio"].includes(e.type)&&FAV.has(e.sku)).length;
   const favN = document.querySelector('.tab[data-t="favs"] .n');
