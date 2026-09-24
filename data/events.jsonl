@@ -427,3 +427,140 @@
 {"sku": "488967", "type": "club_volvio", "title": "Special K Cereal Fusion Frutal 3 Unidades / 340 g / 12 oz", "price": 1399, "club": "San Miguel", "prev_date": "2026-09-22", "date": "2026-09-23"}
 {"sku": "526238", "type": "se_agota", "title": "Sello de Oro Pollo Marinado Sabor al Pastor 1.36 kg / 3 lb", "price": 1099, "club": "Santa Elena", "qty_from": 15, "qty_to": 8, "prev_date": "2026-09-22", "date": "2026-09-23"}
 {"sku": "526238", "type": "se_agota", "title": "Sello de Oro Pollo Marinado Sabor al Pastor 1.36 kg / 3 lb", "price": 1099, "club": "El Salvador", "qty_from": 15, "qty_to": 9, "prev_date": "2026-09-22", "date": "2026-09-23"}
+{"sku": "98930", "type": "subio", "title": "Member's Selection Yogurt Griego Natural sin Grasa 907 g / 2 lb ", "from": 549, "to": 559, "delta": 10, "pct": 1.8, "date": "2026-09-24"}
+{"sku": "98942", "type": "subio", "title": "Member's Selection Yogurt Griego Vainilla 907 g / 2 lb ", "from": 549, "to": 559, "delta": 10, "pct": 1.8, "date": "2026-09-24"}
+{"sku": "98940", "type": "subio", "title": "Member's Selection Tocino de Cerdo Ahumado 2 Unidades / 680 g / 24 oz  ", "from": 1829, "to": 1849, "delta": 20, "pct": 1.1, "date": "2026-09-24"}
+{"sku": "754118", "type": "subio", "title": "Member's Selection Agua con Gas de Sabor a Frutas Cero Azúcar 24 Unidades / 503 mL / 17 oz", "from": 1799, "to": 1829, "delta": 30, "pct": 1.7, "date": "2026-09-24"}
+{"sku": "468370", "type": "subio", "title": "Oikos Yogurt Griego 18 Unidades / 150 g / 5.3 oz", "from": 2299, "to": 2379, "delta": 80, "pct": 3.5, "date": "2026-09-24"}
+{"sku": "98969", "type": "subio", "title": "Member's Selection Queso Rallado Estilo Mexicano 2 Unidades / 680 g / 1.5 lb", "from": 1249, "to": 1279, "delta": 30, "pct": 2.4, "date": "2026-09-24"}
+{"sku": "43546", "type": "reaparecio", "title": "Member's Selection Papa Francesa Congelada Corte Recto para Freír 10 kg / 22 lb", "price": 2029, "prev_price": 2029, "days_out": null, "date": "2026-09-24"}
+{"sku": "754114", "type": "subio", "title": "Member's Selection Agua Purificada 80 Unidades / 236 mL / 8 oz", "from": 1599, "to": 1629, "delta": 30, "pct": 1.9, "date": "2026-09-24"}
+{"sku": "600360", "type": "subio", "title": "Fast Fixin' Nuggets de Pollo, 1.5 kg / 3.5 lb", "from": 1099, "to": 1149, "delta": 50, "pct": 4.5, "date": "2026-09-24"}
+{"sku": "22388", "type": "subio", "title": "Nature Valley Barras Masticables de Proteína 26 Unidades / 40 g", "from": 1999, "to": 2099, "delta": 100, "pct": 5.0, "date": "2026-09-24"}
+{"sku": "43569", "type": "subio", "title": "Member's Selection Arandanos 1.36 kg / 3 lb", "from": 1299, "to": 1329, "delta": 30, "pct": 2.3, "date": "2026-09-24"}
+{"sku": "317731", "type": "subio", "title": "Eggo Waffles 40 Unidades / 35 g / 1.2 oz", "from": 1579, "to": 1599, "delta": 20, "pct": 1.3, "date": "2026-09-24"}
+{"sku": "334712", "type": "subio", "title": "Member's Selection Almendras Rebanadas 907 g / 2 lb", "from": 1349, "to": 1399, "delta": 50, "pct": 3.7, "date": "2026-09-24"}
+{"sku": "29042", "type": "subio", "title": "Member's Selection Bandeja de Quesos Variado 907 g / 2 lb", "from": 1399, "to": 1429, "delta": 30, "pct": 2.1, "date": "2026-09-24"}
+{"sku": "468442", "type": "subio", "title": "Jell-O Postres Variados 24 Unidades 2.41 kg / 5 lb", "from": 1879, "to": 1899, "delta": 20, "pct": 1.1, "date": "2026-09-24"}
+{"sku": "61085", "type": "subio", "title": "Member's Selection Mezcla Orgánica de Frutos Secos y Semillas 708 g / 25 oz", "from": 1379, "to": 1399, "delta": 20, "pct": 1.5, "date": "2026-09-24"}
+{"sku": "67769", "type": "reaparecio", "title": "Member's Selection Bebida de Soya 6 Unidades / 946 mL / 32 oz", "price": 1699, "prev_price": 1699, "days_out": null, "date": "2026-09-24"}
+{"sku": "228742", "type": "subio", "title": "Kirkland Signature Pechuga de Pollo en Agua Enlatada 6 Unidades / 196 g / 7 oz", "from": 1799, "to": 1899, "delta": 100, "pct": 5.6, "date": "2026-09-24"}
+{"sku": "2935", "type": "rebaja", "title": "KIWA Botanas Orgánicas Crujientes de Vegetales 453 g / 16 oz", "from": 899, "to": 849, "delta": -50, "pct": -5.6, "date": "2026-09-24"}
+{"sku": "815", "type": "subio", "title": "Child's Play Caramelos Surtidos 2.27 kg", "from": 1799, "to": 1849, "delta": 50, "pct": 2.8, "date": "2026-09-24"}
+{"sku": "96276", "type": "rebaja", "title": "Chile Morrón 907 g / 2 lb", "from": 579, "to": 569, "delta": -10, "pct": -1.7, "date": "2026-09-24"}
+{"sku": "271832", "type": "subio", "title": "Coca Cola Zero 12 Unidades / 355 mL / 12 oz", "from": 719, "to": 729, "delta": 10, "pct": 1.4, "date": "2026-09-24"}
+{"sku": "772094", "type": "rebaja", "title": "Kraft Mayonesa Light 2 Unidades / 650 mL / 22 oz", "from": 719, "to": 97, "delta": -622, "pct": -86.5, "date": "2026-09-24"}
+{"sku": "460138", "type": "subio", "title": "Underwood Jamón Esparcible Sazonado con Finas Especias 4 Unidades / 120.5 g / 4.25 oz", "from": 799, "to": 849, "delta": 50, "pct": 6.3, "date": "2026-09-24"}
+{"sku": "247954", "type": "subio", "title": "Country Crock Margarina Light 1.27 kg / 2.81 lb", "from": 669, "to": 699, "delta": 30, "pct": 4.5, "date": "2026-09-24"}
+{"sku": "490764", "type": "rebaja", "title": "Kirkland Signature Cerezas Orgánicas Deshidratadas Montmorency 567 g / 20 oz", "from": 1599, "to": 1400, "delta": -199, "pct": -12.4, "date": "2026-09-24"}
+{"sku": "243695", "type": "subio", "title": "Margherita Pepperoni 907 g / 2 lb", "from": 1249, "to": 1299, "delta": 50, "pct": 4.0, "date": "2026-09-24"}
+{"sku": "340937", "type": "subio", "title": "Bimbo Pan Blanco con Vitaminas 2 Unidades / 720 g / 1.58 lb", "from": 449, "to": 459, "delta": 10, "pct": 2.2, "date": "2026-09-24"}
+{"sku": "521983", "type": "rebaja", "title": "Uva Roja sin Semilla 907 g / 2 lb", "from": 799, "to": 779, "delta": -20, "pct": -2.5, "date": "2026-09-24"}
+{"sku": "245214", "type": "subio", "title": "Uva Red Globe 907 g / 2 lb", "from": 599, "to": 629, "delta": 30, "pct": 5.0, "date": "2026-09-24"}
+{"sku": "475593", "type": "subio", "title": "Member's Selection Angelina / Rochoy / Vuelta de Lomo Fresco Caja", "from": 28838, "to": 30675, "delta": 1837, "pct": 6.4, "date": "2026-09-24"}
+{"sku": "468613", "type": "subio", "title": "Lomo Pacho Entero Fresco Empacado al Vacío", "from": 2903, "to": 2949, "delta": 46, "pct": 1.6, "date": "2026-09-24"}
+{"sku": "341786", "type": "subio", "title": "Pierna de Cerdo Congelada Importada Rebanada", "from": 706, "to": 713, "delta": 7, "pct": 1.0, "date": "2026-09-24"}
+{"sku": "516409", "type": "nuevo", "title": "Member's Selection Ensalada de Pasta con Atún Lista para Comer", "price": 549, "date": "2026-09-24"}
+{"sku": "750849", "type": "subio", "title": "Filete de Striploin Entero Fresco Empacado al Vacío", "from": 2359, "to": 17493, "delta": 15134, "pct": 641.5, "date": "2026-09-24"}
+{"sku": "468230", "type": "nuevo", "title": "Member's Selection Lomo de Aguja de Res Fresco Caja", "price": 68184, "date": "2026-09-24"}
+{"sku": "504505", "type": "rebaja", "title": "Macesa Lomo Pacho de Res Caja", "from": 28424, "to": 27847, "delta": -577, "pct": -2.0, "date": "2026-09-24"}
+{"sku": "341788", "type": "rebaja", "title": "Member's Selection Pierna de Cerdo con Hueso Congelada Empacado al Vacío", "from": 5081, "to": 4974, "delta": -107, "pct": -2.1, "date": "2026-09-24"}
+{"sku": "526238", "type": "agotado", "title": "Sello de Oro Pollo Marinado Sabor al Pastor 1.36 kg / 3 lb", "price": 1099, "date": "2026-09-24"}
+{"sku": "526146", "type": "agotado", "title": "Sello de Oro Filete de Pollo Marinado Criollo 1.36 kg / 3 lb", "price": 1099, "date": "2026-09-24"}
+{"sku": "468164", "type": "subio", "title": "Coffee Mate Crema de Café Italiano Dulce 1.89 L / 64 oz", "from": 949, "to": 979, "delta": 30, "pct": 3.2, "date": "2026-09-24"}
+{"sku": "298509", "type": "agotado", "title": "President Brie Soft-Ripened Queso 555 g / 1.2 lb", "price": 999, "date": "2026-09-24"}
+{"sku": "522351", "type": "agotado", "title": "Knorr Sopa de Sobre Surtida 12 Unidades / 55 g ", "price": 339, "date": "2026-09-24"}
+{"sku": "57688", "type": "nuevo", "title": "Mini Zanahoria 450 g / 1 lb", "price": 349, "date": "2026-09-24"}
+{"sku": "306937", "type": "agotado", "title": "Mini Vegetales 1.13 kg / 2.5 lb", "price": 569, "date": "2026-09-24"}
+{"sku": "308581", "type": "subio", "title": "Light and Fit Yogur sin Grasa 12 Unidades / 113 g / 4 oz", "from": 699, "to": 729, "delta": 30, "pct": 4.3, "date": "2026-09-24"}
+{"sku": "233512", "type": "agotado", "title": "Chile Pimiento 1.3 kg / 3 lb", "price": 379, "date": "2026-09-24"}
+{"sku": "475594", "type": "agotado", "title": "Sello de Oro Pechuga de Pollo Molida Fresca Bandeja", "price": 872, "date": "2026-09-24"}
+{"sku": "497254", "type": "agotado", "title": "Member's Selection Muslos de Pollo Fresco Bandeja", "price": 912, "date": "2026-09-24"}
+{"sku": "514690", "type": "agotado", "title": "Pio Lindo Medallones de Pollo Congelados 50 Unidades / 975 g / 2.14 lb", "price": 849, "date": "2026-09-24"}
+{"sku": "504867", "type": "agotado", "title": "Oikos Yogurt Griego Natural 900 g / 31.7 oz", "price": 599, "date": "2026-09-24"}
+{"sku": "519922", "type": "reaparecio", "title": "Similac Fórmula Infantil Etapa 2 en Polvo 5 HMOs 1.8 kg / 63.49 oz", "price": 7399, "prev_price": 7399, "days_out": null, "date": "2026-09-24"}
+{"sku": "518124", "type": "regreso", "title": "Dell 39.62 cm / 15.6\" Portátil Intel Core i5-1334U 8 Gigabytes / 512 Gigabytes LDC15250-5315BLK-PUS + Antivirus ESET", "price": 61999, "prev_price": 61999, "days_out": 3, "date": "2026-09-24"}
+{"sku": "465702", "type": "subio", "title": "Klip Xtreme Teclado y Ratón Inalámbricos", "from": 2477, "to": 3299, "delta": 822, "pct": 33.2, "date": "2026-09-24"}
+{"sku": "400861", "type": "subio", "title": "Navia Ventilador de Pared con Control Remoto 46 cm / 18” pulgadas", "from": 6499, "to": 6799, "delta": 300, "pct": 4.6, "date": "2026-09-24"}
+{"sku": "515357", "type": "nuevo", "title": "Virtavo Cámara de Seguridad Exterior Triple Lente WiFi 360° con Visión Nocturna 86334", "price": 5999, "date": "2026-09-24"}
+{"sku": "380185", "type": "subio", "title": "Bell + Howell Exterminador de Insectos", "from": 3599, "to": 3699, "delta": 100, "pct": 2.8, "date": "2026-09-24"}
+{"sku": "499710", "type": "nuevo", "title": "Thirtieth Sense Silla Tumbona en Madera de Eucalipto", "price": 15999, "date": "2026-09-24"}
+{"sku": "495545", "type": "agotado", "title": "Dynamic Sauna con Bluetooth para 2 Personas", "price": 259999, "date": "2026-09-24"}
+{"sku": "500388", "type": "agotado", "title": "Feit Electric Lampara de Techo LED Panel Plano 35.5 cm / 14\"", "price": 1777, "date": "2026-09-24"}
+{"sku": "515919", "type": "subio", "title": "Downy Light Perlas de Perfume para Sábanas y Toallas Aroma Fresco y Floral 963 g / 34 oz", "from": 1799, "to": 1849, "delta": 50, "pct": 2.8, "date": "2026-09-24"}
+{"sku": "377591", "type": "reaparecio", "title": "Kodiak Sistema de Limpieza de 4 Piezas", "price": 1749, "prev_price": 1749, "days_out": null, "date": "2026-09-24"}
+{"sku": "465281", "type": "rebaja", "title": "Downy Infusions Calm Perlas de Perfume Intensificadoras de Aroma a Lavanda y Vainilla 963 g / 34 oz", "from": 1849, "to": 1577, "delta": -272, "pct": -14.7, "date": "2026-09-24"}
+{"sku": "391991", "type": "subio", "title": "Rinso Detergente en Polvo 2 Unidades / 4.5 kg / 110 Lavadas", "from": 1299, "to": 1379, "delta": 80, "pct": 6.2, "date": "2026-09-24"}
+{"sku": "494360", "type": "subio", "title": "Xedex Detergente en Polvo con Suavizante para Ropa 2 Unidades / 4.5 kg", "from": 1649, "to": 1699, "delta": 50, "pct": 3.0, "date": "2026-09-24"}
+{"sku": "518129-0062338018232", "type": "rebaja", "title": "Air Wick Difusor Eléctrico de Aceites Esenciales Naturales Aromas Variados + 6 Repuestos / 120 mL / 4.05 oz", "from": 1949, "to": 1777, "delta": -172, "pct": -8.8, "date": "2026-09-24"}
+{"sku": "474163-0062338034478", "type": "rebaja", "title": "Air Wick Ambientador con Aceite Perfumado", "from": 1949, "to": 1777, "delta": -172, "pct": -8.8, "date": "2026-09-24"}
+{"sku": "474121-0062338033419", "type": "rebaja", "title": "Air Wick Essential Mist 1 Difusor + 3 Repuestos 20 mL", "from": 2099, "to": 1999, "delta": -100, "pct": -4.8, "date": "2026-09-24"}
+{"sku": "491541-0752760033285", "type": "regreso", "title": "Baum Set de Platos Base Decorativos 6 Unidades", "price": 1799, "prev_price": 1799, "days_out": 2, "date": "2026-09-24"}
+{"sku": "514512", "type": "agotado", "title": "Tide Pods 4 en 1 Ultra Oxi Detergente para Ropa en Cápsulas 100 Unidades", "price": 2899, "date": "2026-09-24"}
+{"sku": "513432", "type": "agotado", "title": "Sterilite Caja Contenedora Plástica Transparente con Tapa 68.14 L / 18 gal", "price": 1477, "date": "2026-09-24"}
+{"sku": "505648-0607766322270", "type": "agotado", "title": "Member's Selection Reloj de Pared con Marco Metálico de 40.6 cm / 16\"", "price": 1999, "date": "2026-09-24"}
+{"sku": "509185", "type": "rebaja", "title": "B Toys Vigas de Equilibrio Musicales para Niños Balance & Groove BX2473PPZ", "from": 6999, "to": 6199, "delta": -800, "pct": -11.4, "date": "2026-09-24"}
+{"sku": "509155-0062243492370", "type": "rebaja", "title": "Our Generation Casa de Juegos para Mascota de Peluche", "from": 3099, "to": 2699, "delta": -400, "pct": -12.9, "date": "2026-09-24"}
+{"sku": "10327", "type": "agotado", "title": "Grant's Whisky Escocés 1 L / 33.8 oz", "price": 2999, "date": "2026-09-24"}
+{"sku": "517098-0743682395872", "type": "subio", "title": "IZOD Camiseta Polo de Manga Corta para Hombre", "from": 1799, "to": 1899, "delta": 100, "pct": 5.6, "date": "2026-09-24"}
+{"sku": "515650-0743682375881", "type": "reaparecio", "title": "Izod Camisa de Pesca de Manga Corta para Hombre", "price": 2199, "prev_price": 2199, "days_out": 2, "date": "2026-09-24"}
+{"sku": "515622-0889498637932", "type": "nuevo", "title": "Construct Camisa Manga Corta para Hombre", "price": 1999, "date": "2026-09-24"}
+{"sku": "513528-0198906297058", "type": "rebaja", "title": "Yogalicious Suéter Deportivo de Manga Larga con Cuello Redondo para Mujer", "from": 1799, "to": 1499, "delta": -300, "pct": -16.7, "date": "2026-09-24"}
+{"sku": "517499-0696317653048", "type": "agotado", "title": "Kenneth Cole Pantalón Color Caqui con Tejido Flexible para Hombre", "price": 2099, "date": "2026-09-24"}
+{"sku": "516011-0191804318436", "type": "agotado", "title": "Matty M Falda Ejecutiva Midi para Mujer", "price": 1599, "date": "2026-09-24"}
+{"sku": "507871-0827118969117", "type": "agotado", "title": "Hilary Radley Blusa Manga Larga de Tejido Ligero para Mujer", "price": 1177, "date": "2026-09-24"}
+{"sku": "492129-0714370846600", "type": "nuevo", "title": "Keith Haring Set de Pijama con Pantalón 2 Piezas", "price": 977, "date": "2026-09-24"}
+{"sku": "508333-0060204064161", "type": "agotado", "title": "S.C. and Co Pantalón para Mujer con Bolsillos", "price": 1599, "date": "2026-09-24"}
+{"sku": "515888-0190828250685", "type": "agotado", "title": "Hawke & Co Pantalón Gris de Corte Recto para Hombre", "price": 1799, "date": "2026-09-24"}
+{"sku": "505184", "type": "rebaja", "title": "Stakmore Set de Comedor y Sillas Plegable para Niños 3 Piezas", "from": 13999, "to": 11999, "delta": -2000, "pct": -14.3, "date": "2026-09-24"}
+{"sku": "339843", "type": "agotado", "title": "Acuvue Oasys -4.00 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "date": "2026-09-24"}
+{"sku": "486967", "type": "reaparecio", "title": "Member's Selection Árbol de Navidad Nevado Iluminado 2.3 m / 7.5'", "price": 32999, "prev_price": 32999, "days_out": null, "date": "2026-09-24"}
+{"sku": "506847", "type": "rebaja", "title": "Member's Selection Gnomos Navideños para Repisas 2 Piezas", "from": 2499, "to": 2399, "delta": -100, "pct": -4.0, "date": "2026-09-24"}
+{"sku": "505431", "type": "rebaja", "title": "Member's Selection Centro de Ciudad Decorativo Navideño ", "from": 16199, "to": 15999, "delta": -200, "pct": -1.2, "date": "2026-09-24"}
+{"sku": "507265-0607766475136", "type": "rebaja", "title": "Member's Selection Cubierta Metálica para Árbol con Luces LED 76 cm / 30\"", "from": 4499, "to": 4399, "delta": -100, "pct": -2.2, "date": "2026-09-24"}
+{"sku": "507256-0607766474320", "type": "rebaja", "title": "Member's Selection Set de Rollos de Papel Reversible para Regalo 3 Unidades", "from": 1199, "to": 1179, "delta": -20, "pct": -1.7, "date": "2026-09-24"}
+{"sku": "482034", "type": "rebaja", "title": "Member's Selection Jabón en Barra Aroma Original 12 Unidades / 105 g / 3.75 oz", "from": 879, "to": 849, "delta": -30, "pct": -3.4, "date": "2026-09-24"}
+{"sku": "450582", "type": "subio", "title": "Arganatural Gel de Ducha Reafirmante de Coco con Colágeno 2 Unidades / 960 mL / 32 oz", "from": 1499, "to": 1699, "delta": 200, "pct": 13.3, "date": "2026-09-24"}
+{"sku": "410431", "type": "rebaja", "title": "Codeage Proteína en Polvo Péptidos de Colágeno Hidrolizados 342 g / 12 oz", "from": 1829, "to": 1799, "delta": -30, "pct": -1.6, "date": "2026-09-24"}
+{"sku": "522933", "type": "rebaja", "title": "Saba Toallas Higiénicas Ultra Invisibles con Alas 60 Unidades", "from": 779, "to": 579, "delta": -200, "pct": -25.7, "date": "2026-09-24"}
+{"sku": "495119", "type": "rebaja", "title": "Gillette Mach3 Repuestos de Rasuradora de 3 Hojas 16 Unidades", "from": 3199, "to": 3149, "delta": -50, "pct": -1.6, "date": "2026-09-24"}
+{"sku": "844330", "type": "subio", "title": "Designer Whey Proteína de Suero de Leche en Polvo Sabor a Vainilla 908 g", "from": 3649, "to": 3699, "delta": 50, "pct": 1.4, "date": "2026-09-24"}
+{"sku": "831528", "type": "rebaja", "title": "About Time Vé Proteína Vegana de Vainilla 908 g / 32 oz", "from": 2399, "to": 2349, "delta": -50, "pct": -2.1, "date": "2026-09-24"}
+{"sku": "453588", "type": "agotado", "title": "Depend Pañal para Adulto Talla G/XG 48 Unidades", "price": 3999, "date": "2026-09-24"}
+{"sku": "415588", "type": "salio_del_catalogo", "title": "Member's Selection Croissants Pequeños Recién Horneados 18 Unidades", "price": 849, "date": "2026-09-24"}
+{"sku": "479610", "type": "salio_del_catalogo", "title": "Sello de Oro Pechuga de Pollo Deshuesada Fresca Bandeja", "price": 1618, "date": "2026-09-24"}
+{"sku": "511897", "type": "salio_del_catalogo", "title": "Uvas Rojas sin Semillas Frescas 907 g / 2 lb", "price": 499, "date": "2026-09-24"}
+{"sku": "491237", "type": "salio_del_catalogo", "title": "Mega Original Chamoy Salsa Agridulce 2 Unidades / 1.5 L", "price": 1099, "date": "2026-09-24"}
+{"sku": "475657", "type": "salio_del_catalogo", "title": "Sello de Oro Fajitas de Pechuga de Pollo Fresca Bandeja", "price": 1048, "date": "2026-09-24"}
+{"sku": "475622", "type": "salio_del_catalogo", "title": "Sello de Oro Pechuga de Pollo Fresca sin Piel con Hueso Bandeja", "price": 1042, "date": "2026-09-24"}
+{"sku": "475569", "type": "salio_del_catalogo", "title": "Pierna-Muslo de Pollo Fresco Bandeja", "price": 855, "date": "2026-09-24"}
+{"sku": "475581", "type": "salio_del_catalogo", "title": "Ala de Pollo Fresca Bandeja", "price": 1006, "date": "2026-09-24"}
+{"sku": "459039", "type": "salio_del_catalogo", "title": "Sarita Helado Sorby Twist 15 Unidades / 75 g/ 2.6 oz", "price": 859, "date": "2026-09-24"}
+{"sku": "475588", "type": "salio_del_catalogo", "title": "Muslo de Pollo Deshuesado Fresco Bandeja", "price": 1301, "date": "2026-09-24"}
+{"sku": "523039", "type": "salio_del_catalogo", "title": "Acer 39.6 cm / 15.6\" Pulgadas Computador Portátil Aspire Go AMD Ryzen 7 16 Gigabytes / 512 Gigabytes AG15-42P-R917 + Antivirus ESET", "price": 79999, "date": "2026-09-24"}
+{"sku": "523012", "type": "salio_del_catalogo", "title": "Lenovo 39.6 cm / 15.6\" Pulgadas Computador Portátil Slim 3 AMD Ryzen 5 8 Gigabytes / 256 Gigabytes 82XQ012GUS + Antivirus ESET", "price": 69999, "date": "2026-09-24"}
+{"sku": "499542", "type": "salio_del_catalogo", "title": "Kenmore Parrilla de Gas con 2 Quemadores", "price": 18499, "date": "2026-09-24"}
+{"sku": "480343-0014306911793", "type": "salio_del_catalogo", "title": "Grossfillex Maceta Decorativa 40.6 cm / 16\"", "price": 1177, "date": "2026-09-24"}
+{"sku": "501049", "type": "salio_del_catalogo", "title": "Trinity Estantería para Organizar de 3 Niveles 2 Unidades", "price": 2977, "date": "2026-09-24"}
+{"sku": "505671-0840467308109", "type": "salio_del_catalogo", "title": "Owala Botellas para Agua 2 Unidades / 473 mL / 16 oz", "price": 3699, "date": "2026-09-24"}
+{"sku": "496247-0810137396484", "type": "salio_del_catalogo", "title": "Dash Calentador Eléctrico Portátil de Alimentos 2 Unidades / 591.5 mL / 20 oz", "price": 3499, "date": "2026-09-24"}
+{"sku": "490355-0885830160021", "type": "salio_del_catalogo", "title": "Riviera Home Tapete para Baño Reversible 51 cm x 81 cm / 20\" x 32\"", "price": 1399, "date": "2026-09-24"}
+{"sku": "468318-0840467307690", "type": "salio_del_catalogo", "title": "Owala Botellas para Agua 2 Unidades / 710 mL / 24 oz", "price": 3999, "date": "2026-09-24"}
+{"sku": "504083-0840467307973", "type": "salio_del_catalogo", "title": "Owala Vasos Térmicos Portátiles para Bebidas 2 Unidades / 591 mL / 20 oz", "price": 3977, "date": "2026-09-24"}
+{"sku": "510749", "type": "salio_del_catalogo", "title": "Barton & Guestier Vino Rosado Rose D'anjou 750 mL + Merlot 187 mL", "price": 1149, "date": "2026-09-24"}
+{"sku": "500896-7453131125303", "type": "salio_del_catalogo", "title": "Everlast Calcetines Tobilleros para Mujer 10 Pares", "price": 1099, "date": "2026-09-24"}
+{"sku": "510166-0882931249082", "type": "salio_del_catalogo", "title": "Mondetta Short con Cintura Elástica para Niña", "price": 677, "date": "2026-09-24"}
+{"sku": "497096-0012899568936", "type": "salio_del_catalogo", "title": "Kenneth Cole Set para Hombre 2 Piezas ", "price": 1177, "date": "2026-09-24"}
+{"sku": "507500-0195160488390", "type": "salio_del_catalogo", "title": "Weatherproof Vintage Pantalón Casual Caqui Slim para Hombre", "price": 977, "date": "2026-09-24"}
+{"sku": "507571-0702576451162", "type": "salio_del_catalogo", "title": "Mario Serrani Italy Blusa Manga Corta para Mujer", "price": 677, "date": "2026-09-24"}
+{"sku": "509664-0196633805607", "type": "salio_del_catalogo", "title": "Kirkland Signature Pantalón Negro con 5 Bolsillos para Hombre", "price": 877, "date": "2026-09-24"}
+{"sku": "508186-0196064089812", "type": "salio_del_catalogo", "title": "Izod Sandalia Plana con Tiras Anchas Cruzadas para Mujer", "price": 1999, "date": "2026-09-24"}
+{"sku": "507198-0195160488710", "type": "salio_del_catalogo", "title": "Weatherproof Vintage Pantalón Azul Oscuro para Hombre", "price": 977, "date": "2026-09-24"}
+{"sku": "505143-0195160486952", "type": "salio_del_catalogo", "title": "English Laundry Pantalón con Pretina Flexible para Hombre", "price": 977, "date": "2026-09-24"}
+{"sku": "497698-0629075344989", "type": "salio_del_catalogo", "title": "Head Camiseta sin Mangas para Mujer 3 Piezas", "price": 477, "date": "2026-09-24"}
+{"sku": "507022-0198286417794", "type": "salio_del_catalogo", "title": "Weatherproof Camisa Manga Corta para Hombre", "price": 1277, "date": "2026-09-24"}
+{"sku": "501435", "type": "salio_del_catalogo", "title": "Enterogermina Suspensión Oral para el Equilibrio de la Flora Intestinal 2 Cajas / 10 Unidades / 5 mL", "price": 2799, "date": "2026-09-24"}
+{"sku": "484143", "type": "club_volvio", "title": "Degree Desodorante Shower Clean para Mujer 5 Unidades / 74 g / 2.6 oz", "price": 1349, "club": "Los Héroes", "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "515650-0743682375881", "type": "club_volvio", "title": "Izod Camisa de Pesca de Manga Corta para Hombre", "price": 2199, "club": "El Salvador", "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "515650-0743682375881", "type": "club_volvio", "title": "Izod Camisa de Pesca de Manga Corta para Hombre", "price": 2199, "club": "Los Héroes", "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "515650-0743682375881", "type": "club_volvio", "title": "Izod Camisa de Pesca de Manga Corta para Hombre", "price": 2199, "club": "San Miguel", "prev_date": "2026-09-23", "date": "2026-09-24"}
