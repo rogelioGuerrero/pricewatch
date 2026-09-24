@@ -564,3 +564,18 @@
 {"sku": "515650-0743682375881", "type": "club_volvio", "title": "Izod Camisa de Pesca de Manga Corta para Hombre", "price": 2199, "club": "El Salvador", "prev_date": "2026-09-23", "date": "2026-09-24"}
 {"sku": "515650-0743682375881", "type": "club_volvio", "title": "Izod Camisa de Pesca de Manga Corta para Hombre", "price": 2199, "club": "Los Héroes", "prev_date": "2026-09-23", "date": "2026-09-24"}
 {"sku": "515650-0743682375881", "type": "club_volvio", "title": "Izod Camisa de Pesca de Manga Corta para Hombre", "price": 2199, "club": "San Miguel", "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "150", "type": "se_agota", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "Santa Elena", "qty_from": 79, "qty_to": 34, "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "150", "type": "se_agota", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "El Salvador", "qty_from": 631, "qty_to": 308, "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "150", "type": "se_agota", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "San Miguel", "qty_from": 258, "qty_to": 45, "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Elena", "qty_from": 125, "qty_to": 58, "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "171889", "type": "club_volvio", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Ana", "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Los Héroes", "qty_from": 25, "qty_to": 11, "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "195666", "type": "se_agota", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "Santa Elena", "qty_from": 55, "qty_to": 12, "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "318504", "type": "se_agota", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "El Salvador", "qty_from": 11, "qty_to": 5, "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "318504", "type": "se_agota", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "Los Héroes", "qty_from": 11, "qty_to": 5, "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "362345", "type": "se_agota", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "club": "Santa Ana", "qty_from": 20, "qty_to": 8, "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "362345", "type": "se_agota", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "club": "San Miguel", "qty_from": 50, "qty_to": 27, "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "519710", "type": "club_agotado", "title": "Salutaris Toronjada con Soda Bebida Carbonatada 24 Unidades / 355 mL", "price": 1059, "club": "Los Héroes", "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "524336", "type": "club_volvio", "title": "Glade Aromatizantes Surtidos en Gel 4 Unidades / 180 g ", "price": 1049, "club": "Los Héroes", "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "526238", "type": "se_agota", "title": "Sello de Oro Pollo Marinado Sabor al Pastor 1.36 kg / 3 lb", "price": 1099, "club": "Santa Elena", "qty_from": 8, "qty_to": 1, "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "526238", "type": "se_agota", "title": "Sello de Oro Pollo Marinado Sabor al Pastor 1.36 kg / 3 lb", "price": 1099, "club": "El Salvador", "qty_from": 9, "qty_to": 1, "prev_date": "2026-09-23", "date": "2026-09-24"}
