@@ -648,3 +648,30 @@
 {"sku": "339827", "type": "club_volvio", "title": "Acuvue Oasys -1.75 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "club": "El Salvador", "prev_date": "2026-09-24", "date": "2026-09-25"}
 {"sku": "526084", "type": "club_volvio", "title": "Sello de Oro Filete de Pechuga sabor Chimichurri 1.36 kg / 3 lb", "price": 1099, "club": "Santa Elena", "prev_date": "2026-09-24", "date": "2026-09-25"}
 {"sku": "526084", "type": "club_volvio", "title": "Sello de Oro Filete de Pechuga sabor Chimichurri 1.36 kg / 3 lb", "price": 1099, "club": "El Salvador", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "150", "type": "se_agota", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "Santa Elena", "qty_from": 34, "qty_to": 14, "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "150", "type": "se_agota", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "El Salvador", "qty_from": 308, "qty_to": 183, "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "150", "type": "se_agota", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "Los Héroes", "qty_from": 98, "qty_to": 57, "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "150", "type": "club_agotado", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "San Miguel", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Elena", "qty_from": 58, "qty_to": 26, "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Ana", "qty_from": 19, "qty_to": 10, "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "El Salvador", "qty_from": 142, "qty_to": 85, "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "171889", "type": "club_agotado", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Los Héroes", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "195666", "type": "club_agotado", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "Santa Elena", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "318504", "type": "se_agota", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "El Salvador", "qty_from": 5, "qty_to": 3, "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "318504", "type": "se_agota", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "Los Héroes", "qty_from": 5, "qty_to": 3, "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "320186", "type": "se_agota", "title": "Kreef Salchicha Cocktel 454 g / 1 lb", "price": 779, "club": "Santa Elena", "qty_from": 7, "qty_to": 2, "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "320186", "type": "club_agotado", "title": "Kreef Salchicha Cocktel 454 g / 1 lb", "price": 779, "club": "Santa Ana", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "326756", "type": "se_agota", "title": "Lifeway Kéfir de Fresa 2 Unidades / 946 mL / 32 oz ", "price": 1079, "club": "Santa Elena", "qty_from": 52, "qty_to": 18, "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "326756", "type": "club_agotado", "title": "Lifeway Kéfir de Fresa 2 Unidades / 946 mL / 32 oz ", "price": 1079, "club": "Santa Ana", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "326756", "type": "se_agota", "title": "Lifeway Kéfir de Fresa 2 Unidades / 946 mL / 32 oz ", "price": 1079, "club": "El Salvador", "qty_from": 103, "qty_to": 17, "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "326756", "type": "club_agotado", "title": "Lifeway Kéfir de Fresa 2 Unidades / 946 mL / 32 oz ", "price": 1079, "club": "Los Héroes", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "326756", "type": "se_agota", "title": "Lifeway Kéfir de Fresa 2 Unidades / 946 mL / 32 oz ", "price": 1079, "club": "San Miguel", "qty_from": 16, "qty_to": 4, "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "437908", "type": "se_agota", "title": "Hisense Aire Acondicionado Portátil de 12 000 BTU AP-12CW1RNXS20", "price": 40999, "club": "San Miguel", "qty_from": 4, "qty_to": 2, "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "494360", "type": "club_volvio", "title": "Xedex Detergente en Polvo con Suavizante para Ropa 2 Unidades / 4.5 kg", "price": 1699, "club": "Santa Elena", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "494360", "type": "club_volvio", "title": "Xedex Detergente en Polvo con Suavizante para Ropa 2 Unidades / 4.5 kg", "price": 1699, "club": "Los Héroes", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "497254", "type": "club_volvio", "title": "Member's Selection Muslos de Pollo Fresco Bandeja", "price": 912, "club": "El Salvador", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "513432", "type": "club_volvio", "title": "Sterilite Caja Contenedora Plástica Transparente con Tapa 68.14 L / 18 gal", "price": 1477, "club": "Santa Ana", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "513432", "type": "club_volvio", "title": "Sterilite Caja Contenedora Plástica Transparente con Tapa 68.14 L / 18 gal", "price": 1477, "club": "El Salvador", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "515650-0743682375881", "type": "club_volvio", "title": "Izod Camisa de Pesca de Manga Corta para Hombre", "price": 2199, "club": "Santa Elena", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "515650-0743682375881", "type": "club_volvio", "title": "Izod Camisa de Pesca de Manga Corta para Hombre", "price": 2199, "club": "Santa Ana", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "524336", "type": "club_volvio", "title": "Glade Aromatizantes Surtidos en Gel 4 Unidades / 180 g ", "price": 1049, "club": "Santa Elena", "prev_date": "2026-09-24", "date": "2026-09-25"}
