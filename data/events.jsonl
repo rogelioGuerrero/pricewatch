@@ -579,3 +579,72 @@
 {"sku": "524336", "type": "club_volvio", "title": "Glade Aromatizantes Surtidos en Gel 4 Unidades / 180 g ", "price": 1049, "club": "Los Héroes", "prev_date": "2026-09-23", "date": "2026-09-24"}
 {"sku": "526238", "type": "se_agota", "title": "Sello de Oro Pollo Marinado Sabor al Pastor 1.36 kg / 3 lb", "price": 1099, "club": "Santa Elena", "qty_from": 8, "qty_to": 1, "prev_date": "2026-09-23", "date": "2026-09-24"}
 {"sku": "526238", "type": "se_agota", "title": "Sello de Oro Pollo Marinado Sabor al Pastor 1.36 kg / 3 lb", "price": 1099, "club": "El Salvador", "qty_from": 9, "qty_to": 1, "prev_date": "2026-09-23", "date": "2026-09-24"}
+{"sku": "526238", "type": "reaparecio", "title": "Sello de Oro Pollo Marinado Sabor al Pastor 1.36 kg / 3 lb", "price": 1099, "prev_price": 1099, "days_out": 2, "date": "2026-09-25"}
+{"sku": "526146", "type": "reaparecio", "title": "Sello de Oro Filete de Pollo Marinado Criollo 1.36 kg / 3 lb", "price": 1099, "prev_price": 1099, "days_out": 2, "date": "2026-09-25"}
+{"sku": "526084", "type": "reaparecio", "title": "Sello de Oro Filete de Pechuga sabor Chimichurri 1.36 kg / 3 lb", "price": 1099, "prev_price": 1099, "days_out": 3, "date": "2026-09-25"}
+{"sku": "754112", "type": "subio", "title": "Member's Selection Agua Purificada 40 Unidades / 500 mL / 16.9 oz", "from": 869, "to": 929, "delta": 60, "pct": 6.9, "date": "2026-09-25"}
+{"sku": "669654", "type": "subio", "title": "Member's Selection Aceite de Coco Virgen Orgánico 1.65 L / 56 oz", "from": 1549, "to": 1599, "delta": 50, "pct": 3.2, "date": "2026-09-25"}
+{"sku": "754118", "type": "subio", "title": "Member's Selection Agua con Gas de Sabor a Frutas Cero Azúcar 24 Unidades / 503 mL / 17 oz", "from": 1829, "to": 1899, "delta": 70, "pct": 3.8, "date": "2026-09-25"}
+{"sku": "781060", "type": "subio", "title": "Member's Selection Mayonesa Cremosa con Sabor Natural 3.78 L / 128 oz", "from": 1379, "to": 1399, "delta": 20, "pct": 1.5, "date": "2026-09-25"}
+{"sku": "16724", "type": "subio", "title": "Member's Selection Jugo de Arándano 2 Unidades / 2.83 L / 96 oz", "from": 1149, "to": 1179, "delta": 30, "pct": 2.6, "date": "2026-09-25"}
+{"sku": "754114", "type": "subio", "title": "Member's Selection Agua Purificada 80 Unidades / 236 mL / 8 oz", "from": 1629, "to": 1699, "delta": 70, "pct": 4.3, "date": "2026-09-25"}
+{"sku": "167401", "type": "subio", "title": "Member's Selection Aceite de Girasol 100 % Puro 5 L / 1.32 gal", "from": 1299, "to": 1399, "delta": 100, "pct": 7.7, "date": "2026-09-25"}
+{"sku": "454145", "type": "subio", "title": "Mott's Jugo de Manzana 100% Orgánico sin Azúcar Añadida 3.78 L / 128 oz", "from": 999, "to": 1079, "delta": 80, "pct": 8.0, "date": "2026-09-25"}
+{"sku": "815248", "type": "subio", "title": "ReaLemon Jugo de Limón 2 Unidades 1.4 L / 48 oz", "from": 1179, "to": 1249, "delta": 70, "pct": 5.9, "date": "2026-09-25"}
+{"sku": "540617", "type": "subio", "title": "Member's Selection Mezcla en Polvo para Preparar Té Chai Latte con Especias 1.58 kg / 56 oz", "from": 2449, "to": 2499, "delta": 50, "pct": 2.0, "date": "2026-09-25"}
+{"sku": "470124", "type": "subio", "title": "Sunberry Farms Jugo de Néctar de Mango Orgánico - Sin Gluten 3.78 L / 128 oz", "from": 899, "to": 1099, "delta": 200, "pct": 22.2, "date": "2026-09-25"}
+{"sku": "363614", "type": "subio", "title": "Member's Selection Aceite de Canola 2 Unidades / 2.84 L / 96 oz", "from": 1799, "to": 1999, "delta": 200, "pct": 11.1, "date": "2026-09-25"}
+{"sku": "296959", "type": "rebaja", "title": "Pera Bosc ", "from": 449, "to": 399, "delta": -50, "pct": -11.1, "date": "2026-09-25"}
+{"sku": "13278", "type": "subio", "title": "Ocean Spray Jugo de Toronja Roja 2 Unidades / 1.89 L / 64 oz", "from": 879, "to": 899, "delta": 20, "pct": 2.3, "date": "2026-09-25"}
+{"sku": "501333", "type": "subio", "title": "Caffe D'Vita Mezcla para Preparar Cappuccino Moca 1.36 kg / 3 lb", "from": 1679, "to": 1699, "delta": 20, "pct": 1.2, "date": "2026-09-25"}
+{"sku": "340937", "type": "rebaja", "title": "Bimbo Pan Blanco con Vitaminas 2 Unidades / 720 g / 1.58 lb", "from": 459, "to": 429, "delta": -30, "pct": -6.5, "date": "2026-09-25"}
+{"sku": "233512", "type": "reaparecio", "title": "Chile Pimiento 1.3 kg / 3 lb", "price": 379, "prev_price": 379, "days_out": 2, "date": "2026-09-25"}
+{"sku": "475594", "type": "reaparecio", "title": "Sello de Oro Pechuga de Pollo Molida Fresca Bandeja", "price": 872, "prev_price": 872, "days_out": 2, "date": "2026-09-25"}
+{"sku": "497254", "type": "reaparecio", "title": "Member's Selection Muslos de Pollo Fresco Bandeja", "price": 912, "prev_price": 912, "days_out": 2, "date": "2026-09-25"}
+{"sku": "325838", "type": "rebaja", "title": "McCormick Salsa Picante Jalisco 6 Unidades / 148 mL / 5 oz", "from": 849, "to": 719, "delta": -130, "pct": -15.3, "date": "2026-09-25"}
+{"sku": "341786", "type": "rebaja", "title": "Pierna de Cerdo Congelada Importada Rebanada", "from": 713, "to": 699, "delta": -14, "pct": -2.0, "date": "2026-09-25"}
+{"sku": "525489", "type": "nuevo", "title": "Great Fry Aceite Vegetal Refinado 20 L", "price": 3699, "date": "2026-09-25"}
+{"sku": "294336", "type": "agotado", "title": "Melocotón 907 g / 2 lb", "price": 799, "date": "2026-09-25"}
+{"sku": "334586", "type": "agotado", "title": "Madrigal Sardinas Surtidas 6 Unidades / 125 g / 4.4 oz", "price": 949, "date": "2026-09-25"}
+{"sku": "29203", "type": "subio", "title": "Purple Blaster Desengrasante 3.78 L + 946 mL / 1 gal + 32 oz", "from": 1649, "to": 1799, "delta": 150, "pct": 9.1, "date": "2026-09-25"}
+{"sku": "524536", "type": "nuevo", "title": "Lenovo 39.6 cm / 15.6\" Pulgadas Computador Portátil Slim 3 AMD Ryzen 5 8 Gigabytes / 256 Gigabytes 82XQ012GUS + Antivirus ESET", "price": 69999, "date": "2026-09-25"}
+{"sku": "493951", "type": "agotado", "title": "Ninja SmoothieiQ Licuadora con 3 Funciones 1 200 W CO750BPTLA", "price": 8999, "date": "2026-09-25"}
+{"sku": "505116-0091806298906", "type": "rebaja", "title": "WindPro Sombrilla Compacta con Apertura y Cierre Automático", "from": 1999, "to": 1799, "delta": -200, "pct": -10.0, "date": "2026-09-25"}
+{"sku": "512543-0886120026850", "type": "nuevo", "title": "Maceta Mystique con Acabado Decorativo 55.8 cm / 22\"", "price": 3299, "date": "2026-09-25"}
+{"sku": "281588", "type": "rebaja", "title": "Fabuloso Desinfectante Multiusos Fabuloso Frescura Activa Antibacterial Lavanda 2 Unidades / 5 L", "from": 1359, "to": 1329, "delta": -30, "pct": -2.2, "date": "2026-09-25"}
+{"sku": "464491", "type": "subio", "title": "Member's Selection Almohadas de Gomaespuma Cómoda con Gel Fresco 2 Unidades / 45.72 cm x 66.04 cm / 18\" x 26\"", "from": 2099, "to": 2149, "delta": 50, "pct": 2.4, "date": "2026-09-25"}
+{"sku": "490518", "type": "agotado", "title": "Scotch Brite Esponjas de Limpieza en Forma de Esfera 8 Unidades ", "price": 377, "date": "2026-09-25"}
+{"sku": "503318-0196557373435", "type": "agotado", "title": "Manna Termo para Bebidas en Acero Inoxidable 2 Unidades / 946.3 mL / 32 oz", "price": 2999, "date": "2026-09-25"}
+{"sku": "470500", "type": "subio", "title": "Keror Jugo de Manzana Granada Espumoso sin Alcohol 3 Unidades / 750 mL / 25.4 oz", "from": 1149, "to": 1199, "delta": 50, "pct": 4.4, "date": "2026-09-25"}
+{"sku": "462293", "type": "reaparecio", "title": "Alma Atlántica Sangría Rosé 750 mL", "price": 1349, "prev_price": 1349, "days_out": null, "date": "2026-09-25"}
+{"sku": "484041", "type": "reaparecio", "title": "Alma Atlántica Sangría de Vino Blanco 750 mL", "price": 1349, "prev_price": 1349, "days_out": null, "date": "2026-09-25"}
+{"sku": "526263", "type": "nuevo", "title": "ComfortStar Aire Acondicionado Serie CL20 WhisperAire 12 000 BTU CL20-12CA(I)", "price": 38999, "date": "2026-09-25"}
+{"sku": "364777", "type": "reaparecio", "title": "Felino Comida para Gatos Mar y Tierra 8 kg / 17.63 lb", "price": 1099, "prev_price": 1099, "days_out": null, "date": "2026-09-25"}
+{"sku": "508430-0060206070016", "type": "nuevo", "title": "Dalia Pantalón Formal con Cordón Ajustable para Mujer", "price": 2299, "date": "2026-09-25"}
+{"sku": "514826-0195160518806", "type": "nuevo", "title": "English Laundry Jean 5 Bolsillos para Hombre", "price": 1999, "date": "2026-09-25"}
+{"sku": "516547-0195160524654", "type": "nuevo", "title": "Peloton Pantalón Jogger con Cintura Elástica para Hombre", "price": 2299, "date": "2026-09-25"}
+{"sku": "514832-0195160517717", "type": "nuevo", "title": "English Laundry Jean Azul Oscuro Clásico para Hombre", "price": 1900, "date": "2026-09-25"}
+{"sku": "519830-0199920285816", "type": "nuevo", "title": "Blueberi Boulevard Vestido Tutu para Niña", "price": 1179, "date": "2026-09-25"}
+{"sku": "514763-0194777662964", "type": "agotado", "title": "Free Country Pantalón Verde Oliva Convertible para Hombre", "price": 2499, "date": "2026-09-25"}
+{"sku": "508247-0609475998326", "type": "regreso", "title": "Leo and Nicole Jeans para Mujer con Bota Enrollada", "price": 1799, "prev_price": 1799, "days_out": 6, "date": "2026-09-25"}
+{"sku": "399315", "type": "rebaja", "title": "Sudden Comfort Silla Plegable Acolchada", "from": 2799, "to": 2699, "delta": -100, "pct": -3.6, "date": "2026-09-25"}
+{"sku": "494362", "type": "agotado", "title": "Game Gear Silla Gamer ", "price": 31999, "date": "2026-09-25"}
+{"sku": "339824", "type": "reaparecio", "title": "Acuvue Oasys -1.50 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "prev_price": 6499, "days_out": null, "date": "2026-09-25"}
+{"sku": "339836", "type": "reaparecio", "title": "Acuvue Oasys -3.00 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "prev_price": 6499, "days_out": null, "date": "2026-09-25"}
+{"sku": "339827", "type": "reaparecio", "title": "Acuvue Oasys -1.75 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "prev_price": 6499, "days_out": 6, "date": "2026-09-25"}
+{"sku": "443077", "type": "reaparecio", "title": "Acuvue Oasys Lentes de Contacto Multifocal 6 Unidades", "price": 9299, "prev_price": 9299, "days_out": null, "date": "2026-09-25"}
+{"sku": "339803", "type": "reaparecio", "title": "Acuvue Oasys -1.00 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "prev_price": 6499, "days_out": null, "date": "2026-09-25"}
+{"sku": "512774", "type": "rebaja", "title": "Colgate Total Whitening Cepillo de Dientes 8 Unidades", "from": 1149, "to": 1119, "delta": -30, "pct": -2.6, "date": "2026-09-25"}
+{"sku": "404243", "type": "agotado", "title": "Now Magnesio 180 Cápsulas / 400 mg / 0.01 oz", "price": 2149, "date": "2026-09-25"}
+{"sku": "600630", "type": "salio_del_catalogo", "title": "MorningStar Farms Nuggets de Pollo Vegano 289 g / 10.5 oz", "price": 1149, "date": "2026-09-25"}
+{"sku": "479113", "type": "salio_del_catalogo", "title": "Nuchar Pulpo Cocido 200 g / 7 oz", "price": 1349, "date": "2026-09-25"}
+{"sku": "474891", "type": "salio_del_catalogo", "title": "Trevijano Arroz Cous Cous al Estilo Thai 800 g / 28.2 oz", "price": 577, "date": "2026-09-25"}
+{"sku": "502695", "type": "salio_del_catalogo", "title": "Runic Set de Porterías de Fútbol para Interiores y Exteriores 121.92 cm x  91.44 cm / 48\" x 36\"", "price": 4999, "date": "2026-09-25"}
+{"sku": "500582-0810137397139", "type": "salio_del_catalogo", "title": "Dash Waflera Antigoteo 4 Cuadros ", "price": 3499, "date": "2026-09-25"}
+{"sku": "307305", "type": "salio_del_catalogo", "title": "Fabuloso Desinfectante Multiusos Frescura Activa Antibacterial Manzana 2 Unidades / 5 L", "price": 1199, "date": "2026-09-25"}
+{"sku": "233512", "type": "club_volvio", "title": "Chile Pimiento 1.3 kg / 3 lb", "price": 379, "club": "Santa Elena", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "233512", "type": "club_volvio", "title": "Chile Pimiento 1.3 kg / 3 lb", "price": 379, "club": "El Salvador", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "339827", "type": "club_volvio", "title": "Acuvue Oasys -1.75 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "club": "Santa Elena", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "339827", "type": "club_volvio", "title": "Acuvue Oasys -1.75 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "club": "El Salvador", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "526084", "type": "club_volvio", "title": "Sello de Oro Filete de Pechuga sabor Chimichurri 1.36 kg / 3 lb", "price": 1099, "club": "Santa Elena", "prev_date": "2026-09-24", "date": "2026-09-25"}
+{"sku": "526084", "type": "club_volvio", "title": "Sello de Oro Filete de Pechuga sabor Chimichurri 1.36 kg / 3 lb", "price": 1099, "club": "El Salvador", "prev_date": "2026-09-24", "date": "2026-09-25"}
