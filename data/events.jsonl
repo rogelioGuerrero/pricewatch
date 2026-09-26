@@ -739,3 +739,19 @@
 {"sku": "526084", "type": "club_agotado", "title": "Sello de Oro Filete de Pechuga sabor Chimichurri 1.36 kg / 3 lb", "price": 1099, "club": "El Salvador", "prev_date": "2026-09-25", "date": "2026-09-26"}
 {"sku": "602140", "type": "club_volvio", "title": "Lifetime Cobertizo de Almacenamiento 243 cm x 304 cm / 8' x 10'", "price": 169999, "club": "Santa Elena", "prev_date": "2026-09-25", "date": "2026-09-26"}
 {"sku": "602140", "type": "club_volvio", "title": "Lifetime Cobertizo de Almacenamiento 243 cm x 304 cm / 8' x 10'", "price": 169999, "club": "El Salvador", "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "150", "type": "club_agotado", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "Santa Elena", "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "150", "type": "club_agotado", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "Los Héroes", "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "167401", "type": "se_agota", "title": "Member's Selection Aceite de Girasol 100 % Puro 5 L / 1.32 gal", "price": 1399, "club": "Los Héroes", "qty_from": 234, "qty_to": 87, "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "171889", "type": "club_agotado", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Ana", "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "171889", "type": "club_volvio", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Los Héroes", "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "195666", "type": "club_volvio", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "Santa Elena", "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "320186", "type": "club_agotado", "title": "Kreef Salchicha Cocktel 454 g / 1 lb", "price": 779, "club": "Santa Elena", "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "330281", "type": "se_agota", "title": "Alpina Agua Natural 24 Unidades / 600 mL / 20 oz", "price": 629, "club": "Los Héroes", "qty_from": 150, "qty_to": 84, "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "404243", "type": "club_volvio", "title": "Now Magnesio 180 Cápsulas / 400 mg / 0.01 oz", "price": 2149, "club": "Santa Elena", "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "404243", "type": "club_volvio", "title": "Now Magnesio 180 Cápsulas / 400 mg / 0.01 oz", "price": 2149, "club": "Los Héroes", "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "447051", "type": "club_volvio", "title": "Jennies Bites de Coco con Trozos de Cacao y Chocolate Negro 680 g / 24 oz ", "price": 1499, "club": "Santa Elena", "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "447051", "type": "club_volvio", "title": "Jennies Bites de Coco con Trozos de Cacao y Chocolate Negro 680 g / 24 oz ", "price": 1499, "club": "Santa Ana", "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "515622-0889498637932", "type": "club_volvio", "title": "Construct Camisa Manga Corta para Hombre", "price": 1999, "club": "Santa Elena", "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "515622-0889498637932", "type": "club_agotado", "title": "Construct Camisa Manga Corta para Hombre", "price": 1999, "club": "San Miguel", "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "526238", "type": "se_agota", "title": "Sello de Oro Pollo Marinado Sabor al Pastor 1.36 kg / 3 lb", "price": 1099, "club": "Santa Elena", "qty_from": 9, "qty_to": 5, "prev_date": "2026-09-25", "date": "2026-09-26"}
+{"sku": "526238", "type": "se_agota", "title": "Sello de Oro Pollo Marinado Sabor al Pastor 1.36 kg / 3 lb", "price": 1099, "club": "El Salvador", "qty_from": 9, "qty_to": 5, "prev_date": "2026-09-25", "date": "2026-09-26"}
