@@ -193,6 +193,8 @@
   <div class="pane" id="pane-ofertas">
     <div class="filters" id="f-ofertas">
       <span class="chip on" data-of="all">todas</span>
+      <span class="chip" data-of="letrero">con letrero</span>
+      <span class="chip" data-of="silenciosa">silenciosas</span>
       <span class="chip" data-of="real">ofertas reales</span>
       <span class="chip" data-of="min">al mínimo</span>
       <span class="chip" data-of="bajo">bajo lo habitual</span>
@@ -248,6 +250,7 @@
         <input type="checkbox" id="adv" style="width:auto"> avanzado
       </label>
       <span class="chip" data-pp="real">ofertas reales</span>
+      <span class="chip" data-pp="silenciosa">silenciosas</span>
       <span class="chip" data-pp="min">al mínimo</span>
       <span class="chip" data-pp="up">subieron</span>
       <span class="chip" data-pp="clubout">agotado en mi club</span>
@@ -338,17 +341,22 @@ const DEALS = (() => {
   return [...m];
 })();
 const dealOK = (s, f) => {
-  const a = D.agg[s]||{}, l = lastOf(s);
-  if (f === "real") return (l?.[3]||0) > 0 && atMin(s);
-  if (f === "min")  return atMin(s);
-  if (f === "bajo") return a.vs_med != null && a.vs_med < 0;
+  const a = D.agg[s]||{}, l = lastOf(s), sv = l?.[3]||0;
+  if (f === "letrero")    return sv > 0;
+  if (f === "silenciosa") return atMin(s) && sv <= 0;
+  if (f === "real")       return sv > 0 && atMin(s);
+  if (f === "min")        return atMin(s);
+  if (f === "bajo")       return a.vs_med != null && a.vs_med < 0;
   return true;
 };
-// fuerza del deal: la mejor cifra entre % de ahorro declarado y % bajo el tipico
+// fuerza del deal: la mejor cifra entre % de ahorro declarado, % bajo el
+// habitual y % bajo su propio maximo — "cuanto mas barato que antes" es
+// la referencia intuitiva del comprador (Eufy 249->130 = -48% del techo)
 const dealScore = s => {
   const a = D.agg[s]||{}, l = lastOf(s);
   const sp = l && l[1] ? (l[3]||0) / (l[1]/100) : 0;
-  return Math.max(sp, -((a.vs_med||0)/100));
+  const bajoMax = a.max && l && l[1] ? (a.max - l[1]) / a.max : 0;
+  return Math.max(sp, bajoMax, -((a.vs_med||0)/100));
 };
 // objetivo de precio por sku (centavos): alerta cuando el precio lo cruza
 const TARGETS = JSON.parse(localStorage.getItem("pw-targets") || "{}");
@@ -805,7 +813,7 @@ async function doAuth(reg){
 const TABS = [
   ["favs","Mi lista", FAV.size],
   ["cambios","Movimientos", byType("bajo").length + byType("subio").length + byType("oferta_termino").length + byType("rebaja").length],
-  ["ofertas","Ofertas", DEALS.length],
+  ["ofertas","Gangas", DEALS.length],
   ["stock","Se acabó / Volvió",
    byType("agotado").length + byType("reaparecio").length
    + byType("salio_del_catalogo").length + byType("regreso").length
@@ -948,7 +956,7 @@ function render(){
     .filter(s => dealOK(s, OF_F)
              && (!q || matchQ(q, (D.products[s]||{}).title)))
     .sort((a,b) => dealScore(b) - dealScore(a)).slice(0, 120)
-    .map(favCard).join("") || "<p class='meta'>Sin ofertas activas hoy</p>";
+    .map(favCard).join("") || "<p class='meta'>Sin gangas hoy</p>";
   $("#g-stock").innerHTML = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo","regreso","club_agotado","club_volvio","se_agota"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios de disponibilidad</p>";
   $("#g-nuevos").innerHTML = ev.filter(e=>e.type==="nuevo"&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin productos nuevos</p>";
   const favList = [...FAV].sort((x,y)=>verdict(x).rank-verdict(y).rank);
@@ -1230,10 +1238,11 @@ const COLS_ADV = ["min_hist","max_hist","pct_sobre_min","vs_tipico_pct",
                   "dias_agotado","n_veces_agotado","mi_club"];
 // presets del comprador: filtros Perspective sin saber pivots
 const PV_PRESETS = {
-  real:    [["ahorro",">",0],["pct_sobre_min","<=",0]],
-  min:     [["pct_sobre_min","<=",0]],
-  up:      [["ult_chg_pct",">",0]],
-  clubout: [["mi_club","==","no"]],
+  real:       [["ahorro",">",0],["pct_sobre_min","<=",0],["n_cambios",">",0]],
+  silenciosa: [["pct_sobre_min","<=",0],["n_cambios",">",0],["ahorro","==",0]],
+  min:        [["pct_sobre_min","<=",0],["n_cambios",">",0]],
+  up:         [["ult_chg_pct",">",0]],
+  clubout:    [["mi_club","==","no"]],
 };
 async function loadExplorer(attempt=0){
   if (pvDone) return;
