@@ -324,11 +324,15 @@ const NEWSET = new Set(NEWEV);
 localStorage.setItem("pw-lastseen", D.generated);
 // Ofertas+Mejores unidos: letrero de la tienda O stats que dicen "barato hoy"
 // "en su minimo" solo informa si el precio se movio alguna vez: un producto
-// que nunca cambio esta trivialmente en su min (ruido con historia corta)
+// que nunca cambio esta trivialmente en su min (ruido con historia corta).
+// Y vence a los 30d sin moverse (~ciclo de pasaporte): pasado eso el precio
+// bajo ya ES su precio habitual, no una ganga vigente
 const atMin = s => {
   const a = D.agg[s]||{};
+  const fresh = a.last_ch
+    && (Date.parse(D.generated) - Date.parse(a.last_ch)) / 864e5 <= 30;
   return a.pct_min != null && a.pct_min <= 0 && (a.n_ch||0) >= 1
-         && (D.series[s]||[]).length >= 3;
+         && (D.series[s]||[]).length >= 3 && fresh;
 };
 const DEALS = (() => {
   const m = new Set(D.ofertas.map(o => o.sku));
@@ -1152,7 +1156,7 @@ function verdict(sku){
             tip:`está a lo que pagaste ($${(+PAID[sku].paid).toFixed(2)}) o menos`+ofTip(a)};
   if (save>0) return {rank:1, cls:"oferta", label:"en oferta",
                       tip:`ahorra $${(+save).toFixed(2)}`+ofTip(a)};
-  if (a.pct_min!=null && a.pct_min<=0 && (a.n_ch||0)>=1)
+  if (atMin(sku))
     return {rank:2, cls:"bajo", label:"mínimo histórico",
             tip:"nunca estuvo más barato en nuestros datos"+ofTip(a)};
   if (a.vs_med!=null && a.vs_med<0)
@@ -1162,8 +1166,12 @@ function verdict(sku){
                      tip:"recién bajó de precio"+ofTip(a)};
   if (chg>0) return {rank:6, cls:"subio", label:`subió ${chg}%`,
                      tip:"si no urge, espera"+ofTip(a)};
+  // en el piso pero vencida (>30d sin moverse): ya es su precio normal
+  const stale = a.pct_min!=null && a.pct_min<=0 && (a.n_ch||0)>=1;
   return {rank:5, cls:"salio_del_catalogo", label:"precio normal",
-          tip:(a.pct_min!=null?`a ${a.pct_min}% de su mínimo`:"")+ofTip(a)};
+          tip:(stale ? `es su precio más bajo — sin moverse desde ${a.last_ch}`
+                    : a.pct_min!=null ? `a ${a.pct_min}% de su mínimo` : "")
+             +ofTip(a)};
 }
 function favCard(sku){
   const p = D.products[sku]||{}, l = (D.series[sku]||[]).slice(-1)[0],
@@ -1233,14 +1241,19 @@ function sparks(){
 const COLS_BASE = ["sku","producto","marca","categoria","precio","ahorro",
                    "desc_pct","stock"];
 const COLS_ADV = ["min_hist","max_hist","pct_sobre_min","vs_tipico_pct",
-                  "ult_chg_pct","n_cambios","ult_cambio","oferta_cada_d",
-                  "ult_oferta_d","n_ofertas","ahorro_tipico","pct_dias_stock",
-                  "dias_agotado","n_veces_agotado","mi_club"];
+                  "ult_chg_pct","n_cambios","ult_cambio","dias_cambio",
+                  "oferta_cada_d","ult_oferta_d","n_ofertas","ahorro_tipico",
+                  "pct_dias_stock","dias_agotado","n_veces_agotado","mi_club"];
 // presets del comprador: filtros Perspective sin saber pivots
+// mismos criterios que atMin(): minimo vigente = en el piso, se movio
+// alguna vez, y el ultimo cambio tiene <=30d (vencen, no son eternas)
 const PV_PRESETS = {
-  real:       [["ahorro",">",0],["pct_sobre_min","<=",0],["n_cambios",">",0]],
-  silenciosa: [["pct_sobre_min","<=",0],["n_cambios",">",0],["ahorro","==",0]],
-  min:        [["pct_sobre_min","<=",0],["n_cambios",">",0]],
+  real:       [["ahorro",">",0],["pct_sobre_min","<=",0],["n_cambios",">",0],
+                ["dias_cambio","<=",30]],
+  silenciosa: [["pct_sobre_min","<=",0],["n_cambios",">",0],["ahorro","==",0],
+                ["dias_cambio","<=",30]],
+  min:        [["pct_sobre_min","<=",0],["n_cambios",">",0],
+                ["dias_cambio","<=",30]],
   up:         [["ult_chg_pct",">",0]],
   clubout:    [["mi_club","==","no"]],
 };
@@ -1272,6 +1285,9 @@ async function loadExplorer(attempt=0){
         ult_chg_pct: l&&prev&&prev[1]
           ? +((l[1]-prev[1])/prev[1]*100).toFixed(1) : null,
         n_cambios: a.n_ch ?? null, ult_cambio: a.last_ch||"",
+        dias_cambio: a.last_ch
+          ? Math.round((Date.parse(D.generated)-Date.parse(a.last_ch))/864e5)
+          : null,
         oferta_cada_d: a.of_every ?? null, ult_oferta_d: a.of_last ?? null,
         n_ofertas: a.n_of ?? null,
         ahorro_tipico: a.of_save ?? null,
@@ -1388,9 +1404,26 @@ function openProd(sku){
     ? "<h2 style='margin-top:14px'>Disponibilidad en clubes</h2><table><tr><th>Club</th><th>Stock</th></tr>" +
       clubRows.map(([n,c])=>`<tr${n===MYCLUB?' style="color:var(--warn)"':""}><td>${n===MYCLUB?"📍 ":""}${n==="El Salvador"?"Total (nacional)":n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td></tr>`).join("") + "</table>"
     : "<p class='meta' style='margin-top:10px'>Sin dato de stock por club todavía — se consulta solo para ofertas, movimientos y tu lista.</p>";
-  $("#dtable").innerHTML = "<tr><th>Fecha</th><th>Precio</th><th>Ahorro</th><th>Stock</th></tr>" +
-    s.slice(-12).reverse().map(([d,pr,st,sv]) =>
-      `<tr><td>${d}</td><td>${fmt(pr)}</td><td>${sv?"$"+(+sv).toFixed(2):"—"}</td><td>${st?"✓":"✗"}</td></tr>`).join("");
+  // tabla por episodios: una fila por regimen (mismo precio+stock+letrero),
+  // no por observacion — la biografia no crece en ruido aunque el producto
+  // viva anos en el catalogo
+  const eps = [];
+  s.forEach(([d,pr,st,sv]) => {
+    const e = eps[eps.length-1];
+    if (e && e.pr===pr && e.st===st && (e.sv||0)===(sv||0)) e.to = d;
+    else eps.push({from:d, to:d, pr, st, sv});
+  });
+  const endD = d => d === D.generated ? "hoy" : d;
+  $("#dtable").innerHTML =
+    "<tr><th>Período</th><th>Precio</th><th>Ahorro</th><th>Stock</th></tr>"
+    + eps.slice().reverse().map(e => {
+        const nd = Math.round((Date.parse(e.to)-Date.parse(e.from))/864e5) + 1;
+        const per = e.from === e.to ? e.from
+                  : `${e.from} → ${endD(e.to)} · ${nd}d`;
+        return `<tr><td>${per}</td><td>${fmt(e.pr)}</td>`
+             + `<td>${e.sv?"$"+(+e.sv).toFixed(2):"—"}</td>`
+             + `<td>${e.st?"✓":"✗"}</td></tr>`;
+      }).join("");
   // PC: ficha anclada a la derecha (no modal) — master-detail con la lista
   const wide = matchMedia("(min-width:900px)").matches;
   if (!dlg.open) wide ? dlg.show() : dlg.showModal();
