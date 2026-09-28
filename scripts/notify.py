@@ -67,6 +67,9 @@ def tkey(s):
 
 # ---------------- Appwrite (server-side, API key) ----------------
 
+UA = {"User-Agent": "PriceWatch-Notify/1.0 (+github-actions)"}
+
+
 def aw(method, path, body=None):
     if not (AW_EP and AW_PID and AW_KEY):
         return {}, 0
@@ -74,7 +77,7 @@ def aw(method, path, body=None):
                   data=json.dumps(body).encode() if body is not None else None,
                   headers={"content-type": "application/json",
                            "X-Appwrite-Project": AW_PID,
-                           "X-Appwrite-Key": AW_KEY})
+                           "X-Appwrite-Key": AW_KEY, **UA})
     try:
         with urlopen(req, timeout=20) as r:
             return json.loads(r.read() or b"{}"), r.status
@@ -291,12 +294,13 @@ def send_email(subject, html, text):
     if not (key and to):
         print("  ! sin RESEND_API_KEY/RESEND_TO — email omitido")
         return
+    # Cloudflare (1010) banea el UA por defecto de urllib; mandar uno propio
     req = Request("https://api.resend.com/emails", method="POST",
                   data=json.dumps({"from": frm, "to": to,
                                    "subject": subject,
                                    "html": html, "text": text}).encode(),
                   headers={"Authorization": f"Bearer {key}",
-                           "Content-Type": "application/json"})
+                           "Content-Type": "application/json", **UA})
     try:
         with urlopen(req, timeout=30) as r:
             print(f"  email enviado: {json.loads(r.read()).get('id')}")
@@ -371,7 +375,7 @@ def main():
             paid[r["sku"]], paid_d[r["sku"]] = r["paid"], r.get("date", "")
 
     a = build_alerts(events, cat, favs, paid)
-    siman = siman_gangas(sevents) if AW_KEY else sevents
+    siman = siman_gangas(sevents)   # aw_rows() devuelve [] sin creds
 
     # gangas silenciosas vigentes (espejo de atMin del frontend)
     silent = []
