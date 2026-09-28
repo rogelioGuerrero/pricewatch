@@ -856,3 +856,66 @@
 {"sku": "468164", "type": "club_agotado", "title": "Coffee Mate Crema de Café Italiano Dulce 1.89 L / 64 oz", "price": 979, "club": "Santa Elena", "prev_date": "2026-09-27", "date": "2026-09-28"}
 {"sku": "497254", "type": "club_agotado", "title": "Member's Selection Muslos de Pollo Fresco Bandeja", "price": 912, "club": "Santa Elena", "prev_date": "2026-09-27", "date": "2026-09-28"}
 {"sku": "497254", "type": "club_agotado", "title": "Member's Selection Muslos de Pollo Fresco Bandeja", "price": 912, "club": "El Salvador", "prev_date": "2026-09-27", "date": "2026-09-28"}
+{"sku": "98995", "type": "rebaja", "title": "Member's Selection Porciones de Salmón Congelado con Piel sin Hueso 680 g / 1.5 lb", "from": 1599, "to": 1579, "delta": -20, "pct": -1.3, "date": "2026-09-28"}
+{"sku": "127788", "type": "subio", "title": "Member's Selection Filete de Lomo de Cerdo sin Hueso Congelado Bandeja", "from": 1000, "to": 1016, "delta": 16, "pct": 1.6, "date": "2026-09-28"}
+{"sku": "511410", "type": "reaparecio", "title": "Chobani Yogurt Griego 1.13 kg / 2.5 lb", "price": 849, "prev_price": 849, "days_out": 3, "date": "2026-09-28"}
+{"sku": "750763", "type": "subio", "title": "Rastelli's Ribeye Steak 2 Unidades / 225 g / 8 oz", "from": 1849, "to": 1869, "delta": 20, "pct": 1.1, "date": "2026-09-28"}
+{"sku": "348305", "type": "subio", "title": "Mr. Tango Chorizo de Cerdo Crudo 680 g / 1.5 lb", "from": 699, "to": 729, "delta": 30, "pct": 4.3, "date": "2026-09-28"}
+{"sku": "750848", "type": "subio", "title": "Filete de Lomo Striploin Fresco Bandeja", "from": 2613, "to": 2685, "delta": 72, "pct": 2.8, "date": "2026-09-28"}
+{"sku": "243123", "type": "subio", "title": "Lomo de Cerdo sin Hueso Congelado Empacado al Vacio", "from": 2447, "to": 2492, "delta": 45, "pct": 1.8, "date": "2026-09-28"}
+{"sku": "259017", "type": "reaparecio", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "prev_price": 549, "days_out": 3, "date": "2026-09-28"}
+{"sku": "259055", "type": "subio", "title": "Lomo de Cerdo Entero Sin Hueso Congelado Caja", "from": 13647, "to": 13932, "delta": 285, "pct": 2.1, "date": "2026-09-28"}
+{"sku": "510906", "type": "reaparecio", "title": "Oikos Yogurt Bebible con Proteína 8 Unidades / 220 g / 7.7 oz", "price": 1299, "prev_price": 1299, "days_out": 2, "date": "2026-09-28"}
+{"sku": "399005", "type": "subio", "title": "Reny Picot Brie con granos de Pimienta 396 g /14 oz", "from": 377, "to": 899, "delta": 522, "pct": 138.5, "date": "2026-09-28"}
+{"sku": "260637", "type": "subio", "title": "Costilla de Cerdo Cortada Congelada Bandeja", "from": 1286, "to": 1302, "delta": 16, "pct": 1.2, "date": "2026-09-28"}
+{"sku": "228707", "type": "subio", "title": "Coulotte Entero Fresco Empacado al Vacio", "from": 8935, "to": 9087, "delta": 152, "pct": 1.7, "date": "2026-09-28"}
+{"sku": "750849", "type": "subio", "title": "Filete de Striploin Entero Fresco Empacado al Vacío", "from": 17493, "to": 17762, "delta": 269, "pct": 1.5, "date": "2026-09-28"}
+{"sku": "507214", "type": "reaparecio", "title": "Nordelle Galletas Speculoos 3 Unidades / 200 g", "price": 1099, "prev_price": 1099, "days_out": null, "date": "2026-09-28"}
+{"sku": "600580", "type": "nuevo", "title": "My Mochi Helado de Menta 420 g / 15 oz", "price": 1149, "date": "2026-09-28"}
+{"sku": "526146", "type": "agotado", "title": "Sello de Oro Filete de Pollo Marinado Criollo 1.36 kg / 3 lb", "price": 1099, "date": "2026-09-28"}
+{"sku": "455904", "type": "agotado", "title": "Bella Contadina Mezcla de Antipasto Italiano 600 g / 21 oz", "price": 999, "date": "2026-09-28"}
+{"sku": "8754", "type": "agotado", "title": "Member's Selection Endulzante con Stevia 500 Unidades / 1 g", "price": 999, "date": "2026-09-28"}
+{"sku": "496419", "type": "agotado", "title": "Terra Delyssa Aceite de Oliva Extra Virgen Sabor Suave 1 L / 34 oz", "price": 999, "date": "2026-09-28"}
+{"sku": "24970", "type": "agotado", "title": "Kraft Cheez Whiz 2 Unidades / 425 g / 15 oz", "price": 1379, "date": "2026-09-28"}
+{"sku": "306937", "type": "agotado", "title": "Mini Vegetales 1.13 kg / 2.5 lb", "price": 569, "date": "2026-09-28"}
+{"sku": "195641", "type": "agotado", "title": "Cebolla Blanca 2.26 kg / 5 lb", "price": 799, "date": "2026-09-28"}
+{"sku": "475594", "type": "agotado", "title": "Sello de Oro Pechuga de Pollo Molida Fresca Bandeja", "price": 868, "date": "2026-09-28"}
+{"sku": "500728", "type": "nuevo", "title": "Firestone Llanta 205/55R16 F600 Alto Desempeño, Durabilidad y Resistencia", "price": 7699, "date": "2026-09-28"}
+{"sku": "513116", "type": "agotado", "title": "Ninja Luxe Espresso Serie Signature Cafetera Espresso Multifunción con Molino Integrado ES655COPTLA", "price": 52499, "date": "2026-09-28"}
+{"sku": "502626-40094581498", "type": "agotado", "title": "Hamilton Beach Licuadora y Procesador de Alimentos", "price": 4499, "date": "2026-09-28"}
+{"sku": "494824", "type": "agotado", "title": "Samsung 165 cm / 65\" Pulgadas Smart Tizen 4k Crystal UHD TV UN65U8000FFXZA", "price": 59999, "date": "2026-09-28"}
+{"sku": "506831", "type": "agotado", "title": "Aqua Joe Manguera de Agua para Jardin 15.2 m / 50'", "price": 2499, "date": "2026-09-28"}
+{"sku": "718784", "type": "agotado", "title": "UltraHD Home by Seville Classics Armario Alto para Almacenaje en Garaje", "price": 33999, "date": "2026-09-28"}
+{"sku": "505671-0840467308109", "type": "regreso", "title": "Owala Botellas para Agua 2 Unidades / 473 mL / 16 oz", "price": 3699, "prev_price": 3699, "days_out": 5, "date": "2026-09-28"}
+{"sku": "493331-0835432005022", "type": "nuevo", "title": "KeepCool Bolsa Térmica Reusable PriceSmart", "price": 1299, "date": "2026-09-28"}
+{"sku": "465281", "type": "agotado", "title": "Downy Infusions Calm Perlas de Perfume Intensificadoras de Aroma a Lavanda y Vainilla 963 g / 34 oz", "price": 1577, "date": "2026-09-28"}
+{"sku": "354909", "type": "agotado", "title": "Plasticos Diversos Bandejas Desechables Craft #8 125 Unidades", "price": 779, "date": "2026-09-28"}
+{"sku": "503148-0198062901356", "type": "agotado", "title": "Berkshire Life Manta Queen Acolchada Alternativo a Plumón 249 cm x 234 cm / 98\" x 92\"", "price": 1999, "date": "2026-09-28"}
+{"sku": "504083-0840467307973", "type": "regreso", "title": "Owala Vasos Térmicos Portátiles para Bebidas 2 Unidades / 591 mL / 20 oz", "price": 3977, "prev_price": 3977, "days_out": 5, "date": "2026-09-28"}
+{"sku": "468318-0840467307690", "type": "regreso", "title": "Owala Botellas para Agua 2 Unidades / 710 mL / 24 oz", "price": 3999, "prev_price": 3999, "days_out": 5, "date": "2026-09-28"}
+{"sku": "503722", "type": "nuevo", "title": "Benediktiner Cerveza Alemana en Barril 5 L / 169. 07 oz", "price": 2999, "date": "2026-09-28"}
+{"sku": "486301", "type": "nuevo", "title": "Sandara Espumante Rosado 12 Unidades / 250 mL", "price": 3999, "date": "2026-09-28"}
+{"sku": "467690", "type": "nuevo", "title": "Samsung Lavadora de Carga Frontal Capacidad 22 kg / 4.5 cu ft. WF45B6300AC/US", "price": 99999, "date": "2026-09-28"}
+{"sku": "487476", "type": "subio", "title": "Pedigree High Protein Alimento Húmedo en Filetes para Perro Adulto Sabor a Res y Pollo y Cerdo y Res 24 Unidades / 85 g", "from": 2179, "to": 2299, "delta": 120, "pct": 5.5, "date": "2026-09-28"}
+{"sku": "515633-0198374702511", "type": "nuevo", "title": "Weatherproof Vintage Jean Clásico Bota Recta para Hombre", "price": 2299, "date": "2026-09-28"}
+{"sku": "514457-0196633809643", "type": "agotado", "title": "Kirkland Signature Short con Cordon Ajustable para Hombre", "price": 1299, "date": "2026-09-28"}
+{"sku": "506750-0882931317064", "type": "agotado", "title": "Mondetta Set de Camisetas para Niña 2 Unidades", "price": 877, "date": "2026-09-28"}
+{"sku": "510426-0884453232764", "type": "agotado", "title": "Leo & Nicole Sueter con Botones de Manga Larga para Mujer", "price": 977, "date": "2026-09-28"}
+{"sku": "513694-0196633845351", "type": "agotado", "title": "Kirkland Signature Camiseta Polo en Algodón para Hombre", "price": 1999, "date": "2026-09-28"}
+{"sku": "512494-0060206048022", "type": "agotado", "title": "Hilary Radley Blusa Acanalada de Manga Corta para Mujer", "price": 1299, "date": "2026-09-28"}
+{"sku": "506350", "type": "nuevo", "title": "Member's Selection Santa Decorativo Iluminado con Bastón de Caramelo 160 cm / 63\"", "price": 13499, "date": "2026-09-28"}
+{"sku": "516730", "type": "nuevo", "title": "Maud Borup Cascanueces Gigante de Chocolate 900 g / 2 lb", "price": 3899, "date": "2026-09-28"}
+{"sku": "516721", "type": "nuevo", "title": "Maud Borup Bombas Gigantes de Chocolate con Masmelos 5 Unidades / 255 g / 9 oz", "price": 1099, "date": "2026-09-28"}
+{"sku": "509854", "type": "agotado", "title": "Elvive Dream Liso Shampoo Liso Efecto Keratina 680 mL + Acondicionador Sellador Liso 370 mL", "price": 1599, "date": "2026-09-28"}
+{"sku": "341115", "type": "salio_del_catalogo", "title": "Member's Selection Mini Pan Ciabatta 6 Unidades ", "price": 329, "date": "2026-09-28"}
+{"sku": "261887", "type": "salio_del_catalogo", "title": "Member's Selection Pastel de Vainilla con Cobertura de Chocolate Bañado en Jarabe de Tres Leches Recién Horneado 40 a 50 Porciones", "price": 2899, "date": "2026-09-28"}
+{"sku": "475596", "type": "salio_del_catalogo", "title": "Member's Selection Lomo Pacho Viuda Lomo Ancho Fresco Caja", "price": 33311, "date": "2026-09-28"}
+{"sku": "514690", "type": "salio_del_catalogo", "title": "Pio Lindo Medallones de Pollo Congelados 50 Unidades / 975 g / 2.14 lb", "price": 849, "date": "2026-09-28"}
+{"sku": "509919", "type": "salio_del_catalogo", "title": "Samsung Galaxy Z Fold 7 Celular Negro RAM 12 Gigabytes / Almacenamiento 512 Gigabytes ", "price": 119977, "date": "2026-09-28"}
+{"sku": "501943", "type": "salio_del_catalogo", "title": "Xiaomi Redmi Note 14 Pro Celular Negro RAM 8 Gigabytes / Almacenamiento 256 Gigabytes", "price": 29977, "date": "2026-09-28"}
+{"sku": "457303-0799870457341", "type": "salio_del_catalogo", "title": "Coolaroo Carpa para Sol 3.9 m x 2.1 m / 153.5\" x 82.6\"", "price": 4499, "date": "2026-09-28"}
+{"sku": "455690", "type": "salio_del_catalogo", "title": "Lavabo de Acero Inoxidable con Grifo 64 cm x 56.89 cm x 55.11 cm / 25.20'' × 22.40'' × 21.70''", "price": 14977, "date": "2026-09-28"}
+{"sku": "497923-0847420092501", "type": "salio_del_catalogo", "title": "Pure Comfort Cama para Mascotas Diseños Variados 76.2 cm x 61 cm / 30\" x 24\"", "price": 3495, "date": "2026-09-28"}
+{"sku": "496912-0012899568080", "type": "salio_del_catalogo", "title": "Kenneth Cole Medias Cortas para Hombre Talla Única 8 Pares ", "price": 477, "date": "2026-09-28"}
+{"sku": "472073", "type": "salio_del_catalogo", "title": "Plex Tratamiento para Todo Tipo de Cabello 5 Piezas", "price": 977, "date": "2026-09-28"}
+{"sku": "326545", "type": "salio_del_catalogo", "title": "Viro Grip Gel Capsulas Antigripal 3 Cajas / 6 Unidades", "price": 829, "date": "2026-09-28"}
