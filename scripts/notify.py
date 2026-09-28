@@ -1,0 +1,444 @@
+"""
+notify.py - Digest por correo + alertas push. Corre como ultimo paso
+del stock-check (~8am SV), cuando los 3 sweeps del dia ya cerraron.
+
+Regla: molestar solo cuando sea necesario.
+
+PUSH (interrumpe — algo que hacer hoy):
+  * favorito bajo / rebaja / oferta nueva
+  * favorito a precio de resurtir (<= lo que pagaste)
+  * rebaja silenciosa grande (>=30%), aunque no sea favorito
+  * ganga Siman nueva (bajo/oferta, no muteada ni ya vista)
+
+EMAIL (digest consultable): solo si hubo eventos hoy o hits de lista.
+
+Env:
+  RESEND_API_KEY, RESEND_FROM, RESEND_TO      — email via Resend
+  VAPID_PUBLIC, VAPID_PRIVATE                 — web push
+  APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, APPWRITE_API_KEY
+                                              — favs/compras/push_subs
+  SITE_URL                                    — links del digest
+"""
+
+import json
+import os
+import sqlite3
+import sys
+import time
+import unicodedata
+
+if hasattr(sys.stdout, "reconfigure"):   # consolas cp1252 (Windows)
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+from datetime import datetime, timedelta, timezone
+from urllib.parse import quote
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA = os.path.join(ROOT, "data")
+EVENTS_LOG = os.path.join(DATA, "events.jsonl")
+SIMAN_LOG = os.path.join(DATA, "siman_events.jsonl")
+DB = os.path.join(DATA, "prices.db")
+SIMAN_DB = os.path.join(DATA, "siman.db")
+
+AW_EP = os.environ.get("APPWRITE_ENDPOINT", "").rstrip("/")
+AW_PID = os.environ.get("APPWRITE_PROJECT_ID", "")
+AW_KEY = os.environ.get("APPWRITE_API_KEY", "")
+AW_DB = "pricewatch"
+
+SITE = os.environ.get("SITE_URL",
+                      "https://rogelioguerrero.github.io/pricewatch/")
+TODAY = datetime.now(timezone(timedelta(hours=-6))).date().isoformat()
+FRESH_DAYS = 30          # ganga "al minimo" vence a los 30d sin moverse
+BIG_DROP = -30.0         # rebaja silenciosa >=30% amerita push
+
+
+def money(c):
+    return "—" if c is None else f"${c / 100:.2f}"
+
+
+def tkey(s):
+    """Espejo de tkeyJS del frontend: minúsculas, sin acentos,
+    no-alfanumérico → un espacio, bordes recortados."""
+    s = unicodedata.normalize("NFD", (s or "").lower())
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    return " ".join("".join(c if c.isalnum() else " " for c in s).split())
+
+
+# ---------------- Appwrite (server-side, API key) ----------------
+
+def aw(method, path, body=None):
+    if not (AW_EP and AW_PID and AW_KEY):
+        return {}, 0
+    req = Request(f"{AW_EP}{path}", method=method,
+                  data=json.dumps(body).encode() if body is not None else None,
+                  headers={"content-type": "application/json",
+                           "X-Appwrite-Project": AW_PID,
+                           "X-Appwrite-Key": AW_KEY})
+    try:
+        with urlopen(req, timeout=20) as r:
+            return json.loads(r.read() or b"{}"), r.status
+    except HTTPError as e:
+        try:
+            return json.loads(e.read() or b"{}"), e.code
+        except json.JSONDecodeError:
+            return {}, e.code
+    except Exception:
+        return {}, 0
+
+
+def aw_rows(table):
+    q = quote('{"method":"limit","values":[500]}')
+    res, code = aw("GET", f"/tablesdb/{AW_DB}/tables/{table}/rows"
+                         f"?queries%5B%5D={q}")
+    return res.get("rows", []) if code == 200 else []
+
+
+def ensure_push_table():
+    """Crea push_subs si falta — el correo/digest no depende de ella."""
+    _, code = aw("GET", f"/tablesdb/{AW_DB}/tables/push_subs")
+    if code == 200:
+        return
+    res, code = aw("POST", f"/tablesdb/{AW_DB}/tables", {
+        "tableId": "push_subs", "name": "Suscripciones push",
+        # cualquiera puede suscribirse (no requiere cuenta); solo el
+        # servidor lee/borra — unsubscribe mata el endpoint en origen
+        # y el sender lo poda al recibir 404/410
+        "permissions": ['create("any")'], "rowSecurity": True,
+        "enabled": True})
+    if code not in (200, 201, 409):
+        print(f"  ! push_subs: HTTP {code} {res.get('message')}")
+        return
+    for kind, kw in [("string", {"key": "endpoint", "size": 500,
+                                 "required": True}),
+                     ("string", {"key": "keys", "size": 500,
+                                 "required": True}),
+                     ("string", {"key": "ua", "size": 250,
+                                 "required": False})]:
+        aw("POST", f"/tablesdb/{AW_DB}/tables/push_subs/columns/{kind}", kw)
+    for _ in range(20):
+        time.sleep(1)
+        r, _ = aw("GET", f"/tablesdb/{AW_DB}/tables/push_subs")
+        st = {c["key"]: c["status"]
+              for c in r.get("columns", r.get("attributes", []))}
+        if st and all(v == "available" for v in st.values()):
+            break
+    print("  + push_subs lista")
+
+
+# ---------------- datos ----------------
+
+def load_events(path, today=True):
+    out = []
+    if not os.path.exists(path):
+        return out
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            try:
+                e = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not today or e.get("date") == TODAY:
+                out.append(e)
+    # un mismo (sku,type) puede repetirse entre sweep y stock-check:
+    # quedarse con el ultimo
+    dedup = {}
+    for e in out:
+        dedup[(e.get("sku") or e.get("iid"), e["type"])] = e
+    return list(dedup.values())
+
+
+def catalog_state():
+    """{sku: {price, saving, in_stock, min, max, med, n_ch, last_ch,
+    title}} desde prices.db — espejo del agg del frontend."""
+    con = sqlite3.connect(DB)
+    con.row_factory = sqlite3.Row
+    titles = {r["sku"]: r["title"]
+              for r in con.execute("select sku, title from products")}
+    series = {}
+    for r in con.execute("select sku, date, price, saving, in_stock "
+                         "from prices order by sku, date"):
+        series.setdefault(r["sku"], []).append(r)
+    con.close()
+    out = {}
+    for sku, rows in series.items():
+        prices = [r["price"] for r in rows if r["price"]]
+        last = rows[-1]
+        ch = [r for i, r in enumerate(rows[1:], 1)
+              if r["price"] != rows[i - 1]["price"]]
+        d_last = (datetime.strptime(ch[-1]["date"], "%Y-%m-%d").date()
+                  if ch else None)
+        out[sku] = {
+            "title": titles.get(sku, sku), "price": last["price"],
+            "saving": last["saving"] or 0, "in_stock": bool(last["in_stock"]),
+            "min": min(prices) if prices else None,
+            "max": max(prices) if prices else None,
+            "n_ch": len(ch), "last_ch": last["date"] if ch else None,
+            "d_ch": (datetime.now().date() - d_last).days if d_last else None,
+        }
+    return out
+
+
+def siman_items():
+    """Ultimo estado por itemId: {itemId: {pid,title,price,avail,watch}}."""
+    if not os.path.exists(SIMAN_DB):
+        return {}
+    con = sqlite3.connect(SIMAN_DB)
+    con.row_factory = sqlite3.Row
+    items = {r["itemId"]: dict(r) for r in con.execute("select * from items")}
+    for r in con.execute(
+            "select p.* from prices p join (select itemId, max(date) md "
+            "from prices group by itemId) m "
+            "on p.itemId=m.itemId and p.date=m.md"):
+        if r["itemId"] in items:
+            items[r["itemId"]].update(dict(r))
+    con.close()
+    return items
+
+
+# ---------------- decision de ruido ----------------
+
+def build_alerts(events, cat, favs, paid):
+    fav_ids = set(favs)
+    drops = sorted([e for e in events if e["type"] in ("bajo", "rebaja")
+                    and e.get("pct")],
+                   key=lambda e: e["pct"])
+    out = {
+        "drops": drops,
+        "fav_drop": [e for e in drops if e["sku"] in fav_ids],
+        "fav_oferta": [e for e in events if e["type"] == "oferta"
+                       and e["sku"] in fav_ids],
+        "fav_out": [e for e in events
+                    if e["type"] in ("agotado", "salio_del_catalogo")
+                    and e["sku"] in fav_ids],
+        "fav_resurtir": [],
+        "big_rebaja": [e for e in drops if e["type"] == "rebaja"
+                       and e["pct"] <= BIG_DROP],
+    }
+    for sku in fav_ids:
+        c = cat.get(sku)
+        if c and c["in_stock"] and c["price"] and sku in paid \
+                and c["price"] <= round(paid[sku] * 100):
+            out["fav_resurtir"].append(
+                {"sku": sku, "title": c["title"], "to": c["price"],
+                 "paid": paid[sku]})
+    return out
+
+
+def siman_gangas(events):
+    """bajos/ofertas de Siman hoy, menos lo muteado/ya visto."""
+    muted = {r["tkey"] for r in aw_rows("siman_muted")}
+    seen = {r["tkey"]: r["price"] for r in aw_rows("siman_seen")}
+    def hit(rule, tk):
+        t = rule.split("|", 1)[-1] if "|" in rule else rule
+        return t == tk
+    out = []
+    for e in events:
+        if e["type"] not in ("bajo", "oferta"):
+            continue
+        tk = tkey(e.get("title"))
+        if any(hit(r, tk) for r in muted):
+            continue
+        sp = next((p for r, p in seen.items() if hit(r, tk)), None)
+        if sp is not None and e.get("price") and e["price"] >= sp:
+            continue
+        # normalizar a centavos (Siman reporta USD; PS reporta cents)
+        for k in ("price", "from", "to"):
+            if e.get(k) is not None:
+                e[k] = round(e[k] * 100)
+        out.append(e)
+    # mismo producto puede emitir bajo + oferta: 'bajo' trae from→to
+    by_iid = {}
+    for e in out:
+        if e["iid"] not in by_iid or e["type"] == "bajo":
+            by_iid[e["iid"]] = e
+    return list(by_iid.values())
+
+
+# ---------------- envio ----------------
+
+def send_push(subs, payload):
+    try:
+        from pywebpush import webpush, WebPushException
+    except ImportError:
+        print("  ! pywebpush no instalado — push omitido")
+        return
+    vp = os.environ.get("VAPID_PRIVATE")
+    if not vp:
+        print("  ! sin VAPID_PRIVATE — push omitido")
+        return
+    for s in subs:
+        try:
+            webpush(
+                subscription_info={"endpoint": s["endpoint"],
+                                   "keys": json.loads(s["keys"])},
+                data=json.dumps(payload),
+                vapid_private_key=vp,
+                vapid_claims={"sub": "mailto:notificaciones@agtisa.com"},
+                ttl=86400)
+        except WebPushException as e:
+            code = getattr(e.response, "status_code", 0)
+            if code in (404, 410):       # endpoint muerto: podar
+                aw("DELETE", f"/tablesdb/{AW_DB}/tables/push_subs"
+                             f"/rows/{s['$id']}")
+            print(f"  ! push {s['$id']}: HTTP {code}")
+
+
+def send_email(subject, html, text):
+    key = os.environ.get("RESEND_API_KEY")
+    frm = os.environ.get("RESEND_FROM", "PriceWatch <info@agtisa.com>")
+    to = os.environ.get("RESEND_TO", "")
+    if not (key and to):
+        print("  ! sin RESEND_API_KEY/RESEND_TO — email omitido")
+        return
+    req = Request("https://api.resend.com/emails", method="POST",
+                  data=json.dumps({"from": frm, "to": to,
+                                   "subject": subject,
+                                   "html": html, "text": text}).encode(),
+                  headers={"Authorization": f"Bearer {key}",
+                           "Content-Type": "application/json"})
+    try:
+        with urlopen(req, timeout=30) as r:
+            print(f"  email enviado: {json.loads(r.read()).get('id')}")
+    except HTTPError as e:
+        print(f"  ! Resend HTTP {e.code}: {e.read()[:300]}")
+
+
+# ---------------- digest ----------------
+
+def li(e, cat=None):
+    t = (e.get("title") or "?").strip()
+    t = t[:60] + "…" if len(t) > 60 else t
+    if e.get("from") is not None and e.get("to") is not None:
+        return (f"<b>{t}</b> — <s>{money(e['from'])}</s> → "
+                f"<b>{money(e['to'])}</b> ({e['pct']}%)")
+    if e.get("to") is not None:
+        return f"<b>{t}</b> — {money(e['to'])} ({e.get('pct','')}%)"
+    if e.get("price") is not None:
+        return f"<b>{t}</b> — {money(e['price'])}"
+    return f"<b>{t}</b>"
+
+
+def digest_html(day, counts, a, gangas, silent, siman):
+    S = []
+    S.append(f"<p style='color:#666'>{day} — "
+             + " · ".join(f"{n} {k}" for k, n in counts.items() if n)
+             + "</p>")
+    if gangas:
+        g = gangas[0]
+        S.append("<h3 style='margin-bottom:4px'>Ganga del día</h3><p>"
+                 + li(g) +
+                 (" — sin letrero, rebaja silenciosa"
+                  if g["type"] == "rebaja" else "") + "</p>")
+    fav_bits = []
+    for lbl, lst in [("bajaron/en oferta", a["fav_drop"] + a["fav_oferta"]),
+                     ("para resurtir", a["fav_resurtir"]),
+                     ("sin stock", a["fav_out"])]:
+        if lst:
+            fav_bits.append(
+                f"<b>{len(lst)} {lbl}:</b><ul>"
+                + "".join(f"<li>{li(e)}</li>" for e in lst[:5]) + "</ul>")
+    if fav_bits:
+        S.append("<h3 style='margin-bottom:4px'>Tu lista</h3>"
+                 + "".join(fav_bits))
+    if gangas:
+        S.append("<h3 style='margin-bottom:4px'>Bajadas de hoy</h3><ul>"
+                 + "".join(f"<li>{li(e)}</li>" for e in gangas[:8])
+                 + "</ul>")
+    if silent:
+        S.append("<h3 style='margin-bottom:4px'>Silenciosas vigentes</h3><ul>"
+                 + "".join(f"<li>{li(e)}</li>" for e in silent[:5]) + "</ul>")
+    if siman:
+        S.append("<h3 style='margin-bottom:4px'>Siman</h3><ul>"
+                 + "".join(f"<li>{li(e)}</li>" for e in siman[:5]) + "</ul>")
+    S.append(f"<p><a href='{SITE}?tab=ofertas' style='background:#0f1420;"
+             "color:#fff;padding:10px 18px;border-radius:8px;"
+             "text-decoration:none'>Abrir PriceWatch</a></p>")
+    body = "".join(S)
+    return (f"<div style='font-family:sans-serif;max-width:560px'>"
+            f"<h2 style='margin-bottom:2px'>PriceWatch</h2>{body}</div>")
+
+
+def main():
+    print(f"notify {TODAY}")
+    events = load_events(EVENTS_LOG)
+    sevents = load_events(SIMAN_LOG)
+    cat = catalog_state()
+    favs = [r["sku"] for r in aw_rows("favs")] if AW_KEY else []
+    paid, paid_d = {}, {}
+    for r in aw_rows("compras") if AW_KEY else []:
+        if r.get("paid") and r.get("date", "") >= paid_d.get(r["sku"], ""):
+            paid[r["sku"]], paid_d[r["sku"]] = r["paid"], r.get("date", "")
+
+    a = build_alerts(events, cat, favs, paid)
+    siman = siman_gangas(sevents) if AW_KEY else sevents
+
+    # gangas silenciosas vigentes (espejo de atMin del frontend)
+    silent = []
+    for sku, c in cat.items():
+        if (c["in_stock"] and not c["saving"] and c["price"]
+                and c["price"] == c["min"] and c["n_ch"] >= 1
+                and c["d_ch"] is not None and c["d_ch"] <= FRESH_DAYS):
+            drop = (c["max"] - c["price"]) / c["max"] * 100
+            silent.append({"sku": sku, "title": c["title"],
+                           "from": c["max"], "to": c["price"],
+                           "pct": round(-drop, 1)})
+    silent.sort(key=lambda e: e["pct"])
+
+    counts = {}
+    for e in events:
+        counts[e["type"]] = counts.get(e["type"], 0) + 1
+    n_fav = len(a["fav_drop"]) + len(a["fav_oferta"])
+
+    # ---- push: solo lo urgente ----
+    push_items = []
+    if a["fav_drop"] or a["fav_oferta"]:
+        push_items.append(f"{n_fav} de tu lista en oferta/bajó")
+    if a["fav_resurtir"]:
+        push_items.append(f"{len(a['fav_resurtir'])} para resurtir")
+    top = a["big_rebaja"][:1]
+    for e in top:
+        push_items.append(f"{e['title'][:30]} {e['pct']}% silenciosa")
+    if siman:
+        push_items.append(f"{len(siman)} ganga Siman")
+    if push_items and AW_KEY:
+        ensure_push_table()
+        subs = aw_rows("push_subs")
+        print(f"  push -> {len(subs)} subs: {' · '.join(push_items)}")
+        send_push(subs, {"title": "PriceWatch",
+                         "body": " · ".join(push_items)[:170],
+                         "url": SITE + "?tab=favs" if a["fav_drop"]
+                               else SITE + "?tab=ofertas"})
+    elif push_items:
+        print("  push: hay alertas pero sin credenciales Appwrite")
+    else:
+        print("  push: nada urgente — silencio")
+
+    # ---- email: solo si pasó algo ----
+    if not events and not siman:
+        print("  email: día sin eventos — no se envía")
+        return
+    headline = []
+    if a["drops"]:
+        headline.append(f"{len(a['drops'])} bajadas")
+    if n_fav:
+        headline.append(f"{n_fav} de tu lista")
+    if siman:
+        headline.append(f"{len(siman)} Siman")
+    subj = f"PriceWatch {TODAY}: " + (" · ".join(headline) or "resumen")
+    pretty = {"bajo": "bajaron", "rebaja": "rebajas silenciosas",
+              "subio": "subieron", "oferta": "ofertas nuevas",
+              "oferta_termino": "terminó oferta", "agotado": "agotados",
+              "reaparecio": "volvieron", "nuevo": "nuevos",
+              "salio_del_catalogo": "salieron", "regreso": "regresaron",
+              "se_agota": "se están acabando",
+              "club_agotado": "agotado en club", "club_volvio": "volvió en club"}
+    cnt = {pretty.get(k, k): v for k, v in counts.items()}
+    html = digest_html(TODAY, cnt, a, a["drops"], silent, siman)
+    text = f"PriceWatch {TODAY}\n" + "\n".join(
+        f"- {(e.get('title') or '')[:60]} {e.get('pct','')}%" for e in a["drops"][:8])
+    send_email(subj, html, text)
+
+
+if __name__ == "__main__":
+    main()

@@ -171,6 +171,7 @@
   <header>
     <select id="clubsel" class="chip" style="float:right;margin-top:6px;margin-left:8px"></select>
     <span id="acct" class="chip" style="float:right;margin-top:6px;display:none">cuenta</span>
+    <span id="pushbtn" class="chip" title="avisos" style="float:right;margin:6px 6px 0 0;display:none">🔕</span>
     <h1>PriceWatch SV</h1>
     <p>PriceSmart El Salvador · datos al <b id="gen"></b></p>
     <span class="demo" id="demo-banner" style="display:none">DEMO — el historial es sintético hasta acumular corridas reales (mar/jue)</span>
@@ -842,7 +843,8 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   if (t.dataset.t==="explorar") loadExplorer();
 });
 // abre en el ultimo tab usado (o Mi lista)
-document.querySelector(`.tab[data-t="${localStorage.getItem("pw-tab")||"favs"}"]`)?.click();
+const urlTab = new URLSearchParams(location.search).get("tab");
+document.querySelector(`.tab[data-t="${urlTab || localStorage.getItem("pw-tab") || "favs"}"]`)?.click();
 
 const goTab = id => document.querySelector(`.tab[data-t="${id}"]`)?.click();
 let cf = "all", OF_F = "all", PV_PRE = "all", pvRefresh = null;
@@ -1483,6 +1485,43 @@ upd.onclick = () => location.reload();
 document.addEventListener("visibilitychange",
   () => { if (!document.hidden) checkVer(); });
 setInterval(checkVer, 30 * 60 * 1000);
+// ---- web push: el sweep (GH Action) despierta al dispositivo ----
+// La suscripcion vive en Appwrite push_subs; no requiere cuenta porque
+// la "identidad" es el endpoint mismo — unsubscribe() lo mata en origen
+// y el sender lo poda al recibir 404/410.
+const VAPID_PUBLIC = "BCe97olK0g7PDhtvuC4BknYtgjzkzSlXv8MJ_Ve-9tMwnagCAU-lQmI1JtSgrSNrQZQE2pBr0O4H-vruxep4H6c";
+const b64u8 = s => Uint8Array.from(
+  atob(s.replace(/-/g,"+").replace(/_/g,"/")), c => c.charCodeAt(0));
+const pushBtn = document.getElementById("pushbtn");
+(async () => {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)
+      || !AW.ok) return;
+  const reg = await navigator.serviceWorker.ready;
+  const paint = async () => {
+    const sub = await reg.pushManager.getSubscription();
+    pushBtn.style.display = "";
+    pushBtn.textContent = sub ? "🔔" : "🔕";
+    pushBtn.title = sub ? "avisos activados en este dispositivo — toca para quitar"
+                        : "avisarme de gangas y movimientos de mi lista";
+  };
+  pushBtn.onclick = async () => {
+    try {
+      let sub = await reg.pushManager.getSubscription();
+      if (sub) { await sub.unsubscribe(); return paint(); }
+      if (await Notification.requestPermission() !== "granted") return;
+      sub = await reg.pushManager.subscribe({userVisibleOnly: true,
+        applicationServerKey: b64u8(VAPID_PUBLIC)});
+      const j = sub.toJSON();
+      AW.dbs.createRow({databaseId: AW_DB, tableId: "push_subs",
+        rowId: `sub-${h16(j.endpoint)}`,
+        data: {endpoint: j.endpoint, keys: JSON.stringify(j.keys),
+               ua: navigator.userAgent.slice(0, 240)}}).catch(() => {});
+      paint();
+    } catch (e) {}
+  };
+  paint();
+})();
+
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js", {scope: "./"}).catch(()=>{});
 }

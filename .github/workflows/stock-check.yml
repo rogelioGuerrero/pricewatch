@@ -42,3 +42,20 @@ jobs:
           git add data/ docs/index.html
           git diff --staged --quiet || git commit -m "stock-check: $(date +%F)"
           git push
+
+      - name: Digest email + push alerts (solo si hay novedades)
+        # Ultimo job del dia (8am SV): consolida sweep + siman + stock-check.
+        # notify.py decide los umbrales; sin novedades no envia nada.
+        env:
+          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: PriceWatch <info@agtisa.com>
+          RESEND_TO: guerrero_vi@yahoo.com
+          VAPID_PUBLIC: BCe97olK0g7PDhtvuC4BknYtgjzkzSlXv8MJ_Ve-9tMwnagCAU-lQmI1JtSgrSNrQZQE2pBr0O4H-vruxep4H6c
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          SITE_URL: https://rogelioguerrero.github.io/pricewatch/
+        run: |
+          python -m pip install pywebpush -q
+          python scripts/notify.py

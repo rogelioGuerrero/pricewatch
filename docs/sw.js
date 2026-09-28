@@ -1,6 +1,6 @@
 // PriceWatch SV — navegación network-first (abrir la app trae la
 // versión fresca); sin señal cae al último snapshot cacheado.
-const CACHE = "pricewatch-v14";
+const CACHE = "pricewatch-v15";
 const CORE = ["./", "./index.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", e => {
@@ -44,6 +44,31 @@ self.addEventListener("fetch", e => {
         return r;
       }).catch(() => hit);
       return hit || net;
+    })
+  );
+});
+
+// ---- web push: el digest del sweep despierta al dispositivo ----
+self.addEventListener("push", e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) {}
+  e.waitUntil(self.registration.showNotification(d.title || "PriceWatch", {
+    body: d.body || "",
+    icon: "icon-192.png",
+    badge: "icon-192.png",
+    data: { url: d.url || "./index.html" },
+  }));
+});
+
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || "./index.html";
+  e.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
+      for (const c of list) {
+        if (c.url.includes("index") || c.url.endsWith("/")) return c.focus();
+      }
+      return clients.openWindow(url);
     })
   );
 });

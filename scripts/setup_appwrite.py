@@ -88,6 +88,18 @@ for t, name in [("favs", "Favoritos"), ("compras", "Compras"),
                {"tableId": t, "name": name, "permissions": PERMS_USERS,
                 "rowSecurity": True, "enabled": True}, t)
 
+# push_subs: suscripciones web push. create("any") porque suscribirse
+# no requiere cuenta — la identidad es el endpoint; unsubscribe lo mata
+# en origen y notify.py poda las filas que devuelven 404/410.
+_, code = api("GET", f"/tablesdb/{DB}/tables/push_subs")
+if code == 200:
+    print("  = push_subs: ya existe")
+else:
+    ensure("POST", f"/tablesdb/{DB}/tables",
+           {"tableId": "push_subs", "name": "Suscripciones push",
+            "permissions": ['create("any")'],
+            "rowSecurity": True, "enabled": True}, "push_subs")
+
 print("Columnas:")
 def col(table, kind, key, **kw):
     path = f"/tablesdb/{DB}/tables/{table}/columns/{kind}"
@@ -111,6 +123,9 @@ col("siman_muted", "string", "tkey", size=250, required=True)
 col("siman_seen", "string", "tkey", size=250, required=True)
 col("siman_seen", "float", "price", required=True)
 col("siman_seen", "string", "date", size=10, required=True)
+col("push_subs", "string", "endpoint", size=500, required=True)
+col("push_subs", "string", "keys", size=500, required=True)
+col("push_subs", "string", "ua", size=250, required=False)
 
 # las columnas se crean async; esperar a que queden available
 st = {}
