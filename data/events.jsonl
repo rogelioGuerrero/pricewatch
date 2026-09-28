@@ -803,3 +803,25 @@
 {"sku": "382028", "type": "club_volvio", "title": "Member's Selection Desinfectantante 2 Unidades / 5 L / 169 oz", "price": 959, "club": "Santa Ana", "prev_date": "2026-09-26", "date": "2026-09-27"}
 {"sku": "382028", "type": "club_volvio", "title": "Member's Selection Desinfectantante 2 Unidades / 5 L / 169 oz", "price": 959, "club": "El Salvador", "prev_date": "2026-09-26", "date": "2026-09-27"}
 {"sku": "382028", "type": "club_volvio", "title": "Member's Selection Desinfectantante 2 Unidades / 5 L / 169 oz", "price": 959, "club": "San Miguel", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "150", "type": "club_volvio", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "Santa Elena", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "150", "type": "club_volvio", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "San Miguel", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "171889", "type": "club_volvio", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Ana", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Los Héroes", "qty_from": 33, "qty_to": 11, "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "195641", "type": "club_agotado", "title": "Cebolla Blanca 2.26 kg / 5 lb", "price": 799, "club": "Santa Ana", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "195641", "type": "se_agota", "title": "Cebolla Blanca 2.26 kg / 5 lb", "price": 799, "club": "El Salvador", "qty_from": 40, "qty_to": 2, "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "195641", "type": "club_agotado", "title": "Cebolla Blanca 2.26 kg / 5 lb", "price": 799, "club": "Los Héroes", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "195641", "type": "se_agota", "title": "Cebolla Blanca 2.26 kg / 5 lb", "price": 799, "club": "San Miguel", "qty_from": 19, "qty_to": 2, "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "205486", "type": "club_volvio", "title": "Spam Jamón de Cerdo Horneado 3 Unidades / 340.2 g / 12 oz", "price": 1329, "club": "Los Héroes", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "299550", "type": "se_agota", "title": "Salutaris Surtida 24 Unidades / 355 mL / 12 oz", "price": 1059, "club": "Los Héroes", "qty_from": 55, "qty_to": 31, "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "306937", "type": "se_agota", "title": "Mini Vegetales 1.13 kg / 2.5 lb", "price": 569, "club": "Santa Elena", "qty_from": 19, "qty_to": 4, "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "306937", "type": "se_agota", "title": "Mini Vegetales 1.13 kg / 2.5 lb", "price": 569, "club": "El Salvador", "qty_from": 19, "qty_to": 4, "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "318504", "type": "club_volvio", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "Santa Elena", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "318504", "type": "club_volvio", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "Santa Ana", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "318504", "type": "club_volvio", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "San Miguel", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "320186", "type": "se_agota", "title": "Kreef Salchicha Cocktel 454 g / 1 lb", "price": 779, "club": "Los Héroes", "qty_from": 16, "qty_to": 7, "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "378706", "type": "club_agotado", "title": "Lysol Desinfectante para Inodoros 4 Unidades / 946 mL / 32 oz", "price": 1699, "club": "Santa Elena", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "391797", "type": "club_volvio", "title": "Cooper Neumático 255/70R16 Evolution ATT", "price": 14999, "club": "Santa Elena", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "399315", "type": "club_volvio", "title": "Sudden Comfort Silla Plegable Acolchada", "price": 2699, "club": "Los Héroes", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "468442", "type": "club_agotado", "title": "Jell-O Postres Variados 24 Unidades 2.41 kg / 5 lb", "price": 1899, "club": "Santa Elena", "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "486967", "type": "se_agota", "title": "Member's Selection Árbol de Navidad Nevado Iluminado 2.3 m / 7.5'", "price": 32999, "club": "Santa Elena", "qty_from": 3, "qty_to": 1, "prev_date": "2026-09-26", "date": "2026-09-27"}
+{"sku": "486967", "type": "se_agota", "title": "Member's Selection Árbol de Navidad Nevado Iluminado 2.3 m / 7.5'", "price": 32999, "club": "Santa Ana", "qty_from": 3, "qty_to": 1, "prev_date": "2026-09-26", "date": "2026-09-27"}
