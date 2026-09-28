@@ -919,3 +919,10 @@
 {"sku": "496912-0012899568080", "type": "salio_del_catalogo", "title": "Kenneth Cole Medias Cortas para Hombre Talla Única 8 Pares ", "price": 477, "date": "2026-09-28"}
 {"sku": "472073", "type": "salio_del_catalogo", "title": "Plex Tratamiento para Todo Tipo de Cabello 5 Piezas", "price": 977, "date": "2026-09-28"}
 {"sku": "326545", "type": "salio_del_catalogo", "title": "Viro Grip Gel Capsulas Antigripal 3 Cajas / 6 Unidades", "price": 829, "date": "2026-09-28"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Elena", "qty_from": 188, "qty_to": 79, "prev_date": "2026-09-27", "date": "2026-09-28"}
+{"sku": "195666", "type": "se_agota", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "El Salvador", "qty_from": 265, "qty_to": 133, "prev_date": "2026-09-27", "date": "2026-09-28"}
+{"sku": "195666", "type": "se_agota", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "San Miguel", "qty_from": 65, "qty_to": 39, "prev_date": "2026-09-27", "date": "2026-09-28"}
+{"sku": "205486", "type": "se_agota", "title": "Spam Jamón de Cerdo Horneado 3 Unidades / 340.2 g / 12 oz", "price": 1329, "club": "Los Héroes", "qty_from": 20, "qty_to": 6, "prev_date": "2026-09-27", "date": "2026-09-28"}
+{"sku": "299550", "type": "se_agota", "title": "Salutaris Surtida 24 Unidades / 355 mL / 12 oz", "price": 1059, "club": "Santa Elena", "qty_from": 208, "qty_to": 97, "prev_date": "2026-09-27", "date": "2026-09-28"}
+{"sku": "506342-0607766474696", "type": "club_volvio", "title": "Member's Selection Estatua de Ángel Familia Sagrada con Luces LED", "price": 13999, "club": "Los Héroes", "prev_date": "2026-09-27", "date": "2026-09-28"}
+{"sku": "506342-0607766474696", "type": "se_agota", "title": "Member's Selection Estatua de Ángel Familia Sagrada con Luces LED", "price": 13999, "club": "San Miguel", "qty_from": 4, "qty_to": 1, "prev_date": "2026-09-27", "date": "2026-09-28"}
