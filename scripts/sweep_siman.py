@@ -22,7 +22,7 @@ import sqlite3
 import sys
 import time
 import unicodedata
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
@@ -326,7 +326,8 @@ def append_events(events, today):
 
 def main():
     os.makedirs(SNAP_DIR, exist_ok=True)
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    # Fecha SV (GMT-6), consistente con notify.py
+    today = datetime.now(timezone(timedelta(hours=-6))).strftime("%Y-%m-%d")
     prev_name, prev = load_snapshots()
 
     if "--dry" in sys.argv:

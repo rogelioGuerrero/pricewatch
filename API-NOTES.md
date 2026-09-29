@@ -78,3 +78,52 @@ cookie: vsf-* (mismas fijas)
 - Catálogo completo: ~330 llamadas batch de 50 SKUs o vía listados por categoría — viable pero genera ~200KB×16K de payload; almacenar difs, no raw.
 - No requiere Playwright en producción: curl/requests puro.
 - robots.txt: productos no prohibidos para crawlers generales; ser educados (rate bajo).
+
+# Otras tiendas (explorado 2026-09-29)
+
+## Walmart SV — VTEX (igual que Siman)
+
+```
+GET https://www.walmart.com.sv/api/catalog_system/pub/products/search/?ft=<q>&_from=0&_to=49
+```
+
+- Mismo contrato que sv.siman.com — `sweep_siman.py` se reusa cambiando base URL.
+- `productReferenceCode` expone GTIN → matching cross-store confiable.
+
+## Freund — Algolia (público, embebido en su JS)
+
+```
+POST https://70h58ryqaf-dsn.algolia.net/1/indexes/*/queries
+  ?x-algolia-api-key=1077f17552b7477903c936db6ce821b9
+  &x-algolia-application-id=70H58RYQAF
+
+{"requests":[{"indexName":"products-produccion",
+  "params":"query=taladro&hitsPerPage=50&page=0
+            &facetFilters=[[\"isActive:true\"]]
+            &filters=NOT isSubproduct:true AND NOT IsSubproduct:true"}]}
+```
+
+- SPA Blazor WASM + InstantSearch; la key es search-only pública (está en el
+  frontend). 295 hits solo para "taladro".
+- Otro índice: `family-produccion`.
+- Por hit: `objectID`/`productId`, `name`, `isAvailable`, `image`,
+  `schemesWithAvailability` (lista de códigos de tienda),
+  `priceList_N.{currentPrice, priceOff}` — **precio por sucursal**,
+  `dynamicFields` (departamento, grupo, familia, subMarcaComercial, rex).
+- nbHits/nbPages estándar Algolia → paginación `page=N`.
+- NO meter catálogo completo: modelo watch (búsquedas vigiladas), como Siman.
+
+## Vidri — HTML server-rendered (no hay API JSON pública)
+
+- Sitio PHP custom, catálogo server-side: `/catalogo/{catId}/{slug}.html`,
+  250 cards/página, paginación `?page=N`.
+- Markup estable por card: `catalog_products_card` → link
+  `/producto/{sku}/{slug}.html`, `<span>Sku: N</span>`,
+  `catalog_products_card_brand`, `catalog_products_card_currentPrice`,
+  `catalog_products_card__antes` (tachado), `catalog_products_card_ribbonPorcent`.
+- Search es Doofinder (zone us1, hashid 464e85a7-1de0-4b13-9d92-42dbb64ee302)
+  pero la Search API pide API key → no usar; scraping HTML de catálogo basta
+  para vigilancia por categoría. Para watch por búsqueda habría que probar el
+  endpoint interno del sitio (robots.txt disallows /searcher, /ecomm_vidri,
+  /elasticsearch — respetar, no tocar).
+- Imágenes: `ferreteriavidri.com/images/items/{large|thumb}/{sku}.jpg`.

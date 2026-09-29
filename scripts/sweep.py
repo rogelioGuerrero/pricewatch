@@ -15,7 +15,7 @@ import os
 import sqlite3
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
@@ -500,7 +500,9 @@ def append_events(events, today):
 
 def main():
     os.makedirs(SNAP_DIR, exist_ok=True)
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    # Fecha SV (GMT-6): alineada con notify.py — con UTC puro un run
+    # tardio (>6pm UTC) quedaba fechado "maniana" y el digest lo perdia
+    today = datetime.now(timezone(timedelta(hours=-6))).strftime("%Y-%m-%d")
 
     if "--stock-check" in sys.argv:
         # Chequeo diario ligero: solo stock por club de candidatos,
