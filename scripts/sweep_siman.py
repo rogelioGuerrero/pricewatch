@@ -341,6 +341,8 @@ def main():
         print(f"Dry-run sobre {snaps[-1] if snaps else 'nada'}")
         known = history_index()[0]
         events = diff(prev, cur, today, known)
+        if not prev and not known:
+            events = []
     else:
         watches = load_watches()
         print(f"[{today}] Siman: {len(watches)} busquedas vigiladas")
@@ -352,6 +354,10 @@ def main():
         print(f"Snapshot: {snap_file}")
         known = history_index()[0]
         events = diff(prev, cur, today, known)
+        if not prev and not known:
+            # primera observacion (o perdida del cache): no reportar
+            # miles de 'nuevo' por un arranque en frio
+            events = []
         record_history(cur, today)
         print(f"Historia actualizada en {DB_PATH}")
         prune_snapshots()

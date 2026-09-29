@@ -19,10 +19,28 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Restore data cache (db + snapshots viven fuera de git)
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            data/prices.db
+            data/siman.db
+            data/snapshots/
+            data/siman_snapshots/
+          key: pwdata-${{ github.run_id }}
+          restore-keys: pwdata-
+
+      - name: Bootstrap data desde el commit anterior (solo si no hay cache)
+        run: |
+          if [ ! -f data/prices.db ]; then
+            git restore --source=HEAD~1 -- data/ 2>/dev/null || true
+          fi
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+          cache: pip
 
       - name: Sweep catalog + diff + rebuild dashboard
         env:
@@ -33,10 +51,27 @@ jobs:
           python scripts/sweep.py
           python scripts/build_site.py
 
+      - name: Save data cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data/prices.db
+            data/siman.db
+            data/snapshots/
+            data/siman_snapshots/
+          key: pwdata-${{ github.run_id }}
+
       - name: Commit data + dashboard
         run: |
           git config user.name "pricewatch-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add data/ docs/index.html
+          git add docs/ data/events.jsonl data/siman_events.jsonl \
+                  data/mis-compras.json data/watchlist_siman.json
           git diff --staged --quiet || git commit -m "sweep: $(date +%F)"
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --no-edit -X ours || git merge --abort
+            sleep 10
+          done
           git push

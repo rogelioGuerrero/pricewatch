@@ -660,6 +660,17 @@ const watchUp = w => AW.dbs.createRow({databaseId:AW_DB,tableId:"siman_watch",
 const watchDown = (q,t) => AW.dbs.deleteRow({databaseId:AW_DB,
   tableId:"siman_watch",
   rowId:`${AW.user.$id}-${h16(q+"|"+(t||""))}`}).catch(()=>{});
+// precios objetivo: row id = <userId>-<sku>, un target por producto
+const tgtSet = (sku,t) => {
+  const rid = `${AW.user.$id}-${sku}`;
+  AW.dbs.updateRow({databaseId:AW_DB, tableId:"targets", rowId:rid,
+    data:{sku, target:t}})
+    .catch(()=>AW.dbs.createRow({databaseId:AW_DB, tableId:"targets",
+      rowId:rid, data:{sku, target:t},
+      permissions:docPerms(AW.user.$id)}).catch(()=>{}));
+};
+const tgtDel = sku => AW.dbs.deleteRow({databaseId:AW_DB,
+  tableId:"targets", rowId:`${AW.user.$id}-${sku}`}).catch(()=>{});
 const yaLoVi = (rule,p) => {
   SSEEN[rule] = p; saveSSeen();
   if (AW.user) seenUp(rule, p);
@@ -747,8 +758,9 @@ async function syncAll(){
   // existe local (mutes/vistos/watches hechos sin sesion no se pierden
   // al entrar desde otro dispositivo)
   const tryList = t => listAll(t).catch(()=>[]);
-  const [rw, rm, rs] = await Promise.all(
-    [tryList("siman_watch"), tryList("siman_muted"), tryList("siman_seen")]);
+  const [rw, rm, rs, rt] = await Promise.all(
+    [tryList("siman_watch"), tryList("siman_muted"), tryList("siman_seen"),
+     tryList("targets")]);
   const wKey = w => w.q + "|" + (w.talla || "");
   const rwSet = new Set(rw.map(wKey));
   for (const d of rw) {
@@ -764,6 +776,15 @@ async function syncAll(){
   const rsSet = new Set(rs.map(d => d.tkey));
   for (const [t, p] of Object.entries(SSEEN))
     if (!rsSet.has(t)) await seenUp(t, p);
+  // targets: union como favs — baja los de la nube y sube los que solo
+  // existen local (fijados sin sesion). La nube gana si difieren.
+  const rtSet = {};
+  rt.forEach(d => { if (d.sku && d.target) rtSet[d.sku] = d.target; });
+  const localT = {...TARGETS};
+  for (const [s, t] of Object.entries(rtSet)) TARGETS[s] = t;
+  for (const [s, t] of Object.entries(localT))
+    if (!(s in rtSet)) await tgtSet(s, t);
+  localStorage.setItem("pw-targets", JSON.stringify(TARGETS));
   saveSMute(); saveSSeen(); saveSWatch();
   localStorage.setItem("pw-favs", JSON.stringify([...FAV]));
   localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
@@ -1379,6 +1400,7 @@ function openProd(sku){
     const v = parseFloat(dt.value);
     if (v > 0) TARGETS[sku] = Math.round(v*100); else delete TARGETS[sku];
     localStorage.setItem("pw-targets", JSON.stringify(TARGETS));
+    if (AW.user) v > 0 ? tgtSet(sku, TARGETS[sku]) : tgtDel(sku);
     render();
   };
   const buys = COMPRAS.map((c,i)=>({c,i})).filter(x=>x.c.sku===sku);

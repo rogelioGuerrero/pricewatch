@@ -31,12 +31,15 @@ for r in conn.execute(
         "SELECT * FROM prices WHERE date = (SELECT MAX(date) FROM prices)"):
     latest[r["sku"]] = dict(r)
 
-# Stock por club del último fetch disponible (nivel 2, solo eventos)
+# Stock por club: última observación por sku (nivel 2 solo corre para
+# candidatos; usar la fecha global MAX(date) borraba el desglose de los
+# que no se chequearon ese día)
 clubs = defaultdict(dict)
 try:
     for r in conn.execute(
-            "SELECT * FROM club_stock WHERE date = "
-            "(SELECT MAX(date) FROM club_stock)"):
+            "SELECT sku, club_name, in_stock, qty FROM club_stock cs "
+            "WHERE date = (SELECT MAX(date) FROM club_stock "
+            "              WHERE sku = cs.sku)"):
         clubs[r["sku"]][r["club_name"]] = {
             "in_stock": bool(r["in_stock"]), "qty": r["qty"]}
 except sqlite3.OperationalError:

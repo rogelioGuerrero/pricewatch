@@ -6,6 +6,7 @@ Regla: molestar solo cuando sea necesario.
 
 PUSH (interrumpe — algo que hacer hoy):
   * favorito bajo / rebaja / oferta nueva
+  * producto a precio objetivo (targets del PWA)
   * favorito a precio de resurtir (<= lo que pagaste)
   * rebaja silenciosa grande (>=30%), aunque no sea favorito
   * ganga Siman nueva (bajo/oferta, no muteada ni ya vista)
@@ -129,6 +130,33 @@ def ensure_push_table():
     print("  + push_subs lista")
 
 
+def ensure_targets_table():
+    """Crea targets si falta — el sync del PWA escribe directo ahi."""
+    _, code = aw("GET", f"/tablesdb/{AW_DB}/tables/targets")
+    if code == 200:
+        return
+    res, code = aw("POST", f"/tablesdb/{AW_DB}/tables", {
+        "tableId": "targets", "name": "Precios objetivo",
+        "permissions": ['create("users")', 'read("users")',
+                        'update("users")', 'delete("users")'],
+        "rowSecurity": True, "enabled": True})
+    if code not in (200, 201, 409):
+        print(f"  ! targets: HTTP {code} {res.get('message')}")
+        return
+    for kind, kw in [("string", {"key": "sku", "size": 36,
+                                 "required": True}),
+                     ("integer", {"key": "target", "required": True})]:
+        aw("POST", f"/tablesdb/{AW_DB}/tables/targets/columns/{kind}", kw)
+    for _ in range(20):
+        time.sleep(1)
+        r, _ = aw("GET", f"/tablesdb/{AW_DB}/tables/targets")
+        st = {c["key"]: c["status"]
+              for c in r.get("columns", r.get("attributes", []))}
+        if st and all(v == "available" for v in st.values()):
+            break
+    print("  + targets lista")
+
+
 # ---------------- datos ----------------
 
 def load_events(path, today=True):
@@ -201,7 +229,7 @@ def siman_items():
 
 # ---------------- decision de ruido ----------------
 
-def build_alerts(events, cat, favs, paid):
+def build_alerts(events, cat, favs, paid, tgts):
     fav_ids = set(favs)
     drops = sorted([e for e in events if e["type"] in ("bajo", "rebaja")
                     and e.get("pct")],
@@ -215,6 +243,7 @@ def build_alerts(events, cat, favs, paid):
                     if e["type"] in ("agotado", "salio_del_catalogo")
                     and e["sku"] in fav_ids],
         "fav_resurtir": [],
+        "tgt_hit": [],
         "big_rebaja": [e for e in drops if e["type"] == "rebaja"
                        and e["pct"] <= BIG_DROP],
     }
@@ -225,6 +254,18 @@ def build_alerts(events, cat, favs, paid):
             out["fav_resurtir"].append(
                 {"sku": sku, "title": c["title"], "to": c["price"],
                  "paid": paid[sku]})
+    # precio objetivo: el evento de hoy cruza el target (de >t a <=t).
+    # prev_price cubre 'reaparecio'; 'oferta' no trae origen -> si el
+    # precio actual ya esta bajo el objetivo, avisa igual
+    for e in events:
+        t = tgts.get(str(e.get("sku") or ""))
+        if not t:
+            continue
+        cur_p = e.get("to") if e.get("to") is not None else e.get("price")
+        frm = e.get("from") if e.get("from") is not None else e.get("prev_price")
+        if cur_p is not None and cur_p <= t and (frm is None or frm > t):
+            out["tgt_hit"].append({"sku": e["sku"], "title": e.get("title"),
+                                   "price": cur_p, "tgt": t})
     return out
 
 
@@ -335,7 +376,8 @@ def digest_html(day, counts, a, gangas, silent, siman):
                  (" — sin letrero, rebaja silenciosa"
                   if g["type"] == "rebaja" else "") + "</p>")
     fav_bits = []
-    for lbl, lst in [("bajaron/en oferta", a["fav_drop"] + a["fav_oferta"]),
+    for lbl, lst in [("a precio objetivo", a["tgt_hit"]),
+                     ("bajaron/en oferta", a["fav_drop"] + a["fav_oferta"]),
                      ("para resurtir", a["fav_resurtir"]),
                      ("sin stock", a["fav_out"])]:
         if lst:
@@ -369,12 +411,17 @@ def main():
     sevents = load_events(SIMAN_LOG)
     cat = catalog_state()
     favs = [r["sku"] for r in aw_rows("favs")] if AW_KEY else []
+    tgts = {}
+    if AW_KEY:
+        ensure_targets_table()
+        tgts = {str(r["sku"]): r["target"] for r in aw_rows("targets")
+                if r.get("sku") and r.get("target")}
     paid, paid_d = {}, {}
     for r in aw_rows("compras") if AW_KEY else []:
         if r.get("paid") and r.get("date", "") >= paid_d.get(r["sku"], ""):
             paid[r["sku"]], paid_d[r["sku"]] = r["paid"], r.get("date", "")
 
-    a = build_alerts(events, cat, favs, paid)
+    a = build_alerts(events, cat, favs, paid, tgts)
     siman = siman_gangas(sevents)   # aw_rows() devuelve [] sin creds
 
     # gangas silenciosas vigentes (espejo de atMin del frontend)
@@ -396,6 +443,8 @@ def main():
 
     # ---- push: solo lo urgente ----
     push_items = []
+    if a["tgt_hit"]:
+        push_items.append(f"{len(a['tgt_hit'])} a precio objetivo")
     if a["fav_drop"] or a["fav_oferta"]:
         push_items.append(f"{n_fav} de tu lista en oferta/bajó")
     if a["fav_resurtir"]:
@@ -425,6 +474,8 @@ def main():
     headline = []
     if a["drops"]:
         headline.append(f"{len(a['drops'])} bajadas")
+    if a["tgt_hit"]:
+        headline.append(f"{len(a['tgt_hit'])} objetivo")
     if n_fav:
         headline.append(f"{n_fav} de tu lista")
     if siman:

@@ -2,3 +2,10 @@ __pycache__/
 *.pyc
 node_modules/
 .playwright-mcp/
+
+# Historia y snapshots: viven en el cache de Actions, no en git.
+# (los archivos siguen tracked en este commit para sembrar el cache;
+#  se remueven del repo una vez verificado el primer run)
+data/*.db
+data/snapshots/
+data/siman_snapshots/

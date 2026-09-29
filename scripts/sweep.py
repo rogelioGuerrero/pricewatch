@@ -528,6 +528,13 @@ def main():
         print(f"Total: {len(cur)} productos unicos"
               + (f" ({len(failed)} categorias sin respuesta)"
                  if failed else ""))
+        # guarda de catastrofe: si cayo gran parte del catalogo, abortar
+        # sin escribir snapshot/historia — mejor un job rojo que fabricar
+        # miles de 'salio_del_catalogo' por un cambio de API o un bloqueo
+        if len(failed) >= 5 or (prev and len(cur) < len(prev) * 0.6):
+            sys.exit(f"ABORT: {len(failed)} categorias caidas, "
+                     f"{len(cur)}/{len(prev)} productos hoy — "
+                     "posible cambio de API o bloqueo")
         # Categorias que no respondieron: heredar sus productos del
         # snapshot anterior para no declararlos 'salio_del_catalogo' por
         # un fallo de red (ni 'regreso' falso cuando la categoria vuelva).
@@ -567,6 +574,10 @@ def main():
 
     known, last, last_in = hist_idx
     events = diff(prev, cur, today, known, last, last_in)
+    if not prev and not known:
+        # primera observacion (o perdida del cache): todo el catalogo
+        # apareceria como 'nuevo' — no es noticia
+        events = []
     by_type = {}
     for e in events:
         by_type[e["type"]] = by_type.get(e["type"], 0) + 1
