@@ -35,7 +35,10 @@ jobs:
       - name: Bootstrap data desde el commit anterior (solo si no hay cache)
         run: |
           if [ ! -f data/prices.db ]; then
-            git restore --source=HEAD~1 -- data/ 2>/dev/null || true
+            SRC=$(git log --diff-filter=d --format=%H -1 -- data/prices.db || true)
+            if [ -n "$SRC" ]; then
+              git restore --source="$SRC" -- data/ 2>/dev/null || true
+            fi
           fi
 
       - name: Setup Python
