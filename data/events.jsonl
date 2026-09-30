@@ -1128,3 +1128,32 @@
 {"sku": "229404", "type": "club_volvio", "title": "Brócoli 907 g / 2 lb", "price": 479, "club": "El Salvador", "prev_date": "2026-09-29", "date": "2026-09-30"}
 {"sku": "318504", "type": "se_agota", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "Los Héroes", "qty_from": 20, "qty_to": 8, "prev_date": "2026-09-29", "date": "2026-09-30"}
 {"sku": "318504", "type": "se_agota", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "San Miguel", "qty_from": 11, "qty_to": 3, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "10615", "type": "se_agota", "title": "Kraft Queso Parmesano 680 g / 24 oz", "price": 1479, "club": "Santa Elena", "qty_from": 203, "qty_to": 116, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "13278", "type": "se_agota", "title": "Ocean Spray Jugo de Toronja Roja 2 Unidades / 1.89 L / 64 oz", "price": 899, "club": "Los Héroes", "qty_from": 8, "qty_to": 4, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "171889", "type": "club_agotado", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Ana", "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "195666", "type": "club_volvio", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "Santa Elena", "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "195666", "type": "se_agota", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "Santa Ana", "qty_from": 8, "qty_to": 1, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "195666", "type": "se_agota", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "Los Héroes", "qty_from": 47, "qty_to": 22, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "195666", "type": "se_agota", "title": "Espinaca 454 g / 1 lb", "price": 479, "club": "San Miguel", "qty_from": 25, "qty_to": 8, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "294337", "type": "club_volvio", "title": "Nectarina Fresca 908 g / 2 lb", "price": 799, "club": "Santa Elena", "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "294337", "type": "se_agota", "title": "Nectarina Fresca 908 g / 2 lb", "price": 799, "club": "San Miguel", "qty_from": 12, "qty_to": 5, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "296415", "type": "club_volvio", "title": "24 Siete Ice Pops Sabores Surtidos 48 Unidades / 85 mL / 2.87 oz", "price": 629, "club": "Santa Ana", "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "296959", "type": "club_volvio", "title": "Pera Bosc ", "price": 399, "club": "Santa Ana", "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "296959", "type": "club_volvio", "title": "Pera Bosc ", "price": 399, "club": "San Miguel", "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "340937", "type": "se_agota", "title": "Bimbo Pan Blanco con Vitaminas 2 Unidades / 720 g / 1.58 lb", "price": 429, "club": "Los Héroes", "qty_from": 115, "qty_to": 16, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "340937", "type": "se_agota", "title": "Bimbo Pan Blanco con Vitaminas 2 Unidades / 720 g / 1.58 lb", "price": 429, "club": "San Miguel", "qty_from": 92, "qty_to": 49, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "362345", "type": "se_agota", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "club": "Santa Elena", "qty_from": 38, "qty_to": 1, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "362345", "type": "club_agotado", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "club": "Santa Ana", "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "362345", "type": "se_agota", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "club": "Los Héroes", "qty_from": 116, "qty_to": 58, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "362346", "type": "se_agota", "title": "Termogreen Contenedores Térmicos Desechables 120 Unidades", "price": 999, "club": "Los Héroes", "qty_from": 133, "qty_to": 64, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "420380", "type": "club_volvio", "title": "Member's Selection Aceite de Aguacate Refinado 1 L / 33.8 oz", "price": 1749, "club": "Santa Ana", "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "43546", "type": "club_volvio", "title": "Member's Selection Papa Francesa Congelada Corte Recto para Freír 10 kg / 22 lb", "price": 2029, "club": "Santa Ana", "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "43569", "type": "se_agota", "title": "Member's Selection Arandanos 1.36 kg / 3 lb", "price": 1329, "club": "Santa Elena", "qty_from": 275, "qty_to": 162, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "452750", "type": "se_agota", "title": "Sanissimo Salmas Horneadas 40 Unidades / 18 g      ", "price": 959, "club": "Santa Elena", "qty_from": 215, "qty_to": 49, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "454145", "type": "se_agota", "title": "Mott's Jugo de Manzana 100% Orgánico sin Azúcar Añadida 3.78 L / 128 oz", "price": 1079, "club": "Los Héroes", "qty_from": 41, "qty_to": 14, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "503176", "type": "se_agota", "title": "Salat Ensalada de Papa 624 g / 22 oz", "price": 377, "club": "Santa Ana", "qty_from": 9, "qty_to": 1, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "503176", "type": "se_agota", "title": "Salat Ensalada de Papa 624 g / 22 oz", "price": 377, "club": "El Salvador", "qty_from": 63, "qty_to": 32, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "503176", "type": "se_agota", "title": "Salat Ensalada de Papa 624 g / 22 oz", "price": 377, "club": "Los Héroes", "qty_from": 12, "qty_to": 7, "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "503176", "type": "club_agotado", "title": "Salat Ensalada de Papa 624 g / 22 oz", "price": 377, "club": "San Miguel", "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "507311", "type": "club_agotado", "title": "Ninja Deluxe Kitchen System Licuadora Inteligente Multifuncional con Procesador Auto-IQ 1 200 W CO905KS", "price": 18499, "club": "El Salvador", "prev_date": "2026-09-29", "date": "2026-09-30"}
+{"sku": "507311", "type": "club_agotado", "title": "Ninja Deluxe Kitchen System Licuadora Inteligente Multifuncional con Procesador Auto-IQ 1 200 W CO905KS", "price": 18499, "club": "San Miguel", "prev_date": "2026-09-29", "date": "2026-09-30"}
