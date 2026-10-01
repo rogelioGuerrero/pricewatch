@@ -6,7 +6,36 @@ const LABEL = {agotado:"se acabó", reaparecio:"volvió",
   nuevo:"nuevo", oferta_termino:"terminó oferta", rebaja:"rebaja",
   club_volvio:"volvió a", club_agotado:"se acabó en",
   se_agota:"se agota en"};
-function card(e){
+// eventos por club: un mismo producto se acaba en N tiendas el mismo
+// dia -> una sola card con la lista de clubes, no N cards identicas
+const CLUBEV = new Set(["club_agotado","club_volvio","se_agota"]);
+const groupClubs = list => {
+  const byK = new Map();
+  let n = 0;
+  for (const e of list) {
+    const k = CLUBEV.has(e.type) ? e.sku + "|" + e.type : "#" + n++;
+    if (!byK.has(k)) byK.set(k, []);
+    byK.get(k).push(e);
+  }
+  return [...byK.values()];
+};
+// "El Salvador" = canal nacional del API, no una tienda mas — se lista
+// al final, igual que la fila Total de la ficha
+const clubName = n => n === "El Salvador" ? "nivel nacional" : n;
+// la card responde que producto, que paso y donde — el detalle de
+// cantidades vive en la ficha (D.clubs), a un clic
+const clubsLine = evs => evs.slice()
+  .sort((a,b) => (a.club==="El Salvador") - (b.club==="El Salvador"))
+  .map(x => clubName(x.club)).filter(Boolean).join(" · ");
+// tag de urgencia en cards de producto: clubes donde sigue bajando
+const saTag = sku => {
+  const ns = drena(sku);
+  if (!ns) return "";
+  ns.sort((a,b) => (a==="El Salvador") - (b==="El Salvador")
+    || (a===MYCLUB ? -1 : b===MYCLUB ? 1 : a.localeCompare(b)));
+  return `<span class="tag se_agota">se agota en ${ns.map(clubName).join(" · ")}</span>`;
+};
+function card(e, clubs){
   const p = D.products[e.sku]||{};
   let price;
   if (e.from != null && e.to != null)
@@ -18,10 +47,10 @@ function card(e){
     price = `<span class="pr">${fmt(e.price)}</span> <span class="tag oferta">ahorra $${(+e.saving).toFixed(2)}</span>`
       + (hist && a.pct_min<=0 ? `<span class="tag real">oferta real</span>` : "");
   }
-  else if (e.type === "se_agota")
-    price = `<span class="pr">${fmt(e.price)}</span> <span class="tag ${e.type}">${e.club}: ${e.qty_from} → ${e.qty_to} uds</span>`;
-  else
-    price = `<span class="pr">${fmt(e.price)}</span> <span class="tag ${e.type}">${(LABEL[e.type]||e.type)}${e.club?" "+e.club:""}</span>`;
+  else {
+    const cl = clubs ? clubsLine(clubs) : (e.club||"");
+    price = `<span class="pr">${fmt(e.price)}</span> <span class="tag ${e.type}">${(LABEL[e.type]||e.type)}${cl?" "+cl:""}</span>`;
+  }
   const dias = e.days_out != null ? ` · ${e.days_out}d fuera` : "";
   const ea = D.agg[e.sku]||{};
   const oe = e.type==="oferta_termino" && ea.of_end;
@@ -54,7 +83,8 @@ function render(){
   // bajaron/subieron van por magnitud: el Eufy -48% no se entierra bajo -2%s
   if (cfe === "bajo")  cambios.sort((a,b) => (a.pct??0) - (b.pct??0));
   if (cfe === "subio") cambios.sort((a,b) => (b.pct??0) - (a.pct??0));
-  $("#g-cambios").innerHTML = cambios.map(e=>card(e)).join("")
+  $("#g-cambios").innerHTML = groupClubs(cambios)
+    .map(g => card(g[0], g)).join("")
     || "<p class='meta'>Sin cambios</p>";
   $("#cf-new").style.display = NEWEV.length ? "" : "none";
   $("#g-ofertas").innerHTML = DEALS
@@ -62,7 +92,9 @@ function render(){
              && (!q || matchQ(q, (D.products[s]||{}).title)))
     .sort((a,b) => dealScore(b) - dealScore(a)).slice(0, 120)
     .map(favCard).join("") || "<p class='meta'>Sin gangas hoy</p>";
-  $("#g-stock").innerHTML = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo","regreso","club_agotado","club_volvio","se_agota"].includes(e.type)&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin cambios de disponibilidad</p>";
+  // el feed es solo transiciones (hay / no hay); "se agota" es una
+  // señal de urgencia que vive en las cards, no un cambio de estado
+  $("#g-stock").innerHTML = groupClubs(ev.filter(e=>["agotado","reaparecio","salio_del_catalogo","regreso","club_agotado","club_volvio"].includes(e.type)&&f(e))).map(g=>card(g[0],g)).join("") || "<p class='meta'>Sin cambios de disponibilidad</p>";
   $("#g-nuevos").innerHTML = ev.filter(e=>e.type==="nuevo"&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin productos nuevos</p>";
   const favList = [...FAV].sort((x,y)=>verdict(x).rank-verdict(y).rank);
   if (SHOP) favList.sort((x,y)=>(CART.has(x)?1:0)-(CART.has(y)?1:0));
@@ -71,7 +103,9 @@ function render(){
   const favOf   = favList.filter(FAVFF.oferta),
         resu    = favList.filter(FAVFF.resurtir),
         favOut  = favList.filter(FAVFF.sinstock),
-        clubOut = favList.filter(FAVFF.clubout);
+        clubOut = favList.filter(FAVFF.clubout),
+        favSA   = favList.filter(FAVFF.seagota);
+  if (favSA.length)  alerts.push([`${favSA.length} de tu lista se está${favSA.length>1?"n":""} agotando`,"favs","","seagota"]);
   if (favOf.length)  alerts.push([`${favOf.length} de tu lista en oferta`,"favs","","oferta"]);
   if (resu.length)   alerts.push([`${resu.length} para resurtir`,"favs","","resurtir"]);
   if (favOut.length) alerts.push([`${favOut.length} de tu lista sin stock`,"favs","","sinstock"]);
@@ -91,13 +125,14 @@ function render(){
     const nt = t => NEWEV.filter(e => e.type === t).length, parts = [];
     const nb = nt("bajo")+nt("rebaja"), ns = nt("subio"), nof = nt("oferta"),
           nr = nt("reaparecio")+nt("club_volvio")+nt("regreso"),
-          na = nt("agotado")+nt("club_agotado")+nt("se_agota"),
+          na = nt("agotado")+nt("club_agotado"), nc = nt("se_agota"),
           nn = nt("nuevo"), nf = NEWEV.filter(e => FAV.has(e.sku)).length;
     if (nb)  parts.push(`${nb} bajada${nb>1?"s":""}`);
     if (ns)  parts.push(`${ns} subida${ns>1?"s":""}`);
     if (nof) parts.push(`${nof} oferta${nof>1?"s":""}`);
     if (nr)  parts.push(`${nr} volvieron`);
     if (na)  parts.push(`${na} agotado${na>1?"s":""}`);
+    if (nc)  parts.push(`${nc} se agota${nc>1?"n":""}`);
     if (nn)  parts.push(`${nn} nuevo${nn>1?"s":""}`);
     if (nf)  parts.push(`⚡${nf} de tu lista`);
     deltaTxt = `desde tu última visita: ${parts.join(" · ")}`;
@@ -108,7 +143,7 @@ function render(){
     `<span class="alert${cf2==="new"?" new":""}" data-tab="${tab}" data-cf="${cf2||""}"
        data-ff="${ff||""}"${sk?` data-sku="${sk}"`:""}>${t}</span>`).join("");
   // pendientes = articulos unicos de tu lista que piden atencion
-  RESUMEN_N = new Set([...favOf, ...resu, ...favOut, ...clubOut]).size;
+  RESUMEN_N = new Set([...favOf, ...resu, ...favOut, ...clubOut, ...favSA]).size;
   const bar = $("#shopbar");
   if (SHOP) {
     let tot = 0, diff = 0, nd = 0;
@@ -128,7 +163,8 @@ function render(){
   ffEl.style.display = favFilter === "all" ? "none" : "";
   if (favFilter !== "all") {
     const lbl = {oferta:"en oferta", resurtir:"para resurtir",
-      sinstock:"sin stock", clubout:`agotado en ${MYCLUB}`}[favFilter];
+      sinstock:"sin stock", clubout:`agotado en ${MYCLUB}`,
+      seagota:"se están agotando"}[favFilter];
     ffEl.textContent = `viendo: ${lbl} · ${show.length} ✕`;
   }
   // cold start: sin lista, sugerir lo mas barato de hoy para empezar
@@ -234,6 +270,7 @@ function favCard(sku){
         ${TARGETS[sku]!=null?`<span class="tag ${l&&l[1]<=TARGETS[sku]?"real":"oferta"}">🎯 ${fmt(TARGETS[sku])}</span>`:""}
         ${l&&l[3]>0?`<span class="tag oferta">-$${(+l[3]).toFixed(2)}</span>`:""}
         ${l&&!l[2]?`<span class="tag agotado">agotado</span>`:""}
+        ${l&&l[2]?saTag(sku):""}
         ${SHOP&&MYCLUB&&(D.clubs[sku]||{})[MYCLUB]&&!(D.clubs[sku][MYCLUB].in_stock)
           ?`<span class="tag agotado">📍 sin stock en ${MYCLUB}</span>`:""}</div>
       ${v.tip?`<div class="meta">${v.tip}</div>`:""}

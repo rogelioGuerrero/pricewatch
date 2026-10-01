@@ -9,8 +9,7 @@ const TABS = [
   ["stock","Se acabó / Volvió",
    byType("agotado").length + byType("reaparecio").length
    + byType("salio_del_catalogo").length + byType("regreso").length
-   + byType("club_agotado").length + byType("club_volvio").length
-   + byType("se_agota").length],
+   + byType("club_agotado").length + byType("club_volvio").length],
   ["nuevos","Nuevos", byType("nuevo").length],
   ["siman","Siman", simanAlerts().length],
   ["explorar","Catálogo", D.n_products],
@@ -286,11 +285,25 @@ function openProd(sku){
     }
   };
   const clubs = D.clubs[sku]||{};
+  // "El Salvador" es el canal nacional del API (bodega+clubes), no una
+  // suma nuestra — va de ultimo como fila total, con separador visual
   const clubRows = Object.entries(clubs)
-    .sort(([a],[b]) => a===MYCLUB?-1 : b===MYCLUB?1 : 0);
+    .sort(([a],[b]) => a==="El Salvador" ? 1 : b==="El Salvador" ? -1
+                   : a===MYCLUB ? -1 : b===MYCLUB ? 1
+                   : a.localeCompare(b));
   $("#dclubs").innerHTML = clubRows.length
     ? "<h2 style='margin-top:14px'>Disponibilidad en clubes</h2><table><tr><th>Club</th><th>Stock</th></tr>" +
-      clubRows.map(([n,c])=>`<tr${n===MYCLUB?' style="color:var(--warn)"':""}><td>${n===MYCLUB?"📍 ":""}${n==="El Salvador"?"Total (nacional)":n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td></tr>`).join("") + "</table>"
+      clubRows.map(([n,c])=>{
+        const st = (n===MYCLUB?"color:var(--warn);":"")
+                 + (n==="El Salvador"?"border-top:2px solid var(--line)":"");
+        // si el ultimo chequeo lo vio cayendo (se_agota), anotar la
+        // tendencia: aqui si tiene sentido el numero — es la ficha
+        const se = (SEAGOTA[sku]||{})[n],
+              trend = se && c.in_stock && (c.qty==null || c.qty <= se.qty_to)
+                ? ` <span style="color:var(--warn);font-size:11px">`
+                  + `(${se.qty_from} el ${(se.prev_date||"").slice(5)})</span>` : "";
+        return `<tr${st?` style="${st}"`:""}><td>${n===MYCLUB?"📍 ":""}${n==="El Salvador"?"Total (nacional)":n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>${trend}`:'<span style="color:var(--mut)">agotado</span>'}</td></tr>`;
+      }).join("") + "</table>"
     : "<p class='meta' style='margin-top:10px'>Sin dato de stock por club todavía — se consulta solo para ofertas, movimientos y tu lista.</p>";
   // tabla por episodios: una fila por regimen (mismo precio+stock+letrero),
   // no por observacion — la biografia no crece en ruido aunque el producto

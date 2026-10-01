@@ -70,6 +70,7 @@ const FAVFF = {
   sinstock: s => { const l = lastOf(s); return l && !l[2]; },
   clubout:  s => { const c = (D.clubs[s]||{})[MYCLUB];
                    return c && !c.in_stock; },
+  seagota:  s => !!drena(s),
 };
 // lo que muestra la hoja del FAB (se llena en render)
 let RESUMEN = [], RESUMEN_N = 0;
@@ -183,6 +184,23 @@ function clubChips(sku){
     return `<span class="tag ${c.in_stock?"bajo":"agotado"}">${k===MYCLUB?"📍":""}${k} ${c.in_stock?"✓":"✗"}</span>`;
   }).join(" ");
 }
+// velocidad de venta: sku -> {club: evento se_agota mas reciente}.
+// ev viene en orden descendente; el primero por club es el mas fresco
+const SEAGOTA = {};
+for (const e of ev)
+  if (e.type === "se_agota") (SEAGOTA[e.sku] ??= {})[e.club] ??= e;
+// clubes donde sigue escurriendo HOY: aun hay stock y el qty no volvio
+// a subir desde el evento (si subio, hubo re-stock y ya no es urgencia)
+const drena = sku => {
+  const g = SEAGOTA[sku];
+  if (!g) return null;
+  const ns = Object.keys(g).filter(n => {
+    const c = (D.clubs[sku] || {})[n];
+    return c && c.in_stock
+        && (c.qty == null || c.qty <= (g[n].qty_to ?? Infinity));
+  });
+  return ns.length ? ns : null;
+};
 // veredicto de compra: ¿conviene hoy o no? (menor rank = mejor momento)
 const ofTip = a =>
   a.of_every ? ` · ofertas cada ~${a.of_every}d` +
