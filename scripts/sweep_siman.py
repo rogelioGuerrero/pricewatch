@@ -55,6 +55,56 @@ def tkey(title):
     return norm(title)
 
 
+def img_hash(url):
+    """aHash 8x8 del contenido de la foto. Siman re-sube el asset con un
+    id nuevo en cada recode (el URL siempre cambia), pero la imagen es la
+    misma: distancia observada ~2/64 bits tras re-encoding."""
+    try:
+        import io
+        from PIL import Image
+        data = urlopen(Request(url, headers=HEADERS), timeout=20).read()
+        im = Image.open(io.BytesIO(data)).convert("L")
+        im = im.resize((8, 8), Image.LANCZOS)
+        px = list(im.getdata())
+        avg = sum(px) / len(px)
+        return format(sum(1 << i for i, v in enumerate(px) if v > avg),
+                      "016x")
+    except Exception:
+        return None
+
+
+def hamming(a, b):
+    """Distancia entre dos aHash hex de 64 bits."""
+    return bin(int(a, 16) ^ int(b, 16)).count("1")
+
+
+def attach_hashes(items):
+    """p['imghash'] por item, con cache por URL en siman.db — solo se
+    descargan las fotos de listings nuevos (el resto ya tiene hash)."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("""CREATE TABLE IF NOT EXISTS imgcache (
+        url TEXT PRIMARY KEY, h TEXT)""")
+    cached = {u: h for u, h in conn.execute("SELECT url, h FROM imgcache")}
+    todo = [u for u in {it["image"] for it in items.values()
+                        if it.get("image")}
+            if u not in cached]
+    for n, u in enumerate(todo, 1):
+        h = img_hash(u)
+        if h:
+            conn.execute("INSERT OR REPLACE INTO imgcache VALUES (?,?)",
+                         (u, h))
+            cached[u] = h
+        if n % 25 == 0:
+            conn.commit()
+            time.sleep(SLEEP)
+    conn.commit()
+    for it in items.values():
+        it["imghash"] = cached.get(it.get("image"))
+    conn.close()
+    print(f"Imagenes hasheadas: {len(todo)} nuevas, "
+          f"{len(cached)} en cache")
+
+
 def talla_hit(vname, talla):
     """La variante corresponde a la talla pedida? '36X32'->36, 'BLUE:38'->38,
     'NAVY:L'->L. Solo matching de token exacto para no confundir 11 con 110."""
@@ -208,20 +258,26 @@ def record_history(items, date):
     conn.execute("""CREATE TABLE IF NOT EXISTS items (
         itemId TEXT PRIMARY KEY, pid TEXT, title TEXT, brand TEXT,
         link TEXT, image TEXT, vname TEXT, watch TEXT, talla TEXT,
-        first_seen TEXT, last_seen TEXT)""")
+        first_seen TEXT, last_seen TEXT, imghash TEXT)""")
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(items)")}
+    if "imghash" not in cols:
+        conn.execute("ALTER TABLE items ADD COLUMN imghash TEXT")
     conn.execute("""CREATE TABLE IF NOT EXISTS prices (
         itemId TEXT, date TEXT, price REAL, list REAL, qty INT,
         avail INT, card INT, PRIMARY KEY (itemId, date))""")
     for iid, p in items.items():
         conn.execute(
-            """INSERT INTO items VALUES (?,?,?,?,?,?,?,?,?,?,?)
+            """INSERT INTO items (itemId, pid, title, brand, link, image,
+               vname, watch, talla, first_seen, last_seen, imghash)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
                ON CONFLICT(itemId) DO UPDATE SET
                pid=excluded.pid, title=excluded.title,
                link=excluded.link, image=excluded.image,
-               vname=excluded.vname, last_seen=excluded.last_seen""",
+               vname=excluded.vname, last_seen=excluded.last_seen,
+               imghash=excluded.imghash""",
             (iid, p["pid"], p["title"], p["brand"], p["link"],
              p["image"], p["vname"], p.get("watch"), p.get("talla"),
-             date, date))
+             date, date, p.get("imghash")))
         conn.execute(
             "INSERT OR REPLACE INTO prices VALUES (?,?,?,?,?,?,?)",
             (iid, date, p.get("price"), p.get("list"), p.get("qty"),
@@ -266,15 +322,22 @@ def diff(prev, cur, today, known):
     for iid, p in prev.items():
         if iid not in cur:
             dead_items.append(p)
-    # recodificado: murio uno y aparecio otro con el mismo titulo
+    # recodificado: murio uno y aparecio otro con el mismo titulo — o con
+    # la misma FOTO (aHash): cubre recodes donde editaron el titulo, que
+    # sin imagen caian como salio+nuevo y perdian el hilo
     new_by_t = {}
     for p in new_items:
         new_by_t.setdefault(tkey(p["title"]), []).append(p)
     consumed = set()
     for d in dead_items:
-        cand = new_by_t.get(tkey(d["title"]))
-        if cand:
-            n = cand.pop(0)
+        cands = [x for x in new_by_t.get(tkey(d["title"]), [])
+                 if x["iid"] not in consumed]
+        if not cands and d.get("imghash"):
+            cands = [x for x in new_items
+                     if x["iid"] not in consumed and x.get("imghash")
+                     and hamming(x["imghash"], d["imghash"]) <= 8]
+        if cands:
+            n = cands[0]
             consumed.add(n["iid"])
             events.append({"iid": n["iid"], "type": "recodificado",
                            "title": n["title"], "old_iid": d["iid"],
@@ -349,6 +412,7 @@ def main():
         print(f"[{today}] Siman: {len(watches)} busquedas vigiladas")
         cur = sweep(watches)
         print(f"Total: {len(cur)} items unicos")
+        attach_hashes(cur)   # foto = identidad que sobrevive recodes
         snap_file = os.path.join(SNAP_DIR, f"{today}.json")
         with open(snap_file, "w") as f:
             json.dump({"date": today, "items": cur}, f)

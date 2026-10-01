@@ -186,7 +186,9 @@ if os.path.exists(SIMAN_DB):
             "l": it["link"], "img": it["image"], "w": it["watch"],
             "ta": it["talla"], "p": None, "lp": None, "ok": False,
             "broke": False, "decl": False, "n": 0, "crd": False,
-            "avail": False, "last": ""})
+            "avail": False, "last": "", "ihs": set()})
+        if it.get("imghash"):
+            g["ihs"].add(it["imghash"])
         avail = bool(last[2])
         if avail and _talla_hit(it["vname"], it["talla"]):
             g["ok"] = True
@@ -201,6 +203,8 @@ if os.path.exists(SIMAN_DB):
         g["crd"] = g["crd"] or bool(last[4])
         g["avail"] = g["avail"] or avail
         g["last"] = max(g["last"], s[-1][0])
+    for g in prod.values():   # set -> list para json
+        g["ihs"] = sorted(g["ihs"])
     siman["items"] = sorted(prod.values(),
                             key=lambda x: (not x["broke"], not x["decl"]))
     siman["n_items"] = len(sitems)

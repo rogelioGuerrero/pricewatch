@@ -1,6 +1,6 @@
 // PriceWatch SV — navegación network-first (abrir la app trae la
 // versión fresca); sin señal cae al último snapshot cacheado.
-const CACHE = "pricewatch-v15";
+const CACHE = "pricewatch-v16";
 const CORE = ["./", "./index.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", e => {
