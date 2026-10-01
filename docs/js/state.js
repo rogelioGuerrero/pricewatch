@@ -254,8 +254,14 @@ function verdict(sku){
   if (atMin(sku))
     return {rank:2, cls:"bajo", label:"mínimo histórico",
             tip:"nunca estuvo más barato en nuestros datos"+ofTip(a)};
-  if (a.vs_med!=null && a.vs_med<0)
-    return {rank:3, cls:"bajo", label:"bajo lo habitual",
+  // "habitual" solo se afirma con historia suficiente: una mediana de
+  // 3 lecturas no es habitualidad, es ruido. Con historia corta cae al
+  // veredicto del ultimo movimiento (subio/bajo/precio normal)
+  const span = s.length>=2
+    ? (Date.parse(s[s.length-1][0])-Date.parse(s[0][0]))/864e5 : 0;
+  if (a.vs_med!=null && a.vs_med<0 && s.length>=5 && span>=14)
+    return {rank:3, cls:"bajo",
+            label: chg>0 ? "sigue barato" : "bajo lo habitual",
             tip:`${a.vs_med}% vs su precio habitual`+ofTip(a)};
   if (chg<0) return {rank:4, cls:"bajo", label:`bajó ${-chg}%`,
                      tip:"recién bajó de precio"+ofTip(a)};

@@ -60,11 +60,20 @@ function card(e, clubs){
   const vd = verdict(e.sku);
   const vtag = e.type !== "oferta" && vd.rank <= 3
     ? ` <span class="tag ${vd.cls}">${vd.label}</span>` : "";
+  // el movimiento ya se reverto por completo (promo titilando): la card
+  // admite que el evento quedo obsoleto en vez de contradecir el spark
+  const lp = (D.series[e.sku]||[]).at(-1)?.[1];
+  const rtag = lp!=null && e.from!=null && (
+    e.type==="subio" && lp<=e.from
+      ? ` <span class="tag salio_del_catalogo">↩ ya volvió a bajar</span>`
+    : (e.type==="bajo"||e.type==="rebaja") && lp>=e.from
+      ? ` <span class="tag salio_del_catalogo">↩ ya volvió a subir</span>`
+    : "");
   return `<div class="card" onclick="openProd('${e.sku}')">
     ${star(e.sku)}
     ${img(e.sku)?`<img src="${img(e.sku)}" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
-      <div class="t">${esc(e.title||p.title||e.sku)}</div><div>${price}${vtag}</div>
+      <div class="t">${esc(e.title||p.title||e.sku)}</div><div>${price}${vtag}${rtag}</div>
       <div class="meta">${e.date||""}${dias}${odur}${ocd} · ${p.category||""}${ea.temp?" · de temporada":""}</div>
       <div class="spark" data-sku="${e.sku}"></div></div></div>`;
 }
