@@ -8,8 +8,7 @@ const TABS = [
   ["ofertas","Gangas", DEALS.length],
   ["stock","Se acabó / Volvió",
    byType("agotado").length + byType("reaparecio").length
-   + byType("salio_del_catalogo").length + byType("regreso").length
-   + byType("club_agotado").length + byType("club_volvio").length],
+   + byType("salio_del_catalogo").length + byType("regreso").length],
   ["nuevos","Nuevos", byType("nuevo").length],
   ["siman","Siman", simanAlerts().length],
   ["explorar","Catálogo", D.n_products],
@@ -301,7 +300,7 @@ function openProd(sku){
       clubRows.map(([n,c])=>{
         const st = (n===MYCLUB?"color:var(--warn);":"")
                  + (n==="El Salvador"?"border-top:2px solid var(--line)":"");
-        return `<tr${st?` style="${st}"`:""}><td>${n===MYCLUB?"📍 ":""}${n==="El Salvador"?"Total (nacional)":n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td><td>${qtySpark(ch[n], cDates)}</td></tr>`;
+        return `<tr${st?` style="${st}"`:""}><td>${n===MYCLUB?"📍 ":""}${n==="El Salvador"?"Total (nacional)":n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td><td>${typeof qtySpark==="function"?qtySpark(ch[n], cDates):""}</td></tr>`;
       }).join("") + "</table>"
     : "<p class='meta' style='margin-top:10px'>Sin dato de stock por club todavía — se consulta solo para ofertas, movimientos y tu lista.</p>";
   // tabla por episodios: una fila por regimen (mismo precio+stock+letrero),

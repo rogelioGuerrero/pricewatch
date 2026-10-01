@@ -92,19 +92,13 @@ function render(){
              && (!q || matchQ(q, (D.products[s]||{}).title)))
     .sort((a,b) => dealScore(b) - dealScore(a)).slice(0, 120)
     .map(favCard).join("") || "<p class='meta'>Sin gangas hoy</p>";
-  // el feed es solo transiciones (hay / no hay); "se agota" es una
-  // señal de urgencia que vive en las cards, no un cambio de estado.
-  // Dos historias distintas, dos bloques: nacional = el producto
-  // desaparecio/reaparecio para todo el pais; club = inventario local
-  const natEv = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo",
-                              "regreso"].includes(e.type) && f(e));
-  const clubEv = ev.filter(e=>["club_agotado","club_volvio"].includes(e.type)
-    && f(e));
-  const sec = t => `<p class="meta" style="margin:10px 0 4px">${t}</p>`;
-  $("#g-stock").innerHTML =
-    (natEv.length ? sec("a nivel nacional") + natEv.map(e=>card(e)).join("") : "")
-    + (clubEv.length ? sec("por club")
-        + groupClubs(clubEv).map(g=>card(g[0],g)).join("") : "")
+  // el feed cuenta solo transiciones del producto a nivel pais
+  // (hay / no hay / existe / no existe). "se agota" es urgencia que
+  // vive en las cards, y lo que pasa en un club puntual es detalle
+  // que vive en la ficha — ninguno de los dos es cambio de estado.
+  const stockEv = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo",
+                                "regreso"].includes(e.type) && f(e));
+  $("#g-stock").innerHTML = stockEv.map(e=>card(e)).join("")
     || "<p class='meta'>Sin cambios de disponibilidad</p>";
   $("#g-nuevos").innerHTML = ev.filter(e=>e.type==="nuevo"&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin productos nuevos</p>";
   const favList = [...FAV].sort((x,y)=>verdict(x).rank-verdict(y).rank);
