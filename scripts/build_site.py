@@ -233,6 +233,13 @@ for s in series.values():
         chg.append((s[-1][1] - s[-2][1]) / s[-2][1] * 100)
 indice = round(statistics.median(chg), 2) if chg else None
 
+# cada serie exportada se acota a ~90d: agg/veredictos arriba ya usaron
+# la historia completa; el front no renderiza nada mas viejo y asi el
+# payload deja de crecer sin tope dia a dia
+if gen:
+    scut = (date.fromisoformat(gen) - timedelta(days=90)).isoformat()
+    series = {s: [r for r in v if r[0] >= scut] for s, v in series.items()}
+
 # ¿aun hay datos sinteticos del demo? (snapshot marcado o fechas pre-inicio)
 SNAP_DIR = os.path.join(ROOT, "data", "snapshots")
 demo = False

@@ -18,7 +18,8 @@
   .chip.on { color:var(--txt); border-color:var(--info); background:var(--card);
              font-weight:600 }
   .tabs { display:flex; gap:4px; border-bottom:1px solid var(--line); margin:16px 0 12px;
-          overflow-x:auto }
+          overflow-x:auto; position:sticky; top:0; z-index:40;
+          background:var(--bg); padding-top:6px }
   .tab { padding:8px 14px; cursor:pointer; color:var(--mut); font-size:13px;
          border-bottom:2px solid transparent; white-space:nowrap }
   .tab.on { color:var(--txt); border-color:var(--info); font-weight:600 }
