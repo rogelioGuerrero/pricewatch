@@ -189,6 +189,36 @@ function clubChips(sku){
 const SEAGOTA = {};
 for (const e of ev)
   if (e.type === "se_agota") (SEAGOTA[e.sku] ??= {})[e.club] ??= e;
+// sparkline de qty por club para la ficha: step-line porque el stock
+// es un nivel que salta, no una curva; null (dia sin chequeo) corta
+// el trazo — hueco honesto
+const qtySpark = (rows, dates) => {
+  const m = Object.fromEntries(rows || []);
+  const pts = dates.map(d => m[d] ?? null);
+  const vals = pts.filter(v => v != null);
+  if (vals.length < 2) return "";
+  const mn = Math.min(...vals), mx = Math.max(...vals), rng = (mx - mn) || 1;
+  const w = 72, h = 20;
+  const X = i => (i / (dates.length - 1) * w).toFixed(1);
+  const Y = v => (h - 2 - (v - mn) / rng * (h - 4)).toFixed(1);
+  let dAttr = "", pen = false, dots = "";
+  pts.forEach((v, i) => {
+    if (v == null) { pen = false; return; }
+    const x = X(i), y = Y(v);
+    dAttr += pen ? `H${x}V${y}` : `M${x},${y}`;
+    pen = true;
+    // hit-area invisible con tooltip nativo: fecha + unidades
+    dots += `<circle cx="${x}" cy="${y}" r="5" fill="none" `
+          + `pointer-events="all"><title>${dates[i].slice(5)} · `
+          + `${v} uds</title></circle>`;
+  });
+  const last = vals[vals.length - 1], first = vals[0];
+  const col = last < first ? "var(--up)"
+            : last > first ? "var(--down)" : "var(--mut)";
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" `
+       + `style="vertical-align:middle"><path d="${dAttr}" fill="none" `
+       + `stroke="${col}" stroke-width="1.5"/>${dots}</svg>`;
+};
 // clubes donde sigue escurriendo HOY: aun hay stock y el qty no volvio
 // a subir desde el evento (si subio, hubo re-stock y ya no es urgencia)
 const drena = sku => {
