@@ -1369,3 +1369,21 @@
 {"sku": "514264", "type": "salio_del_catalogo", "title": "Gillette ProShield Máquina Rasuradora 1 Mango + 6 Repuestos", "price": 2549, "date": "2026-10-01"}
 {"sku": "497189", "type": "salio_del_catalogo", "title": "Vertex Set de Maquillaje con Esenciales de Belleza 10 Piezas  ", "price": 277, "date": "2026-10-01"}
 {"sku": "497183", "type": "salio_del_catalogo", "title": "Danielle Creations Set con Espejo LED y Accesorios para Cabello 4 Piezas", "price": 677, "date": "2026-10-01"}
+{"sku": "150", "type": "se_agota", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "San Miguel", "qty_from": 119, "qty_to": 57, "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "171889", "type": "club_volvio", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Ana", "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "171889", "type": "club_volvio", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Los Héroes", "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "275453", "type": "club_agotado", "title": "La Carreta Piña Sweet Baby 2 Unidades", "price": 719, "club": "Santa Elena", "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "275453", "type": "club_agotado", "title": "La Carreta Piña Sweet Baby 2 Unidades", "price": 719, "club": "El Salvador", "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "318504", "type": "se_agota", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "Santa Ana", "qty_from": 7, "qty_to": 3, "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "318504", "type": "club_agotado", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "Los Héroes", "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "318504", "type": "club_agotado", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "San Miguel", "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "320186", "type": "club_agotado", "title": "Kreef Salchicha Cocktel 454 g / 1 lb", "price": 577, "club": "El Salvador", "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "320186", "type": "club_agotado", "title": "Kreef Salchicha Cocktel 454 g / 1 lb", "price": 577, "club": "San Miguel", "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "321655", "type": "club_volvio", "title": "Dimare Filete de Boca Colorada Congelado Empacado al Vacío 907 g / 2 lb", "price": 1649, "club": "El Salvador", "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "362345", "type": "club_agotado", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "club": "Santa Elena", "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "362345", "type": "se_agota", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "club": "Los Héroes", "qty_from": 58, "qty_to": 32, "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "362346", "type": "se_agota", "title": "Termogreen Contenedores Térmicos Desechables 120 Unidades", "price": 999, "club": "Los Héroes", "qty_from": 64, "qty_to": 30, "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "420380", "type": "se_agota", "title": "Member's Selection Aceite de Aguacate Refinado 1 L / 33.8 oz", "price": 1749, "club": "Santa Elena", "qty_from": 311, "qty_to": 173, "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "420380", "type": "se_agota", "title": "Member's Selection Aceite de Aguacate Refinado 1 L / 33.8 oz", "price": 1749, "club": "Los Héroes", "qty_from": 454, "qty_to": 221, "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "424009", "type": "club_agotado", "title": "Pepsi, 7up, Mirinda, Grapette, Sodas en Lata Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "San Miguel", "prev_date": "2026-09-30", "date": "2026-10-01"}
+{"sku": "43546", "type": "club_volvio", "title": "Member's Selection Papa Francesa Congelada Corte Recto para Freír 10 kg / 22 lb", "price": 2029, "club": "Los Héroes", "prev_date": "2026-09-30", "date": "2026-10-01"}
