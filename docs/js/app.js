@@ -296,13 +296,7 @@ function openProd(sku){
       clubRows.map(([n,c])=>{
         const st = (n===MYCLUB?"color:var(--warn);":"")
                  + (n==="El Salvador"?"border-top:2px solid var(--line)":"");
-        // si el ultimo chequeo lo vio cayendo (se_agota), anotar la
-        // tendencia: aqui si tiene sentido el numero — es la ficha
-        const se = (SEAGOTA[sku]||{})[n],
-              trend = se && c.in_stock && (c.qty==null || c.qty <= se.qty_to)
-                ? ` <span style="color:var(--warn);font-size:11px">`
-                  + `(${se.qty_from} el ${(se.prev_date||"").slice(5)})</span>` : "";
-        return `<tr${st?` style="${st}"`:""}><td>${n===MYCLUB?"📍 ":""}${n==="El Salvador"?"Total (nacional)":n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>${trend}`:'<span style="color:var(--mut)">agotado</span>'}</td></tr>`;
+        return `<tr${st?` style="${st}"`:""}><td>${n===MYCLUB?"📍 ":""}${n==="El Salvador"?"Total (nacional)":n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td></tr>`;
       }).join("") + "</table>"
     : "<p class='meta' style='margin-top:10px'>Sin dato de stock por club todavía — se consulta solo para ofertas, movimientos y tu lista.</p>";
   // tabla por episodios: una fila por regimen (mismo precio+stock+letrero),
@@ -339,18 +333,38 @@ function openProd(sku){
     });
     if (orun) ofRuns.push([{xAxis:orun},{xAxis:s[s.length-1][0]}]);
     chart = chart || echarts.init(document.getElementById("chart"), null, {renderer:"svg"});
+    // unidades a nivel nacional (canal "El Salvador" del API) sobre el
+    // mismo eje de tiempo, en eje Y derecho punteado — el detalle por
+    // club ya esta en la tabla de arriba
+    const nat = Object.fromEntries(
+      (((D.clubh||{})[sku]||{})["El Salvador"]||[]));
+    const hasNat = Object.keys(nat).length >= 2;
     chart.setOption({
-      grid:{left:55,right:15,top:20,bottom:30},
+      grid:{left:55,right:hasNat?48:15,top:20,bottom:30},
       xAxis:{type:"category",data:s.map(p=>p[0]),axisLabel:{color:"#8b93ad",fontSize:10}},
-      yAxis:{type:"value",axisLabel:{color:"#8b93ad",formatter:v=>"$"+v},splitLine:{lineStyle:{color:"#2a3350"}},scale:true},
-      series:[{type:"line",step:"end",data:s.map(p=>+(p[1]/100).toFixed(2)),showSymbol:true,symbolSize:5,
+      yAxis:[{type:"value",axisLabel:{color:"#8b93ad",formatter:v=>"$"+v},splitLine:{lineStyle:{color:"#2a3350"}},scale:true},
+        ...(hasNat?[{type:"value",position:"right",minInterval:1,min:0,
+          axisLabel:{color:"#8b93ad",formatter:v=>v+"u"},
+          splitLine:{show:false}}]:[])],
+      series:[{name:"precio",type:"line",step:"end",data:s.map(p=>+(p[1]/100).toFixed(2)),showSymbol:true,symbolSize:5,
         lineStyle:{color:"#60a5fa"},areaStyle:{color:"#60a5fa18"},
         markLine:{silent:true,data:[{yAxis:+(Math.min(...s.map(p=>p[1]))/100).toFixed(2)}],
           lineStyle:{color:"#34d399",type:"dashed"},label:{formatter:"mín",color:"#34d399"}},
         markArea:{silent:true,itemStyle:{color:"#3b82f622"},
           label:{color:"#93c5fd",fontSize:9,position:"top",formatter:"oferta"},
-          data:ofRuns}}],
-      tooltip:{trigger:"axis",valueFormatter:v=>"$"+v},
+          data:ofRuns}}]
+        .concat(hasNat ? [{name:"uds nac.",type:"line",step:"end",
+          yAxisIndex:1,connectNulls:false,symbolSize:4,
+          data:s.map(p=>nat[p[0]] ?? null),
+          itemStyle:{color:"#fbbf24"},
+          lineStyle:{color:"#fbbf24",type:"dashed",width:1.5}}] : []),
+      tooltip:{trigger:"axis",formatter: ps => ps.map(x =>
+        `${x.marker} ${x.seriesName}: ${x.value==null?"—":
+          x.seriesName==="precio" ? "$"+x.value : x.value+" uds"}`)
+        .join("<br>")},
+      ...(hasNat ? {legend:{top:0,right:0,
+        textStyle:{color:"#8b93ad",fontSize:10},
+        itemWidth:14,itemHeight:8}} : {}),
     }, true); chart.resize();
   } else {
     $("#chart").style.display="none";

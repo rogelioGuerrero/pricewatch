@@ -44,6 +44,18 @@ try:
             "in_stock": bool(r["in_stock"]), "qty": r["qty"]}
 except sqlite3.OperationalError:
     pass  # tabla aun no existe
+# Historial reciente de qty por club para la ficha (grafico de
+# trayectoria): ~3 semanas bastan para ver el drenaje sin inflar payload
+clubh = defaultdict(lambda: defaultdict(list))
+try:
+    cutoff = (datetime.now(timezone.utc).date()
+              - timedelta(days=21)).isoformat()
+    for r in conn.execute(
+            "SELECT sku, club_name, date, qty FROM club_stock "
+            "WHERE date >= ? ORDER BY sku, club_name, date", (cutoff,)):
+        clubh[r["sku"]][r["club_name"]].append([r["date"], r["qty"]])
+except sqlite3.OperationalError:
+    pass  # tabla aun no existe
 conn.close()
 
 events = []
@@ -241,7 +253,8 @@ data = {
     "n_products": len(latest),
     "n_stockout": sum(1 for r in latest.values() if not r["in_stock"]),
     "products": products, "series": series, "events": events,
-    "mis": mis, "ofertas": ofertas, "clubs": clubs, "agg": agg,
+    "mis": mis, "ofertas": ofertas, "clubs": clubs, "clubh": clubh,
+    "agg": agg,
     "indice": indice, "n_cambios_idx": len(chg),
     "siman": siman,
 }

@@ -93,8 +93,19 @@ function render(){
     .sort((a,b) => dealScore(b) - dealScore(a)).slice(0, 120)
     .map(favCard).join("") || "<p class='meta'>Sin gangas hoy</p>";
   // el feed es solo transiciones (hay / no hay); "se agota" es una
-  // señal de urgencia que vive en las cards, no un cambio de estado
-  $("#g-stock").innerHTML = groupClubs(ev.filter(e=>["agotado","reaparecio","salio_del_catalogo","regreso","club_agotado","club_volvio"].includes(e.type)&&f(e))).map(g=>card(g[0],g)).join("") || "<p class='meta'>Sin cambios de disponibilidad</p>";
+  // señal de urgencia que vive en las cards, no un cambio de estado.
+  // Dos historias distintas, dos bloques: nacional = el producto
+  // desaparecio/reaparecio para todo el pais; club = inventario local
+  const natEv = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo",
+                              "regreso"].includes(e.type) && f(e));
+  const clubEv = ev.filter(e=>["club_agotado","club_volvio"].includes(e.type)
+    && f(e));
+  const sec = t => `<p class="meta" style="margin:10px 0 4px">${t}</p>`;
+  $("#g-stock").innerHTML =
+    (natEv.length ? sec("a nivel nacional") + natEv.map(e=>card(e)).join("") : "")
+    + (clubEv.length ? sec("por club")
+        + groupClubs(clubEv).map(g=>card(g[0],g)).join("") : "")
+    || "<p class='meta'>Sin cambios de disponibilidad</p>";
   $("#g-nuevos").innerHTML = ev.filter(e=>e.type==="nuevo"&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin productos nuevos</p>";
   const favList = [...FAV].sort((x,y)=>verdict(x).rank-verdict(y).rank);
   if (SHOP) favList.sort((x,y)=>(CART.has(x)?1:0)-(CART.has(y)?1:0));
