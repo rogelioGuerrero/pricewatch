@@ -184,8 +184,8 @@ def catalog_state():
     title}} desde prices.db — espejo del agg del frontend."""
     con = sqlite3.connect(DB)
     con.row_factory = sqlite3.Row
-    titles = {r["sku"]: r["title"]
-              for r in con.execute("select sku, title from products")}
+    prods = {r["sku"]: dict(r)
+             for r in con.execute("select sku, title, image from products")}
     series = {}
     for r in con.execute("select sku, date, price, saving, in_stock "
                          "from prices order by sku, date"):
@@ -199,8 +199,10 @@ def catalog_state():
               if r["price"] != rows[i - 1]["price"]]
         d_last = (datetime.strptime(ch[-1]["date"], "%Y-%m-%d").date()
                   if ch else None)
+        pr = prods.get(sku) or {}
         out[sku] = {
-            "title": titles.get(sku, sku), "price": last["price"],
+            "title": pr.get("title", sku), "image": pr.get("image") or "",
+            "price": last["price"],
             "saving": last["saving"] or 0, "in_stock": bool(last["in_stock"]),
             "min": min(prices) if prices else None,
             "max": max(prices) if prices else None,
@@ -234,6 +236,18 @@ def build_alerts(events, cat, favs, paid, tgts):
     drops = sorted([e for e in events if e["type"] in ("bajo", "rebaja")
                     and e.get("pct")],
                    key=lambda e: e["pct"])
+    # eventos por club agrupados por sku: un producto que se acaba en
+    # 3 tiendas es UN hecho, no tres — igual que la web
+    club_ev = {}
+    for e in events:
+        if e["type"] in ("club_agotado", "club_volvio", "se_agota"):
+            club_ev.setdefault((e["type"], e["sku"]), []).append(e)
+    def fav_clubs(tipo):
+        return [{"sku": s, "title": es[0]["title"],
+                 "price": es[0].get("price"),
+                 "clubs": [(e.get("club"), e.get("qty_to")) for e in es]}
+                for (t, s), es in club_ev.items()
+                if t == tipo and s in fav_ids]
     out = {
         "drops": drops,
         "fav_drop": [e for e in drops if e["sku"] in fav_ids],
@@ -246,6 +260,16 @@ def build_alerts(events, cat, favs, paid, tgts):
         "tgt_hit": [],
         "big_rebaja": [e for e in drops if e["type"] == "rebaja"
                        and e["pct"] <= BIG_DROP],
+        # urgencia de disponibilidad en TU lista (call to action del dia)
+        "fav_drain": fav_clubs("se_agota"),
+        "fav_clubout": fav_clubs("club_agotado"),
+        "fav_clubback": fav_clubs("club_volvio"),
+        "fav_back": [e for e in events
+                     if e["type"] in ("reaparecio", "regreso")
+                     and e["sku"] in fav_ids],
+        # sku -> clubes donde se agota: anota las bajadas/ofertas del dia
+        "drain": {s: [e.get("club") for e in es]
+                  for (t, s), es in club_ev.items() if t == "se_agota"},
     }
     for sku in fav_ids:
         c = cat.get(sku)
@@ -351,30 +375,80 @@ def send_email(subject, html, text):
 
 # ---------------- digest ----------------
 
-def li(e, cat=None):
+def li(e, cat=None, drain=None):
     t = (e.get("title") or "?").strip()
     t = t[:60] + "…" if len(t) > 60 else t
+    d = ""
+    if drain and drain.get(e.get("sku")):
+        clubs = [c for c in drain[e["sku"]] if c]
+        if clubs:
+            d = (f" <span style='color:#c2410c;font-size:12px'>— "
+                 f"se agota en {', '.join(clubs)}</span>")
     if e.get("from") is not None and e.get("to") is not None:
         return (f"<b>{t}</b> — <s>{money(e['from'])}</s> → "
-                f"<b>{money(e['to'])}</b> ({e['pct']}%)")
+                f"<b>{money(e['to'])}</b> ({e['pct']}%){d}")
     if e.get("to") is not None:
-        return f"<b>{t}</b> — {money(e['to'])} ({e.get('pct','')}%)"
+        return f"<b>{t}</b> — {money(e['to'])} ({e.get('pct','')}%){d}"
     if e.get("price") is not None:
-        return f"<b>{t}</b> — {money(e['price'])}"
-    return f"<b>{t}</b>"
+        return f"<b>{t}</b> — {money(e['price'])}{d}"
+    return f"<b>{t}</b>{d}"
 
 
-def digest_html(day, counts, a, gangas, silent, siman):
+def ulclub(lst, verbo):
+    """lineas 'Producto — verbo en clubes' para eventos por club."""
+    out = []
+    for e in lst:
+        t = (e.get("title") or "?").strip()
+        t = t[:60] + "…" if len(t) > 60 else t
+        clubs = []
+        for club, qty in e["clubs"]:
+            # "El Salvador" = canal nacional del API, no una tienda
+            club = "nivel nacional" if club == "El Salvador" else club
+            clubs.append(f"{club} (quedan {qty})"
+                         if qty is not None else club)
+        out.append(f"<li><b>{t}</b> — {verbo} {' · '.join(clubs)}</li>")
+    return "<ul>" + "".join(out) + "</ul>"
+
+
+def sec(title, inner, color="#0f1420"):
+    return (f"<h3 style='margin:18px 0 4px;border-left:3px solid {color};"
+            f"padding-left:8px'>{title}</h3>{inner}")
+
+
+def digest_html(day, counts, a, gangas, silent, siman, cat):
     S = []
     S.append(f"<p style='color:#666'>{day} — "
              + " · ".join(f"{n} {k}" for k, n in counts.items() if n)
              + "</p>")
+    # urgencia primero: de tu lista, se agota o se acabó — hay que actuar hoy
+    urg = ""
+    if a["fav_drain"]:
+        n = len(a["fav_drain"])
+        urg += f"<b>{n} se está{'n' if n>1 else ''} acabando:</b>" \
+               + ulclub(a["fav_drain"], "se agota en")
+    if a["fav_clubout"]:
+        n = len(a["fav_clubout"])
+        urg += f"<b>{n} se acab{'aron' if n>1 else 'ó'}:</b>" \
+               + ulclub(a["fav_clubout"], "se acabó en")
+    if urg:
+        S.append(sec("Urgente — tu lista se está agotando", urg, "#c2410c"))
+    back = ""
+    if a["fav_clubback"]:
+        back += ulclub(a["fav_clubback"], "volvió a")
+    if a["fav_back"]:
+        back += "<ul>" + "".join(
+            f"<li>{li(e)}</li>" for e in a["fav_back"][:5]) + "</ul>"
+    if back:
+        S.append(sec("Volvió stock", back, "#15803d"))
     if gangas:
         g = gangas[0]
-        S.append("<h3 style='margin-bottom:4px'>Ganga del día</h3><p>"
-                 + li(g) +
-                 (" — sin letrero, rebaja silenciosa"
-                  if g["type"] == "rebaja" else "") + "</p>")
+        im = (cat.get(g.get("sku")) or {}).get("image")
+        card = (f"<img src='{im}' width='52' style='border-radius:8px;"
+                "background:#fff;vertical-align:middle;margin-right:8px'>"
+                if im else "") + li(g, cat, a["drain"]) \
+               + (" — sin letrero, rebaja silenciosa"
+                  if g["type"] == "rebaja" else "")
+        S.append(sec("Ganga del día", f"<p>{card}</p>", "#1e40af"))
     fav_bits = []
     for lbl, lst in [("a precio objetivo", a["tgt_hit"]),
                      ("bajaron/en oferta", a["fav_drop"] + a["fav_oferta"]),
@@ -383,20 +457,22 @@ def digest_html(day, counts, a, gangas, silent, siman):
         if lst:
             fav_bits.append(
                 f"<b>{len(lst)} {lbl}:</b><ul>"
-                + "".join(f"<li>{li(e)}</li>" for e in lst[:5]) + "</ul>")
+                + "".join(f"<li>{li(e, cat, a['drain'])}</li>"
+                          for e in lst[:5]) + "</ul>")
     if fav_bits:
-        S.append("<h3 style='margin-bottom:4px'>Tu lista</h3>"
-                 + "".join(fav_bits))
+        S.append(sec("Tu lista", "".join(fav_bits), "#0f1420"))
     if gangas:
-        S.append("<h3 style='margin-bottom:4px'>Bajadas de hoy</h3><ul>"
-                 + "".join(f"<li>{li(e)}</li>" for e in gangas[:8])
-                 + "</ul>")
+        S.append(sec("Bajadas de hoy",
+                     "<ul>" + "".join(f"<li>{li(e, cat, a['drain'])}</li>"
+                                      for e in gangas[:8]) + "</ul>"))
     if silent:
-        S.append("<h3 style='margin-bottom:4px'>Silenciosas vigentes</h3><ul>"
-                 + "".join(f"<li>{li(e)}</li>" for e in silent[:5]) + "</ul>")
+        S.append(sec("Silenciosas vigentes",
+                     "<ul>" + "".join(f"<li>{li(e, cat)}</li>"
+                                      for e in silent[:5]) + "</ul>"))
     if siman:
-        S.append("<h3 style='margin-bottom:4px'>Siman</h3><ul>"
-                 + "".join(f"<li>{li(e)}</li>" for e in siman[:5]) + "</ul>")
+        S.append(sec("Siman",
+                     "<ul>" + "".join(f"<li>{li(e)}</li>"
+                                      for e in siman[:5]) + "</ul>"))
     S.append(f"<p><a href='{SITE}?tab=ofertas' style='background:#0f1420;"
              "color:#fff;padding:10px 18px;border-radius:8px;"
              "text-decoration:none'>Abrir PriceWatch</a></p>")
@@ -471,7 +547,10 @@ def main():
     if not events and not siman:
         print("  email: día sin eventos — no se envía")
         return
+    n_urg = len(a["fav_drain"]) + len(a["fav_clubout"])
     headline = []
+    if n_urg:
+        headline.append(f"{n_urg} de tu lista se agotan")
     if a["drops"]:
         headline.append(f"{len(a['drops'])} bajadas")
     if a["tgt_hit"]:
@@ -481,16 +560,19 @@ def main():
     if siman:
         headline.append(f"{len(siman)} Siman")
     subj = f"PriceWatch {TODAY}: " + (" · ".join(headline) or "resumen")
+    # el encabezado solo cuenta transiciones nacionales y precios; el
+    # ruido por club vive en la seccion Urgente si es de tu lista
     pretty = {"bajo": "bajaron", "rebaja": "rebajas silenciosas",
               "subio": "subieron", "oferta": "ofertas nuevas",
               "oferta_termino": "terminó oferta", "agotado": "agotados",
               "reaparecio": "volvieron", "nuevo": "nuevos",
-              "salio_del_catalogo": "salieron", "regreso": "regresaron",
-              "se_agota": "se están acabando",
-              "club_agotado": "agotado en club", "club_volvio": "volvió en club"}
-    cnt = {pretty.get(k, k): v for k, v in counts.items()}
-    html = digest_html(TODAY, cnt, a, a["drops"], silent, siman)
-    text = f"PriceWatch {TODAY}\n" + "\n".join(
+              "salio_del_catalogo": "salieron", "regreso": "regresaron"}
+    cnt = {pretty[k]: v for k, v in counts.items() if k in pretty}
+    html = digest_html(TODAY, cnt, a, a["drops"], silent, siman, cat)
+    text = f"PriceWatch {TODAY}\n" + "".join(
+        f"!! {e['title'][:50]} se agota en "
+        f"{', '.join(c for c, _ in e['clubs'])}\n" for e in a["fav_drain"][:5]
+    ) + "\n".join(
         f"- {(e.get('title') or '')[:60]} {e.get('pct','')}%" for e in a["drops"][:8])
     send_email(subj, html, text)
 
