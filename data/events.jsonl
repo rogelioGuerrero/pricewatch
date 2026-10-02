@@ -1473,3 +1473,20 @@
 {"sku": "244383", "type": "club_volvio", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "Santa Ana", "prev_date": "2026-10-01", "date": "2026-10-02"}
 {"sku": "244383", "type": "club_volvio", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "El Salvador", "prev_date": "2026-10-01", "date": "2026-10-02"}
 {"sku": "244383", "type": "club_volvio", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "Los Héroes", "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "10615", "type": "se_agota", "title": "Kraft Queso Parmesano 680 g / 24 oz", "price": 1479, "club": "Santa Elena", "qty_from": 92, "qty_to": 45, "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "150", "type": "se_agota", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "El Salvador", "qty_from": 339, "qty_to": 194, "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "150", "type": "se_agota", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "Los Héroes", "qty_from": 81, "qty_to": 40, "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "150", "type": "club_agotado", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "San Miguel", "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Elena", "qty_from": 79, "qty_to": 43, "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Santa Ana", "qty_from": 31, "qty_to": 10, "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "El Salvador", "qty_from": 157, "qty_to": 80, "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "171889", "type": "se_agota", "title": "Lechuga Romana 2 Unidades", "price": 319, "club": "Los Héroes", "qty_from": 47, "qty_to": 27, "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "258130", "type": "club_agotado", "title": "Breakstone's Queso Cottage 680 g / 1.5 lb", "price": 629, "club": "Santa Elena", "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "318504", "type": "club_agotado", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "Santa Ana", "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "326756", "type": "se_agota", "title": "Lifeway Kéfir de Fresa 2 Unidades / 946 mL / 32 oz ", "price": 1099, "club": "El Salvador", "qty_from": 50, "qty_to": 19, "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "326756", "type": "se_agota", "title": "Lifeway Kéfir de Fresa 2 Unidades / 946 mL / 32 oz ", "price": 1099, "club": "Los Héroes", "qty_from": 50, "qty_to": 20, "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "359319", "type": "se_agota", "title": "International Delight Crema de Vainilla Francesa 3 Unidades / 946 mL / 32 oz", "price": 1129, "club": "Santa Ana", "qty_from": 39, "qty_to": 8, "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "360463", "type": "se_agota", "title": "K-NINO Alimento para Perro Cachorro 17.2 kg / 38 lb", "price": 2499, "club": "Santa Ana", "qty_from": 13, "qty_to": 7, "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "362345", "type": "club_volvio", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "club": "Santa Elena", "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "362345", "type": "club_volvio", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "club": "Santa Ana", "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "46369", "type": "se_agota", "title": "Wesson Aceite de Canola 4.73 L", "price": 1899, "club": "San Miguel", "qty_from": 382, "qty_to": 197, "prev_date": "2026-10-01", "date": "2026-10-02"}
