@@ -1490,3 +1490,60 @@
 {"sku": "362345", "type": "club_volvio", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "club": "Santa Elena", "prev_date": "2026-10-01", "date": "2026-10-02"}
 {"sku": "362345", "type": "club_volvio", "title": "Termogreen Contenedor 20.32 cm x 20.32 cm / 8” x 8” Sin División / 120 Unidades", "price": 999, "club": "Santa Ana", "prev_date": "2026-10-01", "date": "2026-10-02"}
 {"sku": "46369", "type": "se_agota", "title": "Wesson Aceite de Canola 4.73 L", "price": 1899, "club": "San Miguel", "qty_from": 382, "qty_to": 197, "prev_date": "2026-10-01", "date": "2026-10-02"}
+{"sku": "388857", "type": "reaparecio", "title": "Kirkland Vitarain Zero Bebida Enriquecida con Vitaminas 24 Unidades / 591 mL / 20 oz", "price": 1899, "prev_price": 1899, "days_out": null, "date": "2026-10-03"}
+{"sku": "307056", "type": "rebaja", "title": "Nabisco Galleta Oreo Original 36 Unidades / 36 g / 1.26 oz", "from": 869, "to": 799, "delta": -70, "pct": -8.1, "date": "2026-10-03"}
+{"sku": "174601", "type": "reaparecio", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "prev_price": 729, "days_out": 2, "date": "2026-10-03"}
+{"sku": "245214", "type": "subio", "title": "Uva Red Globe 907 g / 2 lb", "from": 669, "to": 699, "delta": 30, "pct": 4.5, "date": "2026-10-03"}
+{"sku": "306937", "type": "reaparecio", "title": "Mini Vegetales 1.13 kg / 2.5 lb", "price": 569, "prev_price": 569, "days_out": null, "date": "2026-10-03"}
+{"sku": "195641", "type": "subio", "title": "Cebolla Blanca 2.26 kg / 5 lb", "from": 849, "to": 929, "delta": 80, "pct": 9.4, "date": "2026-10-03"}
+{"sku": "471241", "type": "subio", "title": "Cebolla Morada Fresca 2.2 kg / 5 lb", "from": 799, "to": 849, "delta": 50, "pct": 6.3, "date": "2026-10-03"}
+{"sku": "475593", "type": "subio", "title": "Member's Selection Angelina / Rochoy / Vuelta de Lomo Fresco Caja", "from": 30113, "to": 30675, "delta": 562, "pct": 1.9, "date": "2026-10-03"}
+{"sku": "341786", "type": "rebaja", "title": "Pierna de Cerdo Congelada Importada Rebanada", "from": 1159, "to": 1104, "delta": -55, "pct": -4.7, "date": "2026-10-03"}
+{"sku": "447703", "type": "reaparecio", "title": "La Carreta Coliflor 907 g / 2 lb", "price": 699, "prev_price": 699, "days_out": null, "date": "2026-10-03"}
+{"sku": "299173", "type": "nuevo", "title": "Brohders Pan Canela y Pasas 2 Unidades / 750 g", "price": 499, "date": "2026-10-03"}
+{"sku": "475585", "type": "nuevo", "title": "Salon Lomo de Res Fresco Caja", "price": 25416, "date": "2026-10-03"}
+{"sku": "326756", "type": "agotado", "title": "Lifeway Kéfir de Fresa 2 Unidades / 946 mL / 32 oz ", "price": 1099, "date": "2026-10-03"}
+{"sku": "479220", "type": "agotado", "title": "Spirella Prosciutto con Mozzarella 454 g / 16 oz", "price": 1299, "date": "2026-10-03"}
+{"sku": "399003", "type": "agotado", "title": "Reny Picot Queso Camembert 397 g / 14 oz", "price": 849, "date": "2026-10-03"}
+{"sku": "905242", "type": "agotado", "title": "RW Garcia Galletas de Batata sin Gluten 2 Unidades / 425 g / 15 oz", "price": 577, "date": "2026-10-03"}
+{"sku": "297935", "type": "agotado", "title": "Chef-Mate Chili Con Carne Sazonada y Frijoles Rojos Enlatados 3 kg / 6.6 lb", "price": 1899, "date": "2026-10-03"}
+{"sku": "303387", "type": "agotado", "title": "Maggi Sopas Surtidas 12 Unidades / 57 g / 2 oz", "price": 349, "date": "2026-10-03"}
+{"sku": "523985", "type": "agotado", "title": "J&E Queso con Chiles Jalapeños 340 g / 12 oz", "price": 729, "date": "2026-10-03"}
+{"sku": "567005", "type": "subio", "title": "Bridgestone Llanta 185/65R15 Potenza RE760", "from": 8799, "to": 9799, "delta": 1000, "pct": 11.4, "date": "2026-10-03"}
+{"sku": "808700", "type": "reaparecio", "title": "Eveready Gold Batería para Carro 31MFS-G FC 16", "price": 12999, "prev_price": 12999, "days_out": null, "date": "2026-10-03"}
+{"sku": "522662", "type": "subio", "title": "Lenovo 39.62 cm / 15.6\" Pulgadas Portátil IdealPad Slim AMD Ryzen 5 40 8 Gigabytes / 512 Gigabytes 82XQ012HUS", "from": 61999, "to": 64999, "delta": 3000, "pct": 4.8, "date": "2026-10-03"}
+{"sku": "487710", "type": "subio", "title": "Gourmia Freidora de Aire en Acero Inoxidable 6.62 L / 7 qt", "from": 5999, "to": 6499, "delta": 500, "pct": 8.3, "date": "2026-10-03"}
+{"sku": "493951", "type": "reaparecio", "title": "Ninja SmoothieiQ Licuadora con 3 Funciones 1 200 W CO750BPTLA", "price": 8999, "prev_price": 8999, "days_out": null, "date": "2026-10-03"}
+{"sku": "510115", "type": "reaparecio", "title": "Klip Xtreme Audífonos Tipo Banda para el Cuello", "price": 4499, "prev_price": 4499, "days_out": 4, "date": "2026-10-03"}
+{"sku": "492463", "type": "rebaja", "title": "Starlink Mini Kit Antena Generador Estándar de WIFI y Regulador de Voltaje", "from": 19999, "to": 9999, "delta": -10000, "pct": -50.0, "date": "2026-10-03"}
+{"sku": "479494-0012109108907", "type": "rebaja", "title": "SmartYard Lamparas LED de Luz Solar 5 Unidades", "from": 3499, "to": 3299, "delta": -200, "pct": -5.7, "date": "2026-10-03"}
+{"sku": "525006", "type": "nuevo", "title": "Termogreen Platos Desechables con Diseño de Jardín 120 Unidades / 22 cm / 9\"", "price": 979, "date": "2026-10-03"}
+{"sku": "478033", "type": "nuevo", "title": "Titan Rostizador Ovalado de Aluminio 3 Unidades", "price": 599, "date": "2026-10-03"}
+{"sku": "509676-0607766233804", "type": "nuevo", "title": "Member's Selection Perchero para Ropa con Funda Protectora y Ruedas de 3 Niveles", "price": 8799, "date": "2026-10-03"}
+{"sku": "493832", "type": "agotado", "title": "Tramontina Tablas para Cortar de Madera 3 Piezas", "price": 2977, "date": "2026-10-03"}
+{"sku": "488735-0030772149737", "type": "agotado", "title": "Febreze Aromatizantes Air Pack 4 Unidades / 250 g / 8.8 oz", "price": 1277, "date": "2026-10-03"}
+{"sku": "282877", "type": "reaparecio", "title": "Santa Helena Vino Tinto Varietal Estuche de Regalo 750 mL / 25 oz", "price": 1299, "prev_price": 1299, "days_out": null, "date": "2026-10-03"}
+{"sku": "265528", "type": "nuevo", "title": "Cousiño Macul AR Vino Tinto Cabernet Sauvignon 750ml", "price": 1679, "date": "2026-10-03"}
+{"sku": "496025", "type": "subio", "title": "Mabe Estufa a Gas con 6 Quemadores y Horno 126.6 L WEM7659CFIS3", "from": 34999, "to": 37999, "delta": 3000, "pct": 8.6, "date": "2026-10-03"}
+{"sku": "502634-0198988419027", "type": "agotado", "title": "Splendid Conjunto de Pijama Camiseta y Shorts para Mujer 2 Piezas", "price": 1377, "date": "2026-10-03"}
+{"sku": "516008-0822540404762", "type": "agotado", "title": "Pekkle Conjunto para Niño 4 Piezas", "price": 1699, "date": "2026-10-03"}
+{"sku": "339843", "type": "reaparecio", "title": "Acuvue Oasys -4.00 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "prev_price": 6499, "days_out": null, "date": "2026-10-03"}
+{"sku": "339831", "type": "reaparecio", "title": "Acuvue Oasys -2.25 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "prev_price": 6499, "days_out": null, "date": "2026-10-03"}
+{"sku": "339834", "type": "reaparecio", "title": "Acuvue Oasys -2.75 Lentes de Cоntacto Oasys Esferico 6 Unidades", "price": 6499, "prev_price": 6499, "days_out": null, "date": "2026-10-03"}
+{"sku": "339836", "type": "reaparecio", "title": "Acuvue Oasys -3.00 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "prev_price": 6499, "days_out": 3, "date": "2026-10-03"}
+{"sku": "339816", "type": "reaparecio", "title": "Acuvue Oasys -1.25 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "prev_price": 6499, "days_out": null, "date": "2026-10-03"}
+{"sku": "339803", "type": "agotado", "title": "Acuvue Oasys -1.00 Lentes de Contacto Oasys Esferico 6 Unidades", "price": 6499, "date": "2026-10-03"}
+{"sku": "471018", "type": "nuevo", "title": "Member's Selection Bolsa para Árbol Artificial 1.52 m / 4.9'", "price": 3799, "date": "2026-10-03"}
+{"sku": "504046", "type": "rebaja", "title": "Member's Selection Caballo Mecedor Decorativo Iluminado para Navidad ", "from": 10799, "to": 9399, "delta": -1400, "pct": -13.0, "date": "2026-10-03"}
+{"sku": "452349", "type": "nuevo", "title": "Oral B Juego de Cepillos Eléctricos Pro Battery Negro y Blanco 2 Unidades", "price": 4499, "date": "2026-10-03"}
+{"sku": "497374-0885395103365", "type": "salio_del_catalogo", "title": "ThermoFlask Botellas para Bebida 2 Unidades / 1.2 L / 40.6 oz", "price": 2999, "date": "2026-10-03"}
+{"sku": "174601", "type": "club_volvio", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "club": "Santa Elena", "prev_date": "2026-10-02", "date": "2026-10-03"}
+{"sku": "174601", "type": "club_volvio", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "club": "Santa Ana", "prev_date": "2026-10-02", "date": "2026-10-03"}
+{"sku": "174601", "type": "club_volvio", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "club": "El Salvador", "prev_date": "2026-10-02", "date": "2026-10-03"}
+{"sku": "174601", "type": "club_volvio", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "club": "Los Héroes", "prev_date": "2026-10-02", "date": "2026-10-03"}
+{"sku": "195641", "type": "club_agotado", "title": "Cebolla Blanca 2.26 kg / 5 lb", "price": 929, "club": "Santa Elena", "prev_date": "2026-10-02", "date": "2026-10-03"}
+{"sku": "195641", "type": "club_agotado", "title": "Cebolla Blanca 2.26 kg / 5 lb", "price": 929, "club": "Santa Ana", "prev_date": "2026-10-02", "date": "2026-10-03"}
+{"sku": "195641", "type": "se_agota", "title": "Cebolla Blanca 2.26 kg / 5 lb", "price": 929, "club": "El Salvador", "qty_from": 81, "qty_to": 30, "prev_date": "2026-10-02", "date": "2026-10-03"}
+{"sku": "195641", "type": "se_agota", "title": "Cebolla Blanca 2.26 kg / 5 lb", "price": 929, "club": "Los Héroes", "qty_from": 41, "qty_to": 16, "prev_date": "2026-10-02", "date": "2026-10-03"}
+{"sku": "493951", "type": "club_volvio", "title": "Ninja SmoothieiQ Licuadora con 3 Funciones 1 200 W CO750BPTLA", "price": 8999, "club": "Santa Elena", "prev_date": "2026-10-02", "date": "2026-10-03"}
+{"sku": "493951", "type": "club_volvio", "title": "Ninja SmoothieiQ Licuadora con 3 Funciones 1 200 W CO750BPTLA", "price": 8999, "club": "El Salvador", "prev_date": "2026-10-02", "date": "2026-10-03"}
