@@ -96,11 +96,14 @@ function render(){
     .map(g => card(g[0], g)).join("")
     || "<p class='meta'>Sin cambios</p>";
   $("#cf-new").style.display = NEWEV.length ? "" : "none";
-  $("#g-ofertas").innerHTML = DEALS
+  movChart(cambios);
+  const dealList = DEALS
     .filter(s => dealOK(s, OF_F)
              && (!q || matchQ(q, (D.products[s]||{}).title)))
-    .sort((a,b) => dealScore(b) - dealScore(a)).slice(0, 120)
+    .sort((a,b) => dealScore(b) - dealScore(a));
+  $("#g-ofertas").innerHTML = dealList.slice(0, 120)
     .map(favCard).join("") || "<p class='meta'>Sin gangas hoy</p>";
+  dealChart(dealList);
   // el feed cuenta solo transiciones del producto a nivel pais
   // (hay / no hay / existe / no existe). "se agota" es urgencia que
   // vive en las cards, y lo que pasa en un club puntual es detalle
@@ -198,7 +201,9 @@ function render(){
   // siman: alertas agrupadas por busqueda vigilada (acordeon).
   // se conserva que grupos tiene abiertos el usuario entre renders
   const sGroups = {};
-  simAl.forEach(p =>
+  // en el tab Siman el buscador global filtra estas cards (titulo,
+  // marca o vigilancia) en vez de cubrir el pane con el catalogo
+  simAl.filter(p => !q || matchQ(q, p.t, p.b, p.w)).forEach(p =>
     (sGroups[(p.w||"otros") + (p.ta ? " · "+p.ta : "")] ??= []).push(p));
   document.querySelectorAll("#g-siman details.acc").forEach(d =>
     ACC_OPEN[d.dataset.k] = d.open);
@@ -226,8 +231,9 @@ function render(){
       <div class="grid">${items.map(sCard).join("")}</div>
     </details>`;
   }).join("")
-    || `<p class='meta'>Sin alertas hoy — ${SIMAN.n_items||0} variantes `
-    + `bajo vigilancia.</p>`;
+    || (q ? `<p class='meta'>Sin coincidencias en Siman</p>`
+        : `<p class='meta'>Sin alertas hoy — ${SIMAN.n_items||0} variantes `
+        + `bajo vigilancia.</p>`);
   document.querySelectorAll("#siman-sort .chip").forEach(c =>
     c.classList.toggle("on", c.dataset.ss === SSORT));
   $("#siman-sum").textContent =

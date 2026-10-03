@@ -175,6 +175,13 @@ if os.path.exists(SIMAN_DB):
     sc = sqlite3.connect(SIMAN_DB)
     sc.row_factory = sqlite3.Row
     sitems = {r["itemId"]: dict(r) for r in sc.execute("SELECT * FROM items")}
+    # frescura ~14d: un itemId no visto es un listing muerto (Siman
+    # recodifica) congelado con su ultimo avail — fuera del payload o
+    # alertaria como zombie y engordaria el html
+    if sitems and "last_seen" in next(iter(sitems.values())):
+        fcut = (date.fromisoformat(gen) - timedelta(days=14)).isoformat()
+        sitems = {i: it for i, it in sitems.items()
+                  if (it.get("last_seen") or "") >= fcut}
     sser = defaultdict(list)
     for r in sc.execute("SELECT * FROM prices ORDER BY date"):
         sser[r["itemId"]].append([r["date"], r["price"], r["avail"],

@@ -2,6 +2,10 @@
 // Perspective, ficha de producto, push e init. Va ultimo:
 // al evaluarse ya existen todos los modulos.
 
+// declaradas arriba: el auto-click del ultimo tab (linea ~33) puede
+// llamar paintBar() durante el eval, antes de cualquier let mas abajo
+let chart, chCal;
+const BARS = {};
 const TABS = [
   ["favs","Mi lista", FAV.size],
   ["cambios","Movimientos", byType("bajo").length + byType("subio").length + byType("oferta_termino").length + byType("rebaja").length],
@@ -26,6 +30,8 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   if (t.dataset.t==="favs" && favFilter!=="all") {
     favFilter = "all"; render(); }
   if (t.dataset.t==="explorar") loadExplorer();
+  if (t.dataset.t==="cambios") paintBar("ch-cambios");
+  if (t.dataset.t==="ofertas") paintBar("ch-ofertas");
 });
 // abre en el ultimo tab usado (o Mi lista)
 const urlTab = new URLSearchParams(location.search).get("tab");
@@ -115,8 +121,9 @@ $("#q").oninput = () => {
   const t = document.querySelector(".tab.on")?.dataset.t;
   document.querySelectorAll(".pane").forEach(x=>x.classList.remove("on"));
   // en tabs de tarjetas: panel de resultados del catalogo;
-  // en tabs de tabla: la tabla queda y se filtra sola
-  if (q.length >= 2 && t !== "explorar")
+  // en tabs de tabla: la tabla queda y se filtra sola;
+  // en siman: el campo filtra sus propias cards, no tapa con catalogo
+  if (q.length >= 2 && t !== "explorar" && t !== "siman")
     document.getElementById("pane-buscar").classList.add("on");
   else document.getElementById("pane-"+t)?.classList.add("on");
   render();
@@ -227,7 +234,104 @@ async function loadExplorer(attempt=0){
 }
 
 const dlg = document.getElementById("dlg");
-let chart;
+// barras horizontales reutilizables (Movimientos y Gangas): divergentes
+// por signo o de un color; ★ = tu lista, ● = nuevo desde tu ultima
+// visita; clic abre la ficha del producto
+function paintBar(id){
+  const b = BARS[id]; if (!b || !b.opt) return;
+  const el = document.getElementById(id);
+  // details cerrado conserva su tamaño (content-visibility) — offsetWidth
+  // no llega a 0; hay que mirar .open. El pane oculto si lo deja en 0
+  if (!document.getElementById(b.wrap).open || !el.offsetWidth) return;
+  // etiqueta adaptativa: en telefono truncar mas corto para que la
+  // barra conserve espacio util
+  b.opt.yAxis.axisLabel.width =
+    Math.min(150, Math.max(90, Math.round(el.offsetWidth * 0.32)));
+  b.ch = b.ch || echarts.init(el, null, {renderer:"svg"});
+  b.ch.setOption(b.opt, true); b.ch.resize();
+  b.ch.off("click");
+  b.ch.on("click", p => { const r = b.data[p.dataIndex];
+    r && openProd(r.sku); });
+}
+// o: {wrap, cap, min, rows:[{sku,v,neg,color,label,tip}], capTxt(n)}
+function barChart(id, o){
+  const w = document.getElementById(o.wrap),
+        el = document.getElementById(id),
+        b = BARS[id] = BARS[id] || {};
+  b.wrap = o.wrap;
+  const rows = o.rows.filter(r => Math.abs(r.v) >= o.min)
+    .sort((a,b) => Math.abs(b.v) - Math.abs(a.v)).slice(0, 12);
+  if (rows.length < 3) { w.style.display = "none"; b.opt = null; return; }
+  w.style.display = "";
+  document.getElementById(o.cap).textContent = o.capTxt(rows.length);
+  el.style.height = Math.max(90, rows.length * 24 + 10) + "px";
+  b.data = rows;
+  b.opt = {
+    grid:{left:6,right:44,top:4,bottom:4,containLabel:true},
+    xAxis:{type:"value",
+      axisLabel:{color:"#8b93ad",fontSize:10,formatter:"{value}%"},
+      splitLine:{lineStyle:{color:"#2a3350"}}},
+    yAxis:{type:"category",inverse:true,
+      data:rows.map(r => r.label),
+      axisLabel:{color:"#8b93ad",fontSize:11,width:150,overflow:"truncate"},
+      axisTick:{show:false},axisLine:{show:false}},
+    series:[{type:"bar",barWidth:11,
+      data:rows.map(r => ({value:r.v,
+        itemStyle:{color:r.color,
+          borderRadius:r.neg ? [3,0,0,3] : [0,3,3,0]},
+        label:{show:true,position:r.neg?"left":"right",fontSize:10,
+          color:"#8b93ad",formatter:(r.v>0?"+":"")+r.v+"%"}}))}],
+    tooltip:{formatter:p => b.data[p.dataIndex].tip},
+  };
+  paintBar(id);
+}
+function movChart(list){
+  const chl = list.filter(e => e.pct != null),
+        nb = chl.filter(e => e.pct < 0).length;
+  barChart("ch-cambios", {wrap:"chmov-wrap", cap:"chmov-n", min:2,
+    capTxt:() => "· " + [nb && `${nb} bajaron`,
+      (chl.length-nb) && `${chl.length-nb} subieron`]
+      .filter(Boolean).join(" · "),
+    rows:chl.map(e => ({sku:e.sku, v:e.pct, neg:e.pct<0,
+      color:e.pct<0 ? "#34d399" : "#f87171",
+      label:(FAV.has(e.sku)?"★ ":"") + (NEWSET.has(e)?"● ":"")
+        + (e.title || (D.products[e.sku]||{}).title || e.sku),
+      tip:esc(e.title || (D.products[e.sku]||{}).title || e.sku)
+        + `<br>${LABEL[e.type]||e.type} · ${e.date||""}`
+        + (e.from!=null ? `<br>${fmt(e.from)} → ${fmt(e.to)}` : "")}))});
+}
+function dealChart(list){
+  barChart("ch-ofertas", {wrap:"chofe-wrap", cap:"chofe-n", min:2,
+    capTxt:n => `· top ${n} de ${list.length} · % desc.`,
+    rows:list.map(s => {
+      const l = lastOf(s), a = D.agg[s]||{},
+            v = +(dealScore(s)*100).toFixed(1);
+      return {sku:s, v, neg:false, color:"#34d399",
+        label:(FAV.has(s)?"★ ":"") + ((D.products[s]||{}).title || s),
+        tip:esc((D.products[s]||{}).title || s)
+          + `<br>${verdict(s).label}`
+          + (l && l[3]>0 ? ` · ahorra $${(+l[3]).toFixed(2)}` : "")
+          + (a.pct_min!=null ? `<br>a ${a.pct_min}% de su mínimo` : "")};
+    })});
+}
+// acordeones: el usuario decide si los ve; la eleccion se recuerda
+[["chmov-wrap","ch-cambios","pw-chmov"],
+ ["chofe-wrap","ch-ofertas","pw-chofe"]].forEach(([w,id,ls]) => {
+  const d = document.getElementById(w);
+  d.open = localStorage.getItem(ls) === "1";
+  d.addEventListener("toggle", () => {
+    localStorage.setItem(ls, d.open ? "1" : "0");
+    // el evento llega antes de que el contenido abierto tenga layout;
+    // esperar un frame o offsetWidth sigue en 0 y paintBar se salta
+    requestAnimationFrame(() => paintBar(id));
+  });
+});
+// rotacion/resize del telefono: repintar los charts visibles
+window.addEventListener("resize", () => {
+  Object.keys(BARS).forEach(paintBar);
+  chart && chart.resize();
+  chCal && chCal.resize();
+});
 function openProd(sku){
   const p = D.products[sku]||{}, s = D.series[sku]||[];
   const last = s.slice(-1)[0];
@@ -336,6 +440,21 @@ function openProd(sku){
       else if (orun){ ofRuns.push([{xAxis:orun},{xAxis:s[i-1][0]}]); orun=null; }
     });
     if (orun) ofRuns.push([{xAxis:orun},{xAxis:s[s.length-1][0]}]);
+    // banda verde tenue = rango habitual (p25-p75 de la serie visible):
+    // debajo es ganga, dentro es normal, encima es caro. Mismo umbral
+    // que verdict(): "habitual" solo con >=5 lecturas en >=14 dias
+    const px = s.map(p=>p[1]).filter(v=>v!=null).sort((a,b)=>a-b);
+    const qtl = p => { const i=(px.length-1)*p, lo=Math.floor(i),
+        hi=Math.min(lo+1,px.length-1);
+      return px[lo]+(px[hi]-px[lo])*(i-lo); };
+    const span = s.length>=2
+      ? (Date.parse(s[s.length-1][0])-Date.parse(s[0][0]))/864e5 : 0;
+    const band = px.length>=5 && span>=14 ? [[
+      {yAxis:+(qtl(.25)/100).toFixed(2),
+       itemStyle:{color:"#34d39912"},
+       label:{color:"#34d399",fontSize:9,position:"insideTop",
+              formatter:"rango habitual"}},
+      {yAxis:+(qtl(.75)/100).toFixed(2)}]] : [];
     chart = chart || echarts.init(document.getElementById("chart"), null, {renderer:"svg"});
     chart.setOption({
       grid:{left:55,right:15,top:20,bottom:30},
@@ -343,16 +462,50 @@ function openProd(sku){
       yAxis:{type:"value",axisLabel:{color:"#8b93ad",formatter:v=>"$"+v},splitLine:{lineStyle:{color:"#2a3350"}},scale:true},
       series:[{type:"line",step:"end",data:s.map(p=>+(p[1]/100).toFixed(2)),showSymbol:true,symbolSize:5,
         lineStyle:{color:"#60a5fa"},areaStyle:{color:"#60a5fa18"},
-        markLine:{silent:true,data:[{yAxis:+(Math.min(...s.map(p=>p[1]))/100).toFixed(2)}],
+        markLine:{silent:true,data:[
+          {yAxis:+(Math.min(...s.map(p=>p[1]))/100).toFixed(2)},
+          // med es de historia completa: si cae fuera del rango visible
+          // la linea quedaria pegada al borde y confunde — no dibujarla
+          ...(dagg.med!=null && dagg.med>=px[0]*0.95
+             && dagg.med<=px[px.length-1]*1.05
+            ? [{yAxis:+(dagg.med/100).toFixed(2),
+            lineStyle:{color:"#8b93ad",type:"dotted"},
+            label:{formatter:"habitual",color:"#8b93ad"}}]:[])],
           lineStyle:{color:"#34d399",type:"dashed"},label:{formatter:"mín",color:"#34d399"}},
         markArea:{silent:true,itemStyle:{color:"#3b82f622"},
           label:{color:"#93c5fd",fontSize:9,position:"top",formatter:"oferta"},
-          data:ofRuns}}],
+          data:[...ofRuns,...band]}}],
       tooltip:{trigger:"axis",valueFormatter:v=>"$"+v},
     }, true); chart.resize();
   } else {
     $("#chart").style.display="none";
   }
+  // calendario del periodo visible: verde = ahorro del dia (mas intenso
+  // = mas $), rojo tenue = agotado, vacio = sin chequeo ese dia
+  const calEl = document.getElementById("dcal");
+  if (s.length >= 3){
+    calEl.style.display = "block";
+    const mxsv = Math.max(...s.map(p=>p[3]||0));
+    chCal = chCal || echarts.init(calEl, null, {renderer:"svg"});
+    chCal.setOption({
+      calendar:{left:34,right:8,top:24,bottom:4,
+        range:[s[0][0].slice(0,7), s[s.length-1][0].slice(0,7)],
+        cellSize:["auto",15],
+        dayLabel:{firstDay:1,color:"#8b93ad",fontSize:9,
+                  nameMap:["D","L","M","X","J","V","S"]},
+        monthLabel:{color:"#8b93ad",fontSize:10,nameMap:MESES},
+        yearLabel:{show:false},
+        splitLine:{lineStyle:{color:"#2a3350"}},
+        itemStyle:{color:"transparent",borderColor:"#0f1420",borderWidth:2}},
+      visualMap:{show:false,min:0,max:mxsv||1,
+        inRange:{color:["#1e2a20","#34d399"]}},
+      series:[{type:"heatmap",coordinateSystem:"calendar",
+        data:s.map(p=>({value:[p[0],+(p[3]||0).toFixed(2),p[2]?1:0],
+          ...(p[2]?{}:{itemStyle:{color:"#f8717140"}})}))}],
+      tooltip:{formatter:p=>{ const [d,sv,st]=p.value;
+        return `${d} · ${st?"":"agotado · "}${sv>0?"ahorro $"+(+sv).toFixed(2):"sin oferta"}`; }},
+    }, true); chCal.resize();
+  } else calEl.style.display = "none";
 }
 // clic fuera del modal (backdrop) lo cierra
 for (const d of [dlg, lgDlg, dlgNav]) d.addEventListener("click", e => {

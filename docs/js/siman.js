@@ -114,7 +114,12 @@ const noMeGusta = rule => {
   if (AW.user) muteUp(rule);
   render();
 };
+// frescura ~14d: un item no visto es un listing muerto congelado con
+// su ultimo avail — no alertar aunque dijera disponible+oferta
+const SCUT = (() => { const d = new Date(D.generated);
+  d.setDate(d.getDate() - 14); return d.toISOString().slice(0, 10); })();
 const simanAlerts = () => SIMAN.items.filter(p => {
+  if (!p.last || p.last < SCUT) return false;
   if (!p.avail || !(p.broke || p.decl) || (p.ta && !p.ok)) return false;
   if (isMuted(p)) return false;
   const sp = seenAt(p);
