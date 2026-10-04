@@ -1575,3 +1575,89 @@
 {"sku": "454313", "type": "se_agota", "title": "Pepsi Soda Black Cero Azúcar 12 Unidades / 355 mL / 12 oz", "price": 619, "club": "Santa Ana", "qty_from": 74, "qty_to": 25, "prev_date": "2026-10-02", "date": "2026-10-03"}
 {"sku": "471241", "type": "se_agota", "title": "Cebolla Morada Fresca 2.2 kg / 5 lb", "price": 849, "club": "San Miguel", "qty_from": 18, "qty_to": 6, "prev_date": "2026-10-02", "date": "2026-10-03"}
 {"sku": "479310", "type": "club_volvio", "title": "Cerveza Corona en Botella 24 Unidades / 330 mL", "price": 3699, "club": "Los Héroes", "prev_date": "2026-10-02", "date": "2026-10-03"}
+{"sku": "16724", "type": "subio", "title": "Member's Selection Jugo de Arándano 2 Unidades / 2.83 L / 96 oz", "from": 1179, "to": 1199, "delta": 20, "pct": 1.7, "date": "2026-10-04"}
+{"sku": "389596", "type": "subio", "title": "Member's Selection Arroz Jazmín Tailandés de Grano Largo 9.07 kg / 20 lb ", "from": 2149, "to": 2179, "delta": 30, "pct": 1.4, "date": "2026-10-04"}
+{"sku": "6196", "type": "subio", "title": "Kirkland Signature Mantequilla de Almendras Cremosa 765 g / 27 oz ", "from": 1159, "to": 1179, "delta": 20, "pct": 1.7, "date": "2026-10-04"}
+{"sku": "9265", "type": "subio", "title": "Member's Selection Bebida de Almendras Sabor Vainilla 6 Unidades / 946 mL / 32 oz", "from": 1329, "to": 1349, "delta": 20, "pct": 1.5, "date": "2026-10-04"}
+{"sku": "347261", "type": "subio", "title": "Member's Selection Pasta Penne 4 Unidades / 454 g / 16 oz", "from": 799, "to": 829, "delta": 30, "pct": 3.8, "date": "2026-10-04"}
+{"sku": "326756", "type": "reaparecio", "title": "Lifeway Kéfir de Fresa 2 Unidades / 946 mL / 32 oz ", "price": 1099, "prev_price": 1099, "days_out": 2, "date": "2026-10-04"}
+{"sku": "931549", "type": "subio", "title": "Kirkland Signature Harina de Almendras 1.36 kg / 3 lb", "from": 1849, "to": 1879, "delta": 30, "pct": 1.6, "date": "2026-10-04"}
+{"sku": "417174", "type": "subio", "title": "Ocean Spray Jugo de Arándanos 2 Unidades / 2.83 L / 96 oz", "from": 1179, "to": 1199, "delta": 20, "pct": 1.7, "date": "2026-10-04"}
+{"sku": "347262", "type": "subio", "title": "Member's Selection Linguini Pasta 4 Unidades / 454 g / 16 oz", "from": 649, "to": 679, "delta": 30, "pct": 4.6, "date": "2026-10-04"}
+{"sku": "417171", "type": "subio", "title": "Ocean Spray Jugo de Arándanos y Uvas con Vitamina C 2 Unidades / 2.83 L / 96 oz", "from": 1179, "to": 1199, "delta": 20, "pct": 1.7, "date": "2026-10-04"}
+{"sku": "11794", "type": "subio", "title": "Member's Selection Aderezo Ranch 3.78 L / 128 oz", "from": 1299, "to": 1349, "delta": 50, "pct": 3.8, "date": "2026-10-04"}
+{"sku": "7804", "type": "reaparecio", "title": "Messana Queso Parmesano 1.13 kg / 2.4 lb", "price": 1779, "prev_price": 1779, "days_out": 5, "date": "2026-10-04"}
+{"sku": "50670", "type": "subio", "title": "Member's Selection Salsa Barbacoa Sabor Original 2.2 kg / 5 lb", "from": 899, "to": 929, "delta": 30, "pct": 3.3, "date": "2026-10-04"}
+{"sku": "95542", "type": "subio", "title": "Silk Bebida de Almendra con Sabor a Vainilla 6 Unidades / 946 mL / 32 oz", "from": 1699, "to": 1829, "delta": 130, "pct": 7.7, "date": "2026-10-04"}
+{"sku": "479220", "type": "reaparecio", "title": "Spirella Prosciutto con Mozzarella 454 g / 16 oz", "price": 1299, "prev_price": 1299, "days_out": 2, "date": "2026-10-04"}
+{"sku": "458062", "type": "subio", "title": "Sunberry Farms Jugo Orgánico de Variados Sabores a Frutas 36 Unidades / 200 mL / 6.75 oz", "from": 1899, "to": 1929, "delta": 30, "pct": 1.6, "date": "2026-10-04"}
+{"sku": "438650", "type": "reaparecio", "title": "Rana Pasta Tortelloni Pollo Mozzarella 567 g / 20 oz", "price": 999, "prev_price": 999, "days_out": null, "date": "2026-10-04"}
+{"sku": "464599", "type": "subio", "title": "Ocean Spray Jugo de Arándano Granada 100% Vitamina C 2 Unidades / 1.89 L / 64 oz", "from": 899, "to": 929, "delta": 30, "pct": 3.3, "date": "2026-10-04"}
+{"sku": "220796", "type": "subio", "title": "Mccormick Sazonador Italiano - Mezcla Clásica de Especias 177 g / 6.25 oz", "from": 859, "to": 879, "delta": 20, "pct": 2.3, "date": "2026-10-04"}
+{"sku": "388045", "type": "subio", "title": "Member's Selection Aceite de Oliva Extra Virgen 8 Unidades / 750 mL / 25.3 oz", "from": 5999, "to": 6199, "delta": 200, "pct": 3.3, "date": "2026-10-04"}
+{"sku": "498664", "type": "reaparecio", "title": "Wrigley's Extra Chicle Sabor Sandía 10 Unidades 37.5 g / 1.32 oz ", "price": 1279, "prev_price": 1279, "days_out": null, "date": "2026-10-04"}
+{"sku": "341786", "type": "rebaja", "title": "Pierna de Cerdo Congelada Importada Rebanada", "from": 1104, "to": 1067, "delta": -37, "pct": -3.4, "date": "2026-10-04"}
+{"sku": "475596", "type": "nuevo", "title": "Member's Selection Lomo Pacho Viuda Lomo Ancho Fresco Caja", "price": 28093, "date": "2026-10-04"}
+{"sku": "991110", "type": "nuevo", "title": "Butterball Caja Pavos Enteros 4 Unidades 4.5 kg - 5.4 kg / 10 lb - 12 lb", "price": 12295, "date": "2026-10-04"}
+{"sku": "321653", "type": "reaparecio", "title": "Dimare Filete de Corvina Congelado Bolsa 907 g / 2 lb", "price": 1949, "prev_price": 1949, "days_out": null, "date": "2026-10-04"}
+{"sku": "483892", "type": "subio", "title": "Garofalo Pasta Variada Fusilli y Farfalle 4 Unidades / 500 g / 1.1 lb", "from": 889, "to": 899, "delta": 10, "pct": 1.1, "date": "2026-10-04"}
+{"sku": "893", "type": "agotado", "title": "Bisquick Mezcla para Pancakes y Repostería 2.72 kg / 6 lb", "price": 949, "date": "2026-10-04"}
+{"sku": "482546", "type": "agotado", "title": "Egregio Aceite de Oliva Extra Virgen Orgánico 500 mL / 16.9 oz", "price": 1099, "date": "2026-10-04"}
+{"sku": "244383", "type": "agotado", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "date": "2026-10-04"}
+{"sku": "174601", "type": "agotado", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "date": "2026-10-04"}
+{"sku": "471834", "type": "agotado", "title": "Kirkland Signature Galletas con Cobertura de Chocolate y Relleno de Caramelo y Malvaviscos 748 g / 26.3 oz", "price": 1699, "date": "2026-10-04"}
+{"sku": "318504", "type": "agotado", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "date": "2026-10-04"}
+{"sku": "647964", "type": "agotado", "title": "Huggies Ultra Confort Pañales para Bebé Talla G / 128 Unidades", "price": 2879, "date": "2026-10-04"}
+{"sku": "514939", "type": "nuevo", "title": "American Legend Mesa de Billar con Set de Accesorios", "price": 74999, "date": "2026-10-04"}
+{"sku": "473526", "type": "agotado", "title": "Bestway Trampolín Extremo para Exteriores 3.65 m / 12'", "price": 26999, "date": "2026-10-04"}
+{"sku": "499187", "type": "subio", "title": "Eden Grace Silla Mecedora de Madera de Acacia ", "from": 9499, "to": 10999, "delta": 1500, "pct": 15.8, "date": "2026-10-04"}
+{"sku": "512983", "type": "subio", "title": "Juego de Comedor para Exteriores en Madera de Eucalipto 7 Piezas", "from": 114999, "to": 119999, "delta": 5000, "pct": 4.3, "date": "2026-10-04"}
+{"sku": "507763", "type": "nuevo", "title": "Polder Escalera Plegable de 2 Peldaños con Cierre Fácil", "price": 4299, "date": "2026-10-04"}
+{"sku": "732579", "type": "subio", "title": "Member's Selection Bolsas para las Basura Perfumadas 160 Unidades / 49 L / 13 gal", "from": 2449, "to": 2499, "delta": 50, "pct": 2.0, "date": "2026-10-04"}
+{"sku": "490124", "type": "subio", "title": "Cascade Platinum Plus Detergente para Lavavajillas en Cápsulas 82 Unidades", "from": 2949, "to": 3149, "delta": 200, "pct": 6.8, "date": "2026-10-04"}
+{"sku": "516713", "type": "nuevo", "title": "Trudeau Estación para Condimentos con Base Giratoria de Acacia 6 Piezas", "price": 2499, "date": "2026-10-04"}
+{"sku": "477956-0718603057238", "type": "reaparecio", "title": "NestNest Juego de Vasos en Cristal de Colores 12 Piezas", "price": 1999, "prev_price": 1999, "days_out": null, "date": "2026-10-04"}
+{"sku": "25096", "type": "subio", "title": "Clorox Blanqueador Desinfectante en Espuma para Baño 3 Unidades / 887 mL / 30 oz", "from": 1379, "to": 1399, "delta": 20, "pct": 1.5, "date": "2026-10-04"}
+{"sku": "27735", "type": "agotado", "title": "Kirkland Signature Vasos Desechables de Plásticos Rojos Extra Fuertes 240 Unidades / 532 mL / 18 oz", "price": 1899, "date": "2026-10-04"}
+{"sku": "511448", "type": "agotado", "title": "Member’s Selection Papel Higiénico Doble Hoja Suave y Resistente 32 Unidades / 360 Hojas", "price": 1279, "date": "2026-10-04"}
+{"sku": "131347", "type": "nuevo", "title": "Protos Cosecha Vino Tinto Tempranillo Roble 750 mL / 25.3 oz", "price": 1999, "date": "2026-10-04"}
+{"sku": "320360", "type": "nuevo", "title": "Finca La Linda Vino Tinto Malbec 750 mL / 25.36 oz", "price": 1779, "date": "2026-10-04"}
+{"sku": "149912", "type": "nuevo", "title": "La Holandesa Rompope 1 L", "price": 1499, "date": "2026-10-04"}
+{"sku": "526716", "type": "nuevo", "title": "Antigal Adventus Vino Tinto Cabernet Franc 2019 750 mL", "price": 4249, "date": "2026-10-04"}
+{"sku": "526732", "type": "nuevo", "title": "Marques de Murrieta Rioja Vino Tinto Español 750 mL", "price": 5499, "date": "2026-10-04"}
+{"sku": "175930", "type": "nuevo", "title": "Marques de Riscal Tempranillo Vino Tinto 750 mL", "price": 1549, "date": "2026-10-04"}
+{"sku": "278754", "type": "nuevo", "title": "LAN Rioja Crianza Vino Tinto Español Cosecha 2021 750 mL", "price": 2199, "date": "2026-10-04"}
+{"sku": "488494", "type": "nuevo", "title": "Santa Helena Vino Dulce 2 Unidades / 750 mL", "price": 1299, "date": "2026-10-04"}
+{"sku": "482193", "type": "reaparecio", "title": "GE Lavadora de Carga Superior 24 kg / 4.5 cu ft. LGA74215WBAB0", "price": 56999, "prev_price": 56999, "days_out": null, "date": "2026-10-04"}
+{"sku": "465470", "type": "reaparecio", "title": "Mabe Lavadora Automática con 11 Ciclos Automáticos 22 kg LMA72215CBAB0", "price": 54999, "prev_price": 54999, "days_out": 5, "date": "2026-10-04"}
+{"sku": "522589", "type": "reaparecio", "title": "Mabe Congelador Horizontal Blanco 414 L CHM15PHL0", "price": 49999, "prev_price": 49999, "days_out": null, "date": "2026-10-04"}
+{"sku": "755610", "type": "subio", "title": "Member's Selection Alimento para Perros de Todas las Edades con Pollo y Guisantes 18.14 kg / 40 lb", "from": 4499, "to": 4649, "delta": 150, "pct": 3.3, "date": "2026-10-04"}
+{"sku": "514902", "type": "subio", "title": "Fresh Step Arena Aglomerante para Gato Sin Fragancia 10 kg / 22 lb", "from": 1749, "to": 1779, "delta": 30, "pct": 1.7, "date": "2026-10-04"}
+{"sku": "469054", "type": "agotado", "title": "Catry Torre para Gatos Grande de 6 Niveles con Condominio y Postes para Arañar", "price": 7599, "date": "2026-10-04"}
+{"sku": "469054", "type": "subio", "title": "Catry Torre para Gatos Grande de 6 Niveles con Condominio y Postes para Arañar", "from": 7499, "to": 7599, "delta": 100, "pct": 1.3, "date": "2026-10-04"}
+{"sku": "513373-7453132169146", "type": "nuevo", "title": "Perry Ellis Pantalón Color Oliva en Tejido Poliéster para Hombre", "price": 2299, "date": "2026-10-04"}
+{"sku": "513309-7453132168996", "type": "nuevo", "title": "Perry Ellis Pantalón Chino Azul Oscuro para Hombre", "price": 2299, "date": "2026-10-04"}
+{"sku": "513384-7453132169290", "type": "nuevo", "title": "Perry Ellis Pantalón Gris Oscuro para Hombre", "price": 2299, "date": "2026-10-04"}
+{"sku": "513201-7453132168842", "type": "nuevo", "title": "Perry Ellis Pantalón Negro para Hombre", "price": 2299, "date": "2026-10-04"}
+{"sku": "516008-0822540404762", "type": "reaparecio", "title": "Pekkle Conjunto para Niño 4 Piezas", "price": 1699, "prev_price": 1699, "days_out": 2, "date": "2026-10-04"}
+{"sku": "513343-0197057931903", "type": "agotado", "title": "Hurley Camisa Polo de Manga Corta para Hombre", "price": 1699, "date": "2026-10-04"}
+{"sku": "491687-0885478187831", "type": "agotado", "title": "Black Bow Panties con Cobertura Completa y Encaje Suave para Mujer 5 Unidades", "price": 1599, "date": "2026-10-04"}
+{"sku": "515433", "type": "nuevo", "title": "Primo Colchón Queen Chill con Espuma de Gel Refrescante 152.4 x 203.2 x 20.32 cm / 60 x 80 x 8\"", "price": 22999, "date": "2026-10-04"}
+{"sku": "999003", "type": "subio", "title": "Member's Selection Jabón Espumoso para Manos 4 Unidades / 236 mL / 8 oz", "from": 1149, "to": 1179, "delta": 30, "pct": 2.6, "date": "2026-10-04"}
+{"sku": "519638", "type": "subio", "title": "Gillette SkinGuard Máquina de Afeitar para Piel Sensible con 13 Cartuchos + Mango", "from": 2999, "to": 3099, "delta": 100, "pct": 3.3, "date": "2026-10-04"}
+{"sku": "495252", "type": "agotado", "title": "L´Oréal UV Defender Protector Solar Fluido Invisible 2 Unidades / 40 g", "price": 2749, "date": "2026-10-04"}
+{"sku": "638010", "type": "subio", "title": "Member's Selection Omega de Triple Potencia 150 Tabletas / 2 g / 0.07 oz", "from": 2949, "to": 2999, "delta": 50, "pct": 1.7, "date": "2026-10-04"}
+{"sku": "311433", "type": "salio_del_catalogo", "title": "Manzana Pink Lady 1.36 kg / 3 lb", "price": 679, "date": "2026-10-04"}
+{"sku": "486219", "type": "salio_del_catalogo", "title": "Febreze Ambientador en Spray para Telas Extra Strength 700 mL / 23.6 oz + Downy Calm 800 mL / 27 oz", "price": 1299, "date": "2026-10-04"}
+{"sku": "488947", "type": "salio_del_catalogo", "title": "Member's Selection Jabón Líquido para Manos y Cuerpo Manzana 2 L / 67.6 oz", "price": 479, "date": "2026-10-04"}
+{"sku": "174601", "type": "club_agotado", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "club": "Santa Elena", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "174601", "type": "club_agotado", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "club": "Santa Ana", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "174601", "type": "club_agotado", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "club": "El Salvador", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "174601", "type": "club_agotado", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "club": "Los Héroes", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "244383", "type": "club_agotado", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "Santa Elena", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "244383", "type": "club_agotado", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "El Salvador", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "318504", "type": "club_agotado", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "Santa Elena", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "318504", "type": "club_agotado", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "club": "El Salvador", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "479220", "type": "club_volvio", "title": "Spirella Prosciutto con Mozzarella 454 g / 16 oz", "price": 1299, "club": "Santa Elena", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "479220", "type": "club_volvio", "title": "Spirella Prosciutto con Mozzarella 454 g / 16 oz", "price": 1299, "club": "Santa Ana", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "479220", "type": "club_volvio", "title": "Spirella Prosciutto con Mozzarella 454 g / 16 oz", "price": 1299, "club": "El Salvador", "prev_date": "2026-10-03", "date": "2026-10-04"}
