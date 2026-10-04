@@ -1661,3 +1661,23 @@
 {"sku": "479220", "type": "club_volvio", "title": "Spirella Prosciutto con Mozzarella 454 g / 16 oz", "price": 1299, "club": "Santa Elena", "prev_date": "2026-10-03", "date": "2026-10-04"}
 {"sku": "479220", "type": "club_volvio", "title": "Spirella Prosciutto con Mozzarella 454 g / 16 oz", "price": 1299, "club": "Santa Ana", "prev_date": "2026-10-03", "date": "2026-10-04"}
 {"sku": "479220", "type": "club_volvio", "title": "Spirella Prosciutto con Mozzarella 454 g / 16 oz", "price": 1299, "club": "El Salvador", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "150", "type": "club_agotado", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "Santa Elena", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "243695", "type": "club_agotado", "title": "Margherita Pepperoni 907 g / 2 lb", "price": 1299, "club": "Los Héroes", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "245214", "type": "se_agota", "title": "Uva Red Globe 907 g / 2 lb", "price": 699, "club": "Los Héroes", "qty_from": 56, "qty_to": 22, "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "245214", "type": "se_agota", "title": "Uva Red Globe 907 g / 2 lb", "price": 699, "club": "San Miguel", "qty_from": 53, "qty_to": 19, "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "299173", "type": "se_agota", "title": "Brohders Pan Canela y Pasas 2 Unidades / 750 g", "price": 499, "club": "Santa Elena", "qty_from": 64, "qty_to": 7, "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "299173", "type": "se_agota", "title": "Brohders Pan Canela y Pasas 2 Unidades / 750 g", "price": 499, "club": "Santa Ana", "qty_from": 35, "qty_to": 8, "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "299173", "type": "se_agota", "title": "Brohders Pan Canela y Pasas 2 Unidades / 750 g", "price": 499, "club": "El Salvador", "qty_from": 136, "qty_to": 36, "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "299173", "type": "se_agota", "title": "Brohders Pan Canela y Pasas 2 Unidades / 750 g", "price": 499, "club": "Los Héroes", "qty_from": 37, "qty_to": 11, "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "299173", "type": "club_volvio", "title": "Brohders Pan Canela y Pasas 2 Unidades / 750 g", "price": 499, "club": "San Miguel", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "302371", "type": "se_agota", "title": "Taifeld's Galletas Avena con Nuez 40 Unidades / 15 g / 0.53 oz", "price": 829, "club": "Los Héroes", "qty_from": 16, "qty_to": 3, "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "306937", "type": "se_agota", "title": "Mini Vegetales 1.13 kg / 2.5 lb", "price": 569, "club": "Santa Elena", "qty_from": 25, "qty_to": 13, "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "306937", "type": "se_agota", "title": "Mini Vegetales 1.13 kg / 2.5 lb", "price": 569, "club": "El Salvador", "qty_from": 25, "qty_to": 13, "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "307056", "type": "se_agota", "title": "Nabisco Galleta Oreo Original 36 Unidades / 36 g / 1.26 oz", "price": 799, "club": "Los Héroes", "qty_from": 89, "qty_to": 3, "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "308581", "type": "club_agotado", "title": "Light and Fit Yogur sin Grasa 12 Unidades / 113 g / 4 oz", "price": 729, "club": "Santa Elena", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "353783", "type": "club_volvio", "title": "International Delight Crema de Avellanas 1.4 L / 48 oz", "price": 749, "club": "Santa Elena", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "353783", "type": "club_volvio", "title": "International Delight Crema de Avellanas 1.4 L / 48 oz", "price": 749, "club": "Santa Ana", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "353783", "type": "se_agota", "title": "International Delight Crema de Avellanas 1.4 L / 48 oz", "price": 749, "club": "San Miguel", "qty_from": 61, "qty_to": 31, "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "452750", "type": "se_agota", "title": "Sanissimo Salmas Horneadas 40 Unidades / 18 g      ", "price": 959, "club": "El Salvador", "qty_from": 371, "qty_to": 208, "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "452750", "type": "club_agotado", "title": "Sanissimo Salmas Horneadas 40 Unidades / 18 g      ", "price": 959, "club": "Los Héroes", "prev_date": "2026-10-03", "date": "2026-10-04"}
+{"sku": "452750", "type": "se_agota", "title": "Sanissimo Salmas Horneadas 40 Unidades / 18 g      ", "price": 959, "club": "San Miguel", "qty_from": 74, "qty_to": 40, "prev_date": "2026-10-03", "date": "2026-10-04"}
