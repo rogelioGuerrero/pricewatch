@@ -1862,3 +1862,18 @@
 {"sku": "491366-0607766077231", "type": "salio_del_catalogo", "title": "Member's Selection Boxer Deportivo para Hombre 6 Unidades", "price": 1399, "date": "2026-10-05"}
 {"sku": "244383", "type": "club_volvio", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "El Salvador", "prev_date": "2026-10-04", "date": "2026-10-05"}
 {"sku": "244383", "type": "club_volvio", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "San Miguel", "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "150", "type": "club_volvio", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "Santa Elena", "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "150", "type": "se_agota", "title": "Pepsi Cola Soda 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "Santa Ana", "qty_from": 36, "qty_to": 9, "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "23799", "type": "se_agota", "title": "Silk Bebida de Almendras sin Endulzante Sabor a Vainilla 6 Unidades / 946 mL / 32 oz", "price": 1749, "club": "Santa Elena", "qty_from": 35, "qty_to": 20, "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "23799", "type": "se_agota", "title": "Silk Bebida de Almendras sin Endulzante Sabor a Vainilla 6 Unidades / 946 mL / 32 oz", "price": 1749, "club": "San Miguel", "qty_from": 4, "qty_to": 1, "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "244383", "type": "club_volvio", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "Santa Ana", "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "296959", "type": "se_agota", "title": "Pera Bosc ", "price": 399, "club": "Santa Ana", "qty_from": 29, "qty_to": 13, "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "296959", "type": "se_agota", "title": "Pera Bosc ", "price": 399, "club": "El Salvador", "qty_from": 203, "qty_to": 121, "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "296959", "type": "se_agota", "title": "Pera Bosc ", "price": 399, "club": "Los Héroes", "qty_from": 89, "qty_to": 36, "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "296959", "type": "club_agotado", "title": "Pera Bosc ", "price": 399, "club": "San Miguel", "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "299173", "type": "club_agotado", "title": "Brohders Pan Canela y Pasas 2 Unidades / 750 g", "price": 499, "club": "Los Héroes", "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "299173", "type": "se_agota", "title": "Brohders Pan Canela y Pasas 2 Unidades / 750 g", "price": 499, "club": "San Miguel", "qty_from": 10, "qty_to": 4, "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "299550", "type": "se_agota", "title": "Salutaris Surtida 24 Unidades / 355 mL / 12 oz", "price": 1069, "club": "Santa Elena", "qty_from": 124, "qty_to": 27, "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "301760", "type": "se_agota", "title": "Cascada Mini Soda Surtida 24 Unidades / 192 mL / 6.5 oz ", "price": 329, "club": "Los Héroes", "qty_from": 1369, "qty_to": 704, "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "301760", "type": "club_volvio", "title": "Cascada Mini Soda Surtida 24 Unidades / 192 mL / 6.5 oz ", "price": 329, "club": "San Miguel", "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "302371", "type": "club_agotado", "title": "Taifeld's Galletas Avena con Nuez 40 Unidades / 15 g / 0.53 oz", "price": 829, "club": "Los Héroes", "prev_date": "2026-10-04", "date": "2026-10-05"}
