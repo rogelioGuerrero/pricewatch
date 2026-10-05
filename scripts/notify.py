@@ -98,6 +98,20 @@ def aw_rows(table):
     return res.get("rows", []) if code == 200 else []
 
 
+def aw_health():
+    """True si Appwrite no responde bien con creds (pausada por
+    inactividad o caida). Sin creds es corrida local: no aplica."""
+    if not (AW_EP and AW_PID and AW_KEY):
+        return False
+    _, code = aw("GET", f"/tablesdb/{AW_DB}/tables")
+    return code != 200
+
+
+# consola del proyecto (region va embebida en el endpoint: sfo.cloud...)
+AW_CONSOLE = ("https://cloud.appwrite.io/console/project-"
+              + AW_EP.split("//")[-1].split(".")[0] + "-" + AW_PID)
+
+
 def ensure_push_table():
     """Crea push_subs si falta — el correo/digest no depende de ella."""
     _, code = aw("GET", f"/tablesdb/{AW_DB}/tables/push_subs")
@@ -415,8 +429,15 @@ def sec(title, inner, color="#0f1420"):
             f"padding-left:8px'>{title}</h3>{inner}")
 
 
-def digest_html(day, counts, a, gangas, silent, siman, cat):
+def digest_html(day, counts, a, gangas, silent, siman, cat,
+                aw_down=False):
     S = []
+    if aw_down:
+        S.append(sec("⚠ Appwrite no respondió",
+            f"<p>La base puede estar pausada por inactividad (free tier): "
+            f"la sincronización de tu cuenta está inactiva hasta "
+            f"reactivarla. <a href='{AW_CONSOLE}'>Abrir consola Appwrite "
+            f"→ reactivar proyecto</a></p>", "#b91c1c"))
     S.append(f"<p style='color:#666'>{day} — "
              + " · ".join(f"{n} {k}" for k, n in counts.items() if n)
              + "</p>")
@@ -486,6 +507,10 @@ def main():
     events = load_events(EVENTS_LOG)
     sevents = load_events(SIMAN_LOG)
     cat = catalog_state()
+    aw_down = aw_health()
+    if aw_down:
+        print("  ! Appwrite no responde — DB posiblemente pausada "
+              "por inactividad")
     favs = [r["sku"] for r in aw_rows("favs")] if AW_KEY else []
     tgts = {}
     if AW_KEY:
@@ -543,12 +568,15 @@ def main():
     else:
         print("  push: nada urgente — silencio")
 
-    # ---- email: solo si pasó algo ----
-    if not events and not siman:
+    # ---- email: solo si pasó algo (o si Appwrite cayo: esa alerta
+    # ES el evento — en un dia quieto nadie se enteraria) ----
+    if not events and not siman and not aw_down:
         print("  email: día sin eventos — no se envía")
         return
     n_urg = len(a["fav_drain"]) + len(a["fav_clubout"])
     headline = []
+    if aw_down:
+        headline.append("⚠ Appwrite caído")
     if n_urg:
         headline.append(f"{n_urg} de tu lista se agotan")
     if a["drops"]:
@@ -568,8 +596,11 @@ def main():
               "reaparecio": "volvieron", "nuevo": "nuevos",
               "salio_del_catalogo": "salieron", "regreso": "regresaron"}
     cnt = {pretty[k]: v for k, v in counts.items() if k in pretty}
-    html = digest_html(TODAY, cnt, a, a["drops"], silent, siman, cat)
-    text = f"PriceWatch {TODAY}\n" + "".join(
+    html = digest_html(TODAY, cnt, a, a["drops"], silent, siman, cat,
+                       aw_down)
+    text = ("!! Appwrite no responde — reactivala: " + AW_CONSOLE
+            + "\n\n" if aw_down else "")
+    text += f"PriceWatch {TODAY}\n" + "".join(
         f"!! {e['title'][:50]} se agota en "
         f"{', '.join(c for c, _ in e['clubs'])}\n" for e in a["fav_drain"][:5]
     ) + "\n".join(
