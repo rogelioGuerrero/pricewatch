@@ -1877,3 +1877,36 @@
 {"sku": "301760", "type": "se_agota", "title": "Cascada Mini Soda Surtida 24 Unidades / 192 mL / 6.5 oz ", "price": 329, "club": "Los Héroes", "qty_from": 1369, "qty_to": 704, "prev_date": "2026-10-04", "date": "2026-10-05"}
 {"sku": "301760", "type": "club_volvio", "title": "Cascada Mini Soda Surtida 24 Unidades / 192 mL / 6.5 oz ", "price": 329, "club": "San Miguel", "prev_date": "2026-10-04", "date": "2026-10-05"}
 {"sku": "302371", "type": "club_agotado", "title": "Taifeld's Galletas Avena con Nuez 40 Unidades / 15 g / 0.53 oz", "price": 829, "club": "Los Héroes", "prev_date": "2026-10-04", "date": "2026-10-05"}
+{"sku": "479235", "type": "nuevo", "title": "Delve Aderezos Variados 3 Unidades / 170 g / 6 oz", "price": 1399, "date": "2026-10-06"}
+{"sku": "504458", "type": "rebaja", "title": "Member's Selection Pie de Frutos Rojos Recién Horneado 8 Porciones", "from": 777, "to": 677, "delta": -100, "pct": -12.9, "date": "2026-10-06"}
+{"sku": "524591", "type": "rebaja", "title": "Pozuelo Galletas Recreo Sabor a Vainilla y Limón 40 Unidades / 48 g ", "from": 1199, "to": 1049, "delta": -150, "pct": -12.5, "date": "2026-10-06"}
+{"sku": "367252", "type": "reaparecio", "title": "Express Lechuga Hidropónica 340 g / 12 oz", "price": 529, "prev_price": 529, "days_out": 2, "date": "2026-10-06"}
+{"sku": "399005", "type": "subio", "title": "Reny Picot Brie con granos de Pimienta 396 g /14 oz", "from": 477, "to": 899, "delta": 422, "pct": 88.5, "date": "2026-10-06"}
+{"sku": "378350", "type": "reaparecio", "title": "Kreef Lomo de Cerdo Ahumado 907 g / 2 lb", "price": 999, "prev_price": 999, "days_out": 2, "date": "2026-10-06"}
+{"sku": "195641", "type": "subio", "title": "Cebolla Blanca 2.26 kg / 5 lb", "from": 929, "to": 979, "delta": 50, "pct": 5.4, "date": "2026-10-06"}
+{"sku": "477440", "type": "rebaja", "title": "Popsis Palomitas de Maíz Bañadas de Caramelo 600 g", "from": 1099, "to": 979, "delta": -120, "pct": -10.9, "date": "2026-10-06"}
+{"sku": "6207", "type": "nuevo", "title": "Marismas Aceitunas de Manzanilla sin Hueso 1.82 kg / 64 oz", "price": 899, "date": "2026-10-06"}
+{"sku": "471241", "type": "subio", "title": "Cebolla Morada Fresca 2.2 kg / 5 lb", "from": 849, "to": 899, "delta": 50, "pct": 5.9, "date": "2026-10-06"}
+{"sku": "318504", "type": "reaparecio", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "price": 1019, "prev_price": 1019, "days_out": 3, "date": "2026-10-06"}
+{"sku": "475595", "type": "nuevo", "title": "Member's Selection Puyaso, Punta de Salon Fresco Caja", "price": 35256, "date": "2026-10-06"}
+{"sku": "104013", "type": "agotado", "title": "Espárrago 340 g / 12 oz", "price": 699, "date": "2026-10-06"}
+{"sku": "229404", "type": "agotado", "title": "Brócoli 907 g / 2 lb", "price": 479, "date": "2026-10-06"}
+{"sku": "171889", "type": "agotado", "title": "Lechuga Romana 2 Unidades", "price": 319, "date": "2026-10-06"}
+{"sku": "335071", "type": "subio", "title": "Cooper Llanta 185/65R15 CS1", "from": 7899, "to": 8199, "delta": 300, "pct": 3.8, "date": "2026-10-06"}
+{"sku": "495870", "type": "subio", "title": "Kumho Llanta 225/45 R19 Ecsta Sport PS72 2363193", "from": 17799, "to": 17999, "delta": 200, "pct": 1.1, "date": "2026-10-06"}
+{"sku": "505005", "type": "subio", "title": "Firestone Llanta 185/60HR14 Firehawk 900", "from": 7199, "to": 7499, "delta": 300, "pct": 4.2, "date": "2026-10-06"}
+{"sku": "335069", "type": "subio", "title": "Cooper Llanta 195/70R14 CS1", "from": 8199, "to": 8499, "delta": 300, "pct": 3.7, "date": "2026-10-06"}
+{"sku": "451620", "type": "subio", "title": "Firestone Llanta 205/70R15 All Season", "from": 8299, "to": 8399, "delta": 100, "pct": 1.2, "date": "2026-10-06"}
+{"sku": "480751", "type": "rebaja", "title": "Evenflo Coche de Viaje Modular para Bebé con Asiento Infantil para Auto", "from": 28999, "to": 24999, "delta": -4000, "pct": -13.8, "date": "2026-10-06"}
+{"sku": "460178", "type": "rebaja", "title": "509 Crew Silla Alta para Comer para Bebés", "from": 6999, "to": 5999, "delta": -1000, "pct": -14.3, "date": "2026-10-06"}
+{"sku": "500388", "type": "agotado", "title": "Feit Electric Lampara de Techo LED Panel Plano 35.5 cm / 14\"", "price": 1777, "date": "2026-10-06"}
+{"sku": "441194", "type": "subio", "title": "Member's Selection Estantería de 4 Niveles en Ácero", "from": 16999, "to": 17499, "delta": 500, "pct": 2.9, "date": "2026-10-06"}
+{"sku": "502933", "type": "agotado", "title": "Ritz Juego de Toallas Multiusos de Microfibra 12 Unidades / 40 cm x 48 cm / 16\" x 19\"", "price": 1199, "date": "2026-10-06"}
+{"sku": "493270", "type": "agotado", "title": "Henckels Juego de Sartenes Antiadherentes en Acero Inoxidable 3 Piezas", "price": 11999, "date": "2026-10-06"}
+{"sku": "477338", "type": "subio", "title": "Greenmade Estante Resistente para Almacenamiento de 5 Niveles", "from": 8499, "to": 8999, "delta": 500, "pct": 5.9, "date": "2026-10-06"}
+{"sku": "487242", "type": "rebaja", "title": "Mueble Recibidor en Madera con 6 Cajones", "from": 43999, "to": 37999, "delta": -6000, "pct": -13.6, "date": "2026-10-06"}
+{"sku": "475556", "type": "subio", "title": "Silla Blanca Plegable para Celebraciones", "from": 2799, "to": 2899, "delta": 100, "pct": 3.6, "date": "2026-10-06"}
+{"sku": "504837", "type": "agotado", "title": "Member's Selection Pesebre Navideño de 13 Piezas", "price": 15999, "date": "2026-10-06"}
+{"sku": "506342-0607766474696", "type": "agotado", "title": "Member's Selection Estatua de Ángel Familia Sagrada con Luces LED", "price": 13999, "date": "2026-10-06"}
+{"sku": "513180-0609475024124", "type": "salio_del_catalogo", "title": "Leo & Nicole Short en Denim con Cintura Ajustable para Mujer", "price": 1799, "date": "2026-10-06"}
+{"sku": "518212", "type": "salio_del_catalogo", "title": "Tree Hut Exfoliante Corporal 3 Unidades / 510 g", "price": 4399, "date": "2026-10-06"}
