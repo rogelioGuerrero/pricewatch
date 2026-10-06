@@ -17,6 +17,11 @@ const TABS = [
   ["siman","Siman", simanAlerts().length],
   ["explorar","Catálogo", D.n_products],
 ];
+// el catalogo es una datagrid Perspective: herramienta de escritorio.
+// En pantalla angosta la tabla es inusable y el WASM pesa en datos
+// moviles — fuera del TABS lo saca de la barra y del FAB a la vez
+if (matchMedia("(max-width:700px)").matches)
+  TABS.splice(TABS.findIndex(t => t[0] === "explorar"), 1);
 $("#tabs").innerHTML = TABS.map(([id,n,nr]) =>
   `<div class="tab" data-t="${id}">${n}<span class="n">${nr}</span></div>`).join("");
 document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
@@ -35,7 +40,8 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
 });
 // abre en el ultimo tab usado (o Mi lista)
 const urlTab = new URLSearchParams(location.search).get("tab");
-document.querySelector(`.tab[data-t="${urlTab || localStorage.getItem("pw-tab") || "favs"}"]`)?.click();
+(document.querySelector(`.tab[data-t="${urlTab || localStorage.getItem("pw-tab") || "favs"}"]`)
+  || document.querySelector('.tab[data-t="favs"]'))?.click();
 
 const goTab = id => document.querySelector(`.tab[data-t="${id}"]`)?.click();
 let cf = "all", OF_F = "all", PV_PRE = "all", pvRefresh = null;
