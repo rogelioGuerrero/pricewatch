@@ -29,7 +29,7 @@
   </header>
   <div class="tabs" id="tabs"></div>
   <div id="alerts"></div>
-  <div class="filters"><input id="q" type="search" autocomplete="off" name="pw-search" placeholder="Buscar en todo el catálogo (nombre, marca, SKU)…"></div>
+  <div class="filters"><input id="q" type="search" autocomplete="off" name="pw-search" inputmode="search" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" placeholder="Buscar en todo el catálogo (nombre, marca, SKU)…"></div>
   <div class="pane" id="pane-buscar"><div class="grid" id="g-buscar"></div></div>
   <div class="pane" id="pane-cambios">
     <div class="filters" id="f-cambios">
@@ -73,10 +73,14 @@
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <div style="flex:1;min-width:140px;position:relative">
         <input id="sw-q" type="search" autocomplete="off"
+          inputmode="search" data-lpignore="true" data-1p-ignore="true"
+          data-bwignore="true" data-form-type="other"
           placeholder="vigilar: marca o artículo" style="width:100%">
         <div id="sw-sug"></div>
       </div>
       <input id="sw-t" type="text" autocomplete="off"
+        data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
+        data-form-type="other"
         placeholder="talla" style="width:76px;flex:none">
       <span class="chip on" id="sw-add"
         style="cursor:pointer;flex:none">+ vigilar</span>
@@ -128,6 +132,7 @@
   <a id="dshare" class="plink" style="margin-left:14px;cursor:pointer">Compartir</a>
   <span class="meta" style="margin-left:14px;font-size:12px">🎯 avísame si baja de</span>
   <input id="dtgt" type="number" min="0" step="0.01" placeholder="$"
+    data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
          title="alerta cuando el precio baje de este monto"
          style="width:78px;padding:3px 8px;font-size:12px;margin-left:4px">
   <p class="meta" id="dbuys" style="margin-top:8px"></p>
