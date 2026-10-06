@@ -171,6 +171,45 @@ def ensure_targets_table():
     print("  + targets lista")
 
 
+def ensure_siman_tables():
+    """Crea siman_watch/muted/seen si faltan — el sync del PWA las usa
+    directo desde el navegador; sin ellas el sync pegaba 404 en loop."""
+    spec = [
+        ("siman_watch", "Siman busquedas vigiladas",
+         [("string", {"key": "q", "size": 120, "required": True}),
+          ("string", {"key": "talla", "size": 12, "required": False}),
+          ("string", {"key": "filtro", "size": 200, "required": False})]),
+        ("siman_muted", "Siman productos muteados",
+         [("string", {"key": "tkey", "size": 250, "required": True})]),
+        ("siman_seen", "Siman alertas vistas",
+         [("string", {"key": "tkey", "size": 250, "required": True}),
+          ("float", {"key": "price", "required": True}),
+          ("string", {"key": "date", "size": 10, "required": True})]),
+    ]
+    for t, name, cols in spec:
+        _, code = aw("GET", f"/tablesdb/{AW_DB}/tables/{t}")
+        if code == 200:
+            continue
+        res, code = aw("POST", f"/tablesdb/{AW_DB}/tables", {
+            "tableId": t, "name": name,
+            "permissions": ['create("users")', 'read("users")',
+                            'update("users")', 'delete("users")'],
+            "rowSecurity": True, "enabled": True})
+        if code not in (200, 201, 409):
+            print(f"  ! {t}: HTTP {code} {res.get('message')}")
+            continue
+        for kind, kw in cols:
+            aw("POST", f"/tablesdb/{AW_DB}/tables/{t}/columns/{kind}", kw)
+        for _ in range(20):
+            time.sleep(1)
+            r, _ = aw("GET", f"/tablesdb/{AW_DB}/tables/{t}")
+            st = {c["key"]: c["status"]
+                  for c in r.get("columns", r.get("attributes", []))}
+            if st and all(v == "available" for v in st.values()):
+                break
+        print(f"  + {t} lista")
+
+
 # ---------------- datos ----------------
 
 def load_events(path, today=True):
@@ -515,6 +554,7 @@ def main():
     tgts = {}
     if AW_KEY:
         ensure_targets_table()
+        ensure_siman_tables()
         tgts = {str(r["sku"]): r["target"] for r in aw_rows("targets")
                 if r.get("sku") and r.get("target")}
     paid, paid_d = {}, {}

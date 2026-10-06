@@ -1,6 +1,6 @@
 // PriceWatch SV — navegación network-first (abrir la app trae la
 // versión fresca); sin señal cae al último snapshot cacheado.
-const CACHE = "pricewatch-v20";
+const CACHE = "pricewatch-v21";
 const CORE = ["./", "./index.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", e => {
@@ -28,7 +28,10 @@ self.addEventListener("fetch", e => {
   if (e.request.mode === "navigate") {
     e.respondWith(
       fetch(e.request).then(r => {
-        if (r.ok) caches.open(CACHE).then(c => c.put(e.request, r.clone()));
+        // clonar ANTES de devolverla: el callback del cache corre async
+        // y para entonces el body ya se consumio (clone() fallaba)
+        if (r.ok) { const cp = r.clone();
+                    caches.open(CACHE).then(c => c.put(e.request, cp)); }
         return r;
       }).catch(() =>
         caches.match(e.request).then(h => h || caches.match("./index.html")))
@@ -40,7 +43,8 @@ self.addEventListener("fetch", e => {
   e.respondWith(
     caches.match(e.request).then(hit => {
       const net = fetch(e.request).then(r => {
-        if (r.ok) caches.open(CACHE).then(c => c.put(e.request, r.clone()));
+        if (r.ok) { const cp = r.clone();
+                    caches.open(CACHE).then(c => c.put(e.request, cp)); }
         return r;
       }).catch(() => hit);
       return hit || net;

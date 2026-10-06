@@ -64,10 +64,14 @@ async function syncAll(){
   // siman: union bidireccional — baja lo de la nube y sube lo que solo
   // existe local (mutes/vistos/watches hechos sin sesion no se pierden
   // al entrar desde otro dispositivo)
-  const tryList = t => listAll(t).catch(()=>[]);
-  const [rw, rm, rs, rt] = await Promise.all(
+  const tryList = t => listAll(t).then(r => ({r, ok:true}))
+                                 .catch(() => ({r:[], ok:false}));
+  const [Rw, Rm, Rs, Rt] = await Promise.all(
     [tryList("siman_watch"), tryList("siman_muted"), tryList("siman_seen"),
      tryList("targets")]);
+  // si la tabla no existe o Appwrite esta caido, listAll falla: no subir
+  // nada ahi — cada POST pegaria 404 y llenaria la consola de errores
+  const rw = Rw.r, rm = Rm.r, rs = Rs.r, rt = Rt.r;
   const wKey = w => w.q + "|" + (w.talla || "");
   const rwSet = new Set(rw.map(wKey));
   for (const d of rw) {
@@ -75,22 +79,26 @@ async function syncAll(){
       solo: d.filtro ? d.filtro.split(",").filter(Boolean) : undefined};
     if (!SWATCH.some(x => wKey(x) === wKey(w))) SWATCH.push(w);
   }
-  for (const w of SWATCH) if (!rwSet.has(wKey(w))) await watchUp(w);
+  if (Rw.ok)
+    for (const w of SWATCH) if (!rwSet.has(wKey(w))) await watchUp(w);
   rm.forEach(d => SMUTE.add(d.tkey));
   rs.forEach(d => { SSEEN[d.tkey] = d.price; });
   const rmSet = new Set(rm.map(d => d.tkey));
-  for (const t of SMUTE) if (!rmSet.has(t)) await muteUp(t);
+  if (Rm.ok)
+    for (const t of SMUTE) if (!rmSet.has(t)) await muteUp(t);
   const rsSet = new Set(rs.map(d => d.tkey));
-  for (const [t, p] of Object.entries(SSEEN))
-    if (!rsSet.has(t)) await seenUp(t, p);
+  if (Rs.ok)
+    for (const [t, p] of Object.entries(SSEEN))
+      if (!rsSet.has(t)) await seenUp(t, p);
   // targets: union como favs — baja los de la nube y sube los que solo
   // existen local (fijados sin sesion). La nube gana si difieren.
   const rtSet = {};
   rt.forEach(d => { if (d.sku && d.target) rtSet[d.sku] = d.target; });
   const localT = {...TARGETS};
   for (const [s, t] of Object.entries(rtSet)) TARGETS[s] = t;
-  for (const [s, t] of Object.entries(localT))
-    if (!(s in rtSet)) await tgtSet(s, t);
+  if (Rt.ok)
+    for (const [s, t] of Object.entries(localT))
+      if (!(s in rtSet)) await tgtSet(s, t);
   localStorage.setItem("pw-targets", JSON.stringify(TARGETS));
   saveSMute(); saveSSeen(); saveSWatch();
   localStorage.setItem("pw-favs", JSON.stringify([...FAV]));
@@ -110,7 +118,15 @@ function paintAcct(){
     document.getElementById("lg-who").textContent =
       AW.user.email + " — sincronizado";
 }
-acctBtn.onclick = () => { lgMsg(""); paintAcct(); lgDlg.showModal(); };
+acctBtn.onclick = () => {
+  lgMsg(""); paintAcct(); lgDlg.showModal();
+  // los inputs de login solo existen para Chrome mientras el dialogo esta
+  // abierto: con el password disabled el parser no detecta contexto de
+  // login y no sugiere correos en el buscador
+  lgDlg.querySelectorAll("input").forEach(i => i.disabled = false);
+};
+lgDlg.addEventListener("close", () =>
+  lgDlg.querySelectorAll("input").forEach(i => i.disabled = true));
 document.getElementById("lg-in").onclick = () => doAuth(false);
 document.getElementById("lg-up").onclick = () => doAuth(true);
 document.getElementById("lg-off").onclick = async () => {
