@@ -1,6 +1,6 @@
 // PriceWatch SV — navegación network-first (abrir la app trae la
 // versión fresca); sin señal cae al último snapshot cacheado.
-const CACHE = "pricewatch-v21";
+const CACHE = "pricewatch-v22";
 const CORE = ["./", "./index.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", e => {
@@ -33,22 +33,23 @@ self.addEventListener("fetch", e => {
         if (r.ok) { const cp = r.clone();
                     caches.open(CACHE).then(c => c.put(e.request, cp)); }
         return r;
-      }).catch(() =>
-        caches.match(e.request).then(h => h || caches.match("./index.html")))
+      }).catch(() => caches.open(CACHE).then(c =>
+        c.match(e.request).then(h => h || c.match("./index.html"))))
     );
     return;
   }
 
-  // resto same-origin: cache-first con revalidación en background
+  // resto same-origin: cache-first con revalidación en background.
+  // OJO: match dentro del cache actual — caches.match() global cruzaba
+  // versiones y servia assets viejos de caches ya obsoletos
   e.respondWith(
-    caches.match(e.request).then(hit => {
+    caches.open(CACHE).then(cache => cache.match(e.request).then(hit => {
       const net = fetch(e.request).then(r => {
-        if (r.ok) { const cp = r.clone();
-                    caches.open(CACHE).then(c => c.put(e.request, cp)); }
+        if (r.ok) { const cp = r.clone(); cache.put(e.request, cp); }
         return r;
       }).catch(() => hit);
       return hit || net;
-    })
+    }))
   );
 });
 
