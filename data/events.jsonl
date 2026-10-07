@@ -2017,3 +2017,37 @@
 {"sku": "244383", "type": "club_agotado", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "Santa Ana", "prev_date": "2026-10-06", "date": "2026-10-07"}
 {"sku": "244383", "type": "club_agotado", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "El Salvador", "prev_date": "2026-10-06", "date": "2026-10-07"}
 {"sku": "468111", "type": "club_volvio", "title": "Kraft Queso Crema 13.6 kg / 30 lb", "price": 7989, "club": "Los Héroes", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "104016", "type": "club_volvio", "title": "Lechuga Escarola Verde 2 Unidades", "price": 299, "club": "Santa Ana", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "11188", "type": "club_agotado", "title": "Member's Selection Granola Orgánica 907 g / 2 lb", "price": 979, "club": "Santa Elena", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "23799", "type": "club_agotado", "title": "Silk Bebida de Almendras sin Endulzante Sabor a Vainilla 6 Unidades / 946 mL / 32 oz", "price": 1749, "club": "Santa Elena", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "240158", "type": "se_agota", "title": "Member's Selection Bolsas de Plástico con Cierre 4 Unidades / 50 Bolsas / 27 cm x 28.5 cm / 10.6\" x 11.2\"", "price": 1999, "club": "San Miguel", "qty_from": 4, "qty_to": 2, "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "243695", "type": "club_volvio", "title": "Margherita Pepperoni 907 g / 2 lb", "price": 1299, "club": "Los Héroes", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "294335", "type": "club_volvio", "title": "Ciruela Fresca Paquete 1.1 kg / 2.5 lb", "price": 549, "club": "Santa Elena", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "294335", "type": "club_volvio", "title": "Ciruela Fresca Paquete 1.1 kg / 2.5 lb", "price": 549, "club": "Los Héroes", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "294335", "type": "club_volvio", "title": "Ciruela Fresca Paquete 1.1 kg / 2.5 lb", "price": 549, "club": "San Miguel", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "294336", "type": "club_volvio", "title": "Melocotón 907 g / 2 lb", "price": 799, "club": "Santa Elena", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "294336", "type": "club_volvio", "title": "Melocotón 907 g / 2 lb", "price": 799, "club": "Santa Ana", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "294336", "type": "club_volvio", "title": "Melocotón 907 g / 2 lb", "price": 799, "club": "El Salvador", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "294336", "type": "club_volvio", "title": "Melocotón 907 g / 2 lb", "price": 799, "club": "Los Héroes", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "294336", "type": "club_volvio", "title": "Melocotón 907 g / 2 lb", "price": 799, "club": "San Miguel", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "294337", "type": "club_agotado", "title": "Nectarina Fresca 908 g / 2 lb", "price": 799, "club": "Santa Elena", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "294337", "type": "se_agota", "title": "Nectarina Fresca 908 g / 2 lb", "price": 799, "club": "El Salvador", "qty_from": 65, "qty_to": 24, "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "296959", "type": "club_volvio", "title": "Pera Bosc ", "price": 399, "club": "San Miguel", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "298509", "type": "se_agota", "title": "President Brie Soft-Ripened Queso 555 g / 1.2 lb", "price": 999, "club": "El Salvador", "qty_from": 96, "qty_to": 54, "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "298509", "type": "club_agotado", "title": "President Brie Soft-Ripened Queso 555 g / 1.2 lb", "price": 999, "club": "Los Héroes", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "299173", "type": "club_volvio", "title": "Brohders Pan Canela y Pasas 2 Unidades / 750 g", "price": 499, "club": "Los Héroes", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "299173", "type": "club_volvio", "title": "Brohders Pan Canela y Pasas 2 Unidades / 750 g", "price": 499, "club": "San Miguel", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "299550", "type": "club_volvio", "title": "Salutaris Surtida 24 Unidades / 355 mL / 12 oz", "price": 1349, "club": "Santa Elena", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "299550", "type": "club_volvio", "title": "Salutaris Surtida 24 Unidades / 355 mL / 12 oz", "price": 1349, "club": "Los Héroes", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "301760", "type": "club_volvio", "title": "Cascada Mini Soda Surtida 24 Unidades / 192 mL / 6.5 oz ", "price": 329, "club": "Santa Elena", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "301760", "type": "club_volvio", "title": "Cascada Mini Soda Surtida 24 Unidades / 192 mL / 6.5 oz ", "price": 329, "club": "Santa Ana", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "301760", "type": "club_agotado", "title": "Cascada Mini Soda Surtida 24 Unidades / 192 mL / 6.5 oz ", "price": 329, "club": "Los Héroes", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "301760", "type": "club_agotado", "title": "Cascada Mini Soda Surtida 24 Unidades / 192 mL / 6.5 oz ", "price": 329, "club": "San Miguel", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "307056", "type": "se_agota", "title": "Nabisco Galleta Oreo Original 36 Unidades / 36 g / 1.26 oz", "price": 799, "club": "Santa Elena", "qty_from": 235, "qty_to": 140, "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "308581", "type": "club_volvio", "title": "Light and Fit Yogur sin Grasa 12 Unidades / 113 g / 4 oz", "price": 729, "club": "Santa Elena", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "335762", "type": "se_agota", "title": "Glade Aerosol Aromatizante Surtido 3 Unidades / 400 mL / 13.52 oz", "price": 899, "club": "Los Héroes", "qty_from": 39, "qty_to": 18, "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "340937", "type": "se_agota", "title": "Bimbo Pan Blanco con Vitaminas 2 Unidades / 720 g / 1.58 lb", "price": 459, "club": "Santa Elena", "qty_from": 138, "qty_to": 49, "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "388857", "type": "club_volvio", "title": "Kirkland Vitarain Zero Bebida Enriquecida con Vitaminas 24 Unidades / 591 mL / 20 oz", "price": 1899, "club": "Santa Elena", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "388857", "type": "club_agotado", "title": "Kirkland Vitarain Zero Bebida Enriquecida con Vitaminas 24 Unidades / 591 mL / 20 oz", "price": 1899, "club": "Santa Ana", "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "391991", "type": "se_agota", "title": "Rinso Detergente en Polvo 2 Unidades / 4.5 kg / 110 Lavadas", "price": 1379, "club": "Los Héroes", "qty_from": 112, "qty_to": 17, "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "43540", "type": "se_agota", "title": "Member's Selection Raviolis de Queso 1.36 kg / 3 lb ", "price": 1579, "club": "San Miguel", "qty_from": 4, "qty_to": 2, "prev_date": "2026-10-06", "date": "2026-10-07"}
