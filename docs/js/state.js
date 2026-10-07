@@ -267,6 +267,15 @@ function verdict(sku){
                      tip:"recién bajó de precio"+ofTip(a)};
   if (chg>0) return {rank:6, cls:"subio", label:`subió ${chg}%`,
                      tip:"si no urge, espera"+ofTip(a)};
+  // defensivo: "hoy no es buen dia". Maduro = claramente arriba del
+  // habitual; inmaduro = sentado en su techo registrado. Ambos peores
+  // que "precio normal" pero menos graves que sin stock
+  if (a.vs_med!=null && a.vs_med>=10 && s.length>=5 && span>=14)
+    return {rank:7, cls:"subio", label:"arriba de lo habitual",
+            tip:`+${a.vs_med}% vs su precio habitual — si no urge, espera`+ofTip(a)};
+  if (a.max!=null && l[1]>=a.max && (a.n_ch||0)>=1 && (a.pct_min||0)>=10)
+    return {rank:7, cls:"subio", label:"en su máximo",
+            tip:"nunca lo vimos más caro — si no urge, espera"+ofTip(a)};
   // en el piso pero vencida (>30d sin moverse): ya es su precio normal
   const stale = a.pct_min!=null && a.pct_min<=0 && (a.n_ch||0)>=1;
   return {rank:5, cls:"salio_del_catalogo", label:"precio normal",
@@ -274,3 +283,25 @@ function verdict(sku){
                     : a.pct_min!=null ? `a ${a.pct_min}% de su mínimo` : "")
              +ofTip(a)};
 }
+// promo rotativa: episodios de oferta que vuelven. Confianza graduada —
+// 2 episodios = "repite oferta" (un solo gap, patron emergente); >=3 =
+// cadencia con mediana real ("cada ~Nd"). Sin letrero pero con precio
+// que rebota (el ping-pong de Salutaris) = "sube y baja": misma
+// moraleja — no te apures — con mecanica distinta
+const rotTag = sku => {
+  const a = D.agg[sku]||{};
+  if (a.of_every && (a.n_of||0) >= 3)
+    return `<span class="tag oferta" title="${a.n_of} ofertas registradas">↺ cada ~${a.of_every}d</span>`;
+  if ((a.n_of||0) === 2)
+    return `<span class="tag oferta" title="2 ofertas hasta ahora — patrón emergente">↺ repite oferta</span>`;
+  const s = D.series[sku]||[];
+  let rev = 0, dir = 0;
+  for (let i = 1; i < s.length; i++) {
+    if (s[i][1] == null || s[i-1][1] == null) continue;
+    const d = Math.sign(s[i][1] - s[i-1][1]);
+    if (d) { if (dir && d !== dir) rev++; dir = d; }
+  }
+  return rev >= 2
+    ? `<span class="tag salio_del_catalogo" title="${rev} reversas de precio — promo titilando">↺ sube y baja</span>`
+    : "";
+};

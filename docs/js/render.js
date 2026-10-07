@@ -288,6 +288,7 @@ function favCard(sku){
       <div><span class="pr">${l?fmt(l[1]):"—"}</span>
         <span class="tag ${v.cls}">${v.label}</span>
         ${TARGETS[sku]!=null?`<span class="tag ${l&&l[1]<=TARGETS[sku]?"real":"oferta"}">🎯 ${fmt(TARGETS[sku])}</span>`:""}
+        ${rotTag(sku)}
         ${l&&l[3]>0?`<span class="tag oferta">-$${(+l[3]).toFixed(2)}</span>`:""}
         ${l&&!l[2]?`<span class="tag agotado">agotado</span>`:""}
         ${l&&l[2]?saTag(sku):""}
