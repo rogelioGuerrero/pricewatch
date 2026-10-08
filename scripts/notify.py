@@ -24,9 +24,11 @@ Env:
 import json
 import os
 import sqlite3
+import statistics
 import sys
 import time
 import unicodedata
+from html import escape as hesc
 
 if hasattr(sys.stdout, "reconfigure"):   # consolas cp1252 (Windows)
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -262,7 +264,13 @@ def catalog_state():
             "n_ch": len(ch), "last_ch": last["date"] if ch else None,
             "d_ch": (datetime.now().date() - d_last).days if d_last else None,
         }
-    return out
+    # indice del dia: mediana del % de cambio entre las 2 ultimas
+    # observaciones por sku — el mismo "indice" del sitio
+    chg = [(rows[-1]["price"] - rows[-2]["price"]) / rows[-2]["price"] * 100
+           for rows in series.values()
+           if len(rows) >= 2 and rows[-1]["price"] and rows[-2]["price"]]
+    indice = round(statistics.median(chg), 2) if chg else None
+    return out, indice
 
 
 def siman_items():
@@ -351,8 +359,11 @@ def siman_gangas(events):
     muted = {r["tkey"] for r in aw_rows("siman_muted")}
     seen = {r["tkey"]: r["price"] for r in aw_rows("siman_seen")}
     def hit(rule, tk):
-        t = rule.split("|", 1)[-1] if "|" in rule else rule
-        return t == tk
+        # reglas "pid|tkey|hash,...": el tkey es el 2do segmento
+        # (split("|",1) dejaba los hashes pegados y nunca igualaba);
+        # legacy "tkey" plano no tiene "|"
+        pt = rule.split("|")
+        return (pt[1] if len(pt) > 1 else rule) == tk
     out = []
     for e in events:
         if e["type"] not in ("bajo", "oferta"):
@@ -428,114 +439,272 @@ def send_email(subject, html, text):
 
 # ---------------- digest ----------------
 
-def li(e, cat=None, drain=None):
-    t = (e.get("title") or "?").strip()
-    t = t[:60] + "…" if len(t) > 60 else t
-    d = ""
-    if drain and drain.get(e.get("sku")):
-        clubs = [c for c in drain[e["sku"]] if c]
-        if clubs:
-            d = (f" <span style='color:#c2410c;font-size:12px'>— "
-                 f"se agota en {', '.join(clubs)}</span>")
-    if e.get("from") is not None and e.get("to") is not None:
-        return (f"<b>{t}</b> — <s>{money(e['from'])}</s> → "
-                f"<b>{money(e['to'])}</b> ({e['pct']}%){d}")
-    if e.get("to") is not None:
-        return f"<b>{t}</b> — {money(e['to'])} ({e.get('pct','')}%){d}"
-    if e.get("price") is not None:
-        return f"<b>{t}</b> — {money(e['price'])}{d}"
-    return f"<b>{t}</b>{d}"
+def pill(txt, bg, fg):
+    """chip inline: % de bajada en verde, 'mín histórico' en azul, etc."""
+    return (f"<span style='font-size:11px;background:{bg};color:{fg};"
+            f"border-radius:4px;padding:1px 5px;white-space:nowrap'>"
+            f"{txt}</span>")
 
 
-def ulclub(lst, verbo):
-    """lineas 'Producto — verbo en clubes' para eventos por club."""
-    out = []
-    for e in lst:
-        t = (e.get("title") or "?").strip()
-        t = t[:60] + "…" if len(t) > 60 else t
-        clubs = []
-        for club, qty in e["clubs"]:
-            # "El Salvador" = canal nacional del API, no una tienda
-            club = "nivel nacional" if club == "El Salvador" else club
-            clubs.append(f"{club} (quedan {qty})"
-                         if qty is not None else club)
-        out.append(f"<li><b>{t}</b> — {verbo} {' · '.join(clubs)}</li>")
-    return "<ul>" + "".join(out) + "</ul>"
+MIN_TAG = pill("mín histórico", "#dbeafe", "#1e40af")
+
+
+def pct_pill(p):
+    if p is None:
+        return ""
+    return pill(f"{p:+.0f}%", "#dcfce7" if p < 0 else "#fee2e2",
+                "#15803d" if p < 0 else "#b91c1c")
 
 
 def sec(title, inner, color="#0f1420"):
-    return (f"<h3 style='margin:18px 0 4px;border-left:3px solid {color};"
+    return (f"<h3 style='margin:18px 0 6px;border-left:3px solid {color};"
             f"padding-left:8px'>{title}</h3>{inner}")
 
 
-def digest_html(day, counts, a, gangas, silent, siman, cat,
-                aw_down=False):
+def table(rows):
+    return ("<table style='width:100%;border-collapse:collapse;"
+            "font-size:14px'>" + "".join(rows) + "</table>")
+
+
+def row(img, title, meta, right, size=40):
+    """tr: thumb | titulo+meta | celda derecha alineada. Layout por tabla:
+    es lo unico que los clientes de correo renderan igual."""
+    ic = (f"<td style='width:{size}px;padding:4px 8px 4px 0;"
+          f"vertical-align:middle'><img src='{img}' width='{size}' "
+          f"style='border-radius:6px;background:#f3f4f6;display:block'>"
+          f"</td>") if img else ""
+    return (f"<tr>{ic}<td style='vertical-align:middle'>{title}"
+            + (f"<br>{meta}" if meta else "")
+            + f"</td><td style='text-align:right;vertical-align:middle;"
+              f"white-space:nowrap'>{right}</td></tr>")
+
+
+def ptitle(sku, t, bold=True):
+    """titulo linkeado a la ficha del producto (?sku abre el dialogo)."""
+    t = hesc((t or "?").strip())
+    if not sku:
+        return f"<b>{t}</b>" if bold else t
+    inner = f"<b>{t}</b>" if bold else t
+    return (f"<a href='{SITE}?sku={sku}' style='color:#111;"
+            f"text-decoration:none'>{inner}</a>")
+
+
+def ev_price(e):
+    """(de, a) en centavos segun lo que traiga el evento."""
+    frm = e.get("from") if e.get("from") is not None else e.get("list")
+    to = e.get("to") if e.get("to") is not None else e.get("price")
+    return frm, to
+
+
+def move_right(e):
+    """celda derecha: <s>antes</s> ahora + pill del %."""
+    frm, to = ev_price(e)
+    pct = e.get("pct")
+    if pct is None and frm and to:
+        pct = round((to - frm) / frm * 100, 1)
+    return ((f"<s style='color:#9ca3af;font-size:12px'>{money(frm)}</s> "
+             if frm else "")
+            + f"<b>{money(to)}</b> " + pct_pill(pct))
+
+
+def at_min(e, c):
+    """la bajada deja el precio en el minimo historico del sku."""
+    _, to = ev_price(e)
+    return (to is not None and c.get("min") is not None
+            and to <= c["min"])
+
+
+def drop_row(e, cat, drain=None, bold=False):
+    """bajada/oferta/rebaja: titulo + tags + meta, precio a la derecha."""
+    c = cat.get(str(e.get("sku") or "")) or {}
+    frm, to = ev_price(e)
+    title = ptitle(e.get("sku"), e.get("title") or c.get("title"), bold)
+    if at_min(e, c):
+        title += " " + MIN_TAG
+    meta = []
+    if frm and to and frm > to:
+        meta.append(f"ahorras {money(frm - to)}")
+    if e.get("type") == "rebaja":
+        meta.append("sin letrero")
+    if drain and drain.get(e.get("sku")):
+        clubs = [x for x in drain[e["sku"]] if x]
+        if clubs:
+            meta.append(f"<span style='color:#c2410c'>se agota en "
+                        f"{', '.join(hesc(x) for x in clubs)}</span>")
+    m = (f"<span style='font-size:12px;color:#6b7280'>"
+         f"{' · '.join(meta)}</span>" if meta else "")
+    return row(c.get("image"), title, m, move_right(e))
+
+
+def club_row(e, verbo, cat, color="#c2410c"):
+    """'se agota/acabó/volvió en clubes': titulo + clubes con qty."""
+    c = cat.get(str(e.get("sku") or "")) or {}
+    clubs = []
+    for club, qty in e.get("clubs", []):
+        # "El Salvador" = canal nacional del API, no una tienda
+        club = "nivel nacional" if club == "El Salvador" else club
+        clubs.append(hesc(club)
+                     + (f" (quedan {qty})" if qty is not None else ""))
+    meta = (f"<span style='font-size:12px;color:{color}'>"
+            f"{verbo} {', '.join(clubs)}</span>")
+    right = f"<b>{money(e['price'])}</b>" if e.get("price") else ""
+    return row(c.get("image"),
+               ptitle(e.get("sku"), e.get("title")), meta, right)
+
+
+def ganga_row(g, cat):
+    """card destacada (thumb 52px): ahorro en $ y recencia del cambio."""
+    c = cat.get(str(g.get("sku") or "")) or {}
+    frm, to = ev_price(g)
+    title = ptitle(g.get("sku"), g.get("title") or c.get("title"))
+    if at_min(g, c):
+        title += " " + MIN_TAG
+    meta = []
+    if frm and to and frm > to:
+        meta.append(f"ahorras {money(frm - to)}")
+    if c.get("d_ch"):
+        meta.append(f"último cambio hace {c['d_ch']} días")
+    if g.get("type") == "rebaja":
+        meta.append("sin letrero, rebaja silenciosa")
+    m = (f"<span style='font-size:12px;color:#6b7280'>"
+         f"{' · '.join(meta)}</span>" if meta else "")
+    return row(c.get("image"), title, m, move_right(g), size=52)
+
+
+def fav_row(e, cat, meta, right=""):
+    """fila de 'tu lista': thumb + titulo + meta de contexto."""
+    c = cat.get(str(e.get("sku") or "")) or {}
+    title = ptitle(e.get("sku"), e.get("title") or c.get("title"))
+    if e.get("price") is not None and c.get("min") is not None \
+            and e["price"] <= c["min"]:
+        title += " " + MIN_TAG
+    return row(c.get("image"), title,
+               f"<span style='font-size:12px;color:#6b7280'>{meta}</span>",
+               right)
+
+
+def siman_row(e, items):
+    """ganga Siman: thumb + link directo a siman.com + tag del watch."""
+    it = items.get(str(e.get("iid"))) or {}
+    t = hesc((e.get("title") or it.get("title") or "?").strip())
+    link = it.get("link")
+    title = (f"<a href='{link}' style='color:#111;text-decoration:none'>"
+             f"<b>{t}</b> <span style='color:#6b7280'>↗</span></a>"
+             if link else f"<b>{t}</b>")
+    meta = (f"<span style='font-size:12px;color:#6b7280'>vigilado por "
+            f"\"{hesc(it['watch'])}\"</span>" if it.get("watch") else "")
+    return row(it.get("image"), title, meta, move_right(e))
+
+
+def ver_todas(n, tab, txt):
+    """'ver las N →' cuando la seccion se trunca."""
+    return (f"<p style='margin:6px 0 0;font-size:13px'>"
+            f"<a href='{SITE}?tab={tab}' style='color:#1e40af'>"
+            f"ver {txt} ({n}) →</a></p>")
+
+
+def digest_html(day, counts, a, gangas, silent, siman, cat, sitems,
+                indice, near_tgt, aw_down=False):
     S = []
+    # preheader: lo que la bandeja muestra junto al asunto
+    pre = []
+    n_urg = len(a["fav_drain"]) + len(a["fav_clubout"])
+    if n_urg:
+        pre.append(f"{n_urg} de tu lista se agotan")
+    if a["tgt_hit"]:
+        pre.append(f"{len(a['tgt_hit'])} a precio objetivo")
+    if gangas:
+        pre.append(f"{len(gangas)} bajadas")
+    if siman:
+        pre.append(f"{len(siman)} ganga Siman")
+    S.append("<div style='display:none;max-height:0;overflow:hidden;"
+             "mso-hide:all'>" + hesc(" · ".join(pre)) + "</div>")
     if aw_down:
         S.append(sec("⚠ Appwrite no respondió",
-            f"<p>La base puede estar pausada por inactividad (free tier): "
-            f"la sincronización de tu cuenta está inactiva hasta "
+            "<p>La base puede estar pausada por inactividad (free tier): "
+            "la sincronización de tu cuenta está inactiva hasta "
             f"reactivarla. <a href='{AW_CONSOLE}'>Abrir consola Appwrite "
-            f"→ reactivar proyecto</a></p>", "#b91c1c"))
-    S.append(f"<p style='color:#666'>{day} — "
+            "→ reactivar proyecto</a></p>", "#b91c1c"))
+    idx = (f" · la tienda hoy: <b>{indice:+.1f}%</b> mediano"
+           if indice is not None else "")
+    S.append(f"<p style='color:#666;margin-top:0;font-size:13px'>{day} — "
              + " · ".join(f"{n} {k}" for k, n in counts.items() if n)
-             + "</p>")
+             + idx + "</p>")
     # urgencia primero: de tu lista, se agota o se acabó — hay que actuar hoy
-    urg = ""
-    if a["fav_drain"]:
-        n = len(a["fav_drain"])
-        urg += f"<b>{n} se está{'n' if n>1 else ''} acabando:</b>" \
-               + ulclub(a["fav_drain"], "se agota en")
-    if a["fav_clubout"]:
-        n = len(a["fav_clubout"])
-        urg += f"<b>{n} se acab{'aron' if n>1 else 'ó'}:</b>" \
-               + ulclub(a["fav_clubout"], "se acabó en")
-    if urg:
-        S.append(sec("Urgente — tu lista se está agotando", urg, "#c2410c"))
-    back = ""
-    if a["fav_clubback"]:
-        back += ulclub(a["fav_clubback"], "volvió a")
-    if a["fav_back"]:
-        back += "<ul>" + "".join(
-            f"<li>{li(e)}</li>" for e in a["fav_back"][:5]) + "</ul>"
-    if back:
+    if a["fav_drain"] or a["fav_clubout"]:
+        urg = table([club_row(e, "se agota en", cat)
+                     for e in a["fav_drain"]]
+                    + [club_row(e, "se acabó en", cat)
+                       for e in a["fav_clubout"]])
+        S.append(sec("Urgente — tu lista se está agotando", urg,
+                     "#c2410c"))
+    if a["fav_clubback"] or a["fav_back"]:
+        back = table([club_row(e, "volvió a", cat, "#15803d")
+                      for e in a["fav_clubback"]]
+                     + [fav_row(e, cat, "volvió stock",
+                                f"<b>{money(e['price'])}</b>"
+                                if e.get("price") else "")
+                        for e in a["fav_back"][:5]])
         S.append(sec("Volvió stock", back, "#15803d"))
     if gangas:
-        g = gangas[0]
-        im = (cat.get(g.get("sku")) or {}).get("image")
-        card = (f"<img src='{im}' width='52' style='border-radius:8px;"
-                "background:#fff;vertical-align:middle;margin-right:8px'>"
-                if im else "") + li(g, cat, a["drain"]) \
-               + (" — sin letrero, rebaja silenciosa"
-                  if g["type"] == "rebaja" else "")
-        S.append(sec("Ganga del día", f"<p>{card}</p>", "#1e40af"))
-    fav_bits = []
-    for lbl, lst in [("a precio objetivo", a["tgt_hit"]),
-                     ("bajaron/en oferta", a["fav_drop"] + a["fav_oferta"]),
-                     ("para resurtir", a["fav_resurtir"]),
-                     ("sin stock", a["fav_out"])]:
-        if lst:
-            fav_bits.append(
-                f"<b>{len(lst)} {lbl}:</b><ul>"
-                + "".join(f"<li>{li(e, cat, a['drain'])}</li>"
-                          for e in lst[:5]) + "</ul>")
-    if fav_bits:
-        S.append(sec("Tu lista", "".join(fav_bits), "#0f1420"))
+        S.append(sec("Ganga del día", ganga_row(gangas[0], cat),
+                     "#1e40af"))
+    # tu lista: objetivos, bajadas, resurtir, casi-objetivo, sin stock
+    rows = [fav_row(e, cat,
+                    f"🎯 cruzó tu objetivo de {money(e['tgt'])}",
+                    f"<b>{money(e['price'])}</b>")
+            for e in a["tgt_hit"]]
+    rows += [drop_row(e, cat, a["drain"], bold=True)
+             for e in (a["fav_drop"] + a["fav_oferta"])[:4]]
+    rows += [fav_row(e, cat,
+                     "para resurtir — pagaste "
+                     f"{money(round(e['paid'] * 100))}",
+                     f"<b>{money(e['to'])}</b>")
+             for e in a["fav_resurtir"]]
+    rows += [fav_row(e, cat,
+                     f"casi en tu objetivo — meta {money(e['tgt'])} "
+                     f"(a {e['pct_away']}%)",
+                     f"<b>{money(e['price'])}</b>")
+             for e in near_tgt]
+    rows += [fav_row(e, cat, "sin stock",
+                     f"<b>{money(e['price'])}</b>" if e.get("price")
+                     else "")
+             for e in a["fav_out"][:5]]
+    if rows:
+        S.append(sec("Tu lista", table(rows)))
     if gangas:
-        S.append(sec("Bajadas de hoy",
-                     "<ul>" + "".join(f"<li>{li(e, cat, a['drain'])}</li>"
-                                      for e in gangas[:8]) + "</ul>"))
+        inner = table([drop_row(e, cat, a["drain"])
+                       for e in gangas[:8]])
+        if len(gangas) > 8:
+            inner += ver_todas(len(gangas), "cambios", "las bajadas")
+        S.append(sec("Bajadas de hoy", inner))
     if silent:
-        S.append(sec("Silenciosas vigentes",
-                     "<ul>" + "".join(f"<li>{li(e, cat)}</li>"
-                                      for e in silent[:5]) + "</ul>"))
+        inner = table([drop_row(e, cat) for e in silent[:5]])
+        if len(silent) > 5:
+            inner += ver_todas(len(silent), "ofertas",
+                               "las silenciosas")
+        S.append(sec("Silenciosas vigentes", inner))
     if siman:
-        S.append(sec("Siman",
-                     "<ul>" + "".join(f"<li>{li(e)}</li>"
-                                      for e in siman[:5]) + "</ul>"))
-    S.append(f"<p><a href='{SITE}?tab=ofertas' style='background:#0f1420;"
-             "color:#fff;padding:10px 18px;border-radius:8px;"
-             "text-decoration:none'>Abrir PriceWatch</a></p>")
+        inner = table([siman_row(e, sitems) for e in siman[:5]])
+        if len(siman) > 5:
+            inner += ver_todas(len(siman), "siman", "las gangas")
+        S.append(sec("Siman", inner, "#7c3aed"))
+    # CTA contextual: si hay algo de tu lista, ahi es donde hay que ir
+    cta_tab, cta_lbl = (("favs", "Ver tu lista →")
+                        if (n_urg or a["tgt_hit"] or a["fav_resurtir"]
+                            or a["fav_drop"] or a["fav_oferta"])
+                        else ("ofertas", "Ver gangas →"))
+    S.append(f"<p style='margin:22px 0 4px;text-align:center'>"
+             f"<a href='{SITE}?tab={cta_tab}' style='background:#0f1420;"
+             f"color:#fff;padding:10px 22px;border-radius:8px;"
+             f"text-decoration:none;display:inline-block'>"
+             f"{cta_lbl}</a></p>")
+    S.append("<p style='text-align:center;font-size:12px;color:#9ca3af'>"
+             + " · ".join(
+                 f"<a href='{SITE}?tab={t}' style='color:#9ca3af'>{n}</a>"
+                 for t, n in [("cambios", "movimientos"),
+                              ("ofertas", "gangas"),
+                              ("siman", "siman")]) + "</p>")
     body = "".join(S)
     return (f"<div style='font-family:sans-serif;max-width:560px'>"
             f"<h2 style='margin-bottom:2px'>PriceWatch</h2>{body}</div>")
@@ -545,7 +714,7 @@ def main():
     print(f"notify {TODAY}")
     events = load_events(EVENTS_LOG)
     sevents = load_events(SIMAN_LOG)
-    cat = catalog_state()
+    cat, indice = catalog_state()
     aw_down = aw_health()
     if aw_down:
         print("  ! Appwrite no responde — DB posiblemente pausada "
@@ -564,6 +733,15 @@ def main():
 
     a = build_alerts(events, cat, favs, paid, tgts)
     siman = siman_gangas(sevents)   # aw_rows() devuelve [] sin creds
+    sitems = siman_items()          # foto/link de cada itemId para el mail
+    # "casi en objetivo": a <=5% de cruzar el target — anticipa el aviso
+    # de mañana en vez de solo reportar los que ya cruzaron
+    near_tgt = [{"sku": s, "title": cat[s]["title"], "price": cat[s]["price"],
+                 "tgt": t,
+                 "pct_away": round((cat[s]["price"] - t) / t * 100)}
+                for s, t in tgts.items()
+                if s in cat and cat[s]["price"]
+                and t < cat[s]["price"] <= t * 1.05]
 
     # gangas silenciosas vigentes (espejo de atMin del frontend)
     silent = []
@@ -637,15 +815,34 @@ def main():
               "salio_del_catalogo": "salieron", "regreso": "regresaron"}
     cnt = {pretty[k]: v for k, v in counts.items() if k in pretty}
     html = digest_html(TODAY, cnt, a, a["drops"], silent, siman, cat,
-                       aw_down)
-    text = ("!! Appwrite no responde — reactivala: " + AW_CONSOLE
-            + "\n\n" if aw_down else "")
-    text += f"PriceWatch {TODAY}\n" + "".join(
-        f"!! {e['title'][:50]} se agota en "
-        f"{', '.join(c for c, _ in e['clubs'])}\n" for e in a["fav_drain"][:5]
-    ) + "\n".join(
-        f"- {(e.get('title') or '')[:60]} {e.get('pct','')}%" for e in a["drops"][:8])
-    send_email(subj, html, text)
+                       sitems, indice, near_tgt, aw_down)
+    # fallback texto plano: mismas secciones para clientes sin HTML
+    lines = [f"PriceWatch {TODAY}", ""]
+    if aw_down:
+        lines.insert(0, "!! Appwrite no responde — reactivala: "
+                        + AW_CONSOLE + "\n")
+    for e in a["fav_drain"]:
+        lines.append(f"!! {e['title'][:50]} se agota en "
+                     + ", ".join(c for c, _ in e["clubs"]))
+    for e in a["fav_clubout"]:
+        lines.append(f"!! {e['title'][:50]} se acabó en "
+                     + ", ".join(c for c, _ in e["clubs"]))
+    for e in a["tgt_hit"]:
+        lines.append(f"🎯 {e['title'][:50]} a {money(e['price'])} "
+                     f"(objetivo {money(e['tgt'])})")
+    for e in a["fav_resurtir"]:
+        lines.append(f"resurtir: {e['title'][:50]} a {money(e['to'])}")
+    if a["drops"]:
+        lines.append("")
+        lines += [f"- {(e.get('title') or '')[:55]} {money(e['from'])} → "
+                  f"{money(e['to'])} ({e['pct']}%)"
+                  for e in a["drops"]
+                  if e.get("from") is not None][:8]
+    for e in siman[:5]:
+        _, p = ev_price(e)
+        lines.append(f"- Siman: {(e.get('title') or '')[:55]} {money(p)}")
+    lines += ["", SITE]
+    send_email(subj, html, "\n".join(lines))
 
 
 if __name__ == "__main__":
