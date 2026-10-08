@@ -2051,3 +2051,205 @@
 {"sku": "388857", "type": "club_agotado", "title": "Kirkland Vitarain Zero Bebida Enriquecida con Vitaminas 24 Unidades / 591 mL / 20 oz", "price": 1899, "club": "Santa Ana", "prev_date": "2026-10-06", "date": "2026-10-07"}
 {"sku": "391991", "type": "se_agota", "title": "Rinso Detergente en Polvo 2 Unidades / 4.5 kg / 110 Lavadas", "price": 1379, "club": "Los Héroes", "qty_from": 112, "qty_to": 17, "prev_date": "2026-10-06", "date": "2026-10-07"}
 {"sku": "43540", "type": "se_agota", "title": "Member's Selection Raviolis de Queso 1.36 kg / 3 lb ", "price": 1579, "club": "San Miguel", "qty_from": 4, "qty_to": 2, "prev_date": "2026-10-06", "date": "2026-10-07"}
+{"sku": "258130", "type": "rebaja", "title": "Breakstone's Queso Cottage 680 g / 1.5 lb", "from": 629, "to": 599, "delta": -30, "pct": -4.8, "date": "2026-10-08"}
+{"sku": "98935", "type": "rebaja", "title": "Member's Selection Pechuga de Pavo Ahumada 2 Unidades / 340 g / 12 oz", "from": 1349, "to": 1329, "delta": -20, "pct": -1.5, "date": "2026-10-08"}
+{"sku": "98934", "type": "rebaja", "title": "Member's Selection Pechuga de Pavo Tajada 2 Unidades / 340 g / 12 oz", "from": 1349, "to": 1329, "delta": -20, "pct": -1.5, "date": "2026-10-08"}
+{"sku": "98942", "type": "subio", "title": "Member's Selection Yogurt Griego Vainilla 907 g / 2 lb ", "from": 559, "to": 569, "delta": 10, "pct": 1.8, "date": "2026-10-08"}
+{"sku": "98930", "type": "subio", "title": "Member's Selection Yogurt Griego Natural sin Grasa 907 g / 2 lb ", "from": 559, "to": 569, "delta": 10, "pct": 1.8, "date": "2026-10-08"}
+{"sku": "189924", "type": "subio", "title": "Member's Selection Salsa de Tomate Ketchup 1.81 kg / 64 oz", "from": 479, "to": 499, "delta": 20, "pct": 4.2, "date": "2026-10-08"}
+{"sku": "79338", "type": "rebaja", "title": "Member's Selection Trocitos de Chocolate Semi Amargo 2.04 kg / 72 oz", "from": 2599, "to": 2499, "delta": -100, "pct": -3.8, "date": "2026-10-08"}
+{"sku": "420380", "type": "subio", "title": "Member's Selection Aceite de Aguacate Refinado 1 L / 33.8 oz", "from": 1749, "to": 1799, "delta": 50, "pct": 2.9, "date": "2026-10-08"}
+{"sku": "781060", "type": "subio", "title": "Member's Selection Mayonesa Cremosa con Sabor Natural 3.78 L / 128 oz", "from": 1429, "to": 1449, "delta": 20, "pct": 1.4, "date": "2026-10-08"}
+{"sku": "511410", "type": "rebaja", "title": "Chobani Yogurt Griego 1.13 kg / 2.5 lb", "from": 879, "to": 869, "delta": -10, "pct": -1.1, "date": "2026-10-08"}
+{"sku": "479129", "type": "subio", "title": "Fratelli Beretta Charcutería Artesanal Bandeja 340 g / 12 oz", "from": 1079, "to": 1099, "delta": 20, "pct": 1.9, "date": "2026-10-08"}
+{"sku": "388857", "type": "reaparecio", "title": "Kirkland Vitarain Zero Bebida Enriquecida con Vitaminas 24 Unidades / 591 mL / 20 oz", "price": 1899, "prev_price": 1899, "days_out": 2, "date": "2026-10-08"}
+{"sku": "461539", "type": "subio", "title": "Welch's Jugos Tropicales Surtidos 24 Unidades / 295 mL / 10 oz", "from": 1899, "to": 1999, "delta": 100, "pct": 5.3, "date": "2026-10-08"}
+{"sku": "479175", "type": "subio", "title": "Karnis Mix de Hummus 3 Unidades / 226 g / 7.97 oz", "from": 899, "to": 929, "delta": 30, "pct": 3.3, "date": "2026-10-08"}
+{"sku": "289120", "type": "subio", "title": "Hormel Tabla de Quesos 794 g / 28 oz", "from": 1499, "to": 1549, "delta": 50, "pct": 3.3, "date": "2026-10-08"}
+{"sku": "490764", "type": "rebaja", "title": "Kirkland Signature Cerezas Orgánicas Deshidratadas Montmorency 567 g / 20 oz", "from": 1400, "to": 1177, "delta": -223, "pct": -15.9, "date": "2026-10-08"}
+{"sku": "353783", "type": "rebaja", "title": "International Delight Crema de Avellanas 1.4 L / 48 oz", "from": 749, "to": 729, "delta": -20, "pct": -2.7, "date": "2026-10-08"}
+{"sku": "43567", "type": "subio", "title": "Member's Selection Helado Cookies & Cream 1.89 L / 64 oz", "from": 779, "to": 799, "delta": 20, "pct": 2.6, "date": "2026-10-08"}
+{"sku": "516615", "type": "nuevo", "title": "Bauducco Galletas de Jengibre Cubiertas con Chocolate 12 Unidades / 30 g / 1 oz", "price": 999, "date": "2026-10-08"}
+{"sku": "108870", "type": "subio", "title": "Maggi Consomé de Pollo 920 g / 32.45 oz", "from": 429, "to": 451, "delta": 22, "pct": 5.1, "date": "2026-10-08"}
+{"sku": "307056", "type": "subio", "title": "Nabisco Galleta Oreo Original 36 Unidades / 36 g / 1.26 oz", "from": 799, "to": 869, "delta": 70, "pct": 8.8, "date": "2026-10-08"}
+{"sku": "471126", "type": "rebaja", "title": "Member's Selection Carne para Guisar Fresca Bandeja", "from": 1624, "to": 1559, "delta": -65, "pct": -4.0, "date": "2026-10-08"}
+{"sku": "479123", "type": "subio", "title": "Sincerely Brgitte Queso con Trufa 453 g / 1.1 lb", "from": 979, "to": 999, "delta": 20, "pct": 2.0, "date": "2026-10-08"}
+{"sku": "43565", "type": "subio", "title": "Member's Selection Helado de Vainilla 1.89 L / 64 oz", "from": 779, "to": 799, "delta": 20, "pct": 2.6, "date": "2026-10-08"}
+{"sku": "471087", "type": "subio", "title": "Member's Selection Costilla Alta de Res Cortada Bandeja", "from": 974, "to": 1004, "delta": 30, "pct": 3.1, "date": "2026-10-08"}
+{"sku": "399003", "type": "subio", "title": "Reny Picot Queso Camembert 397 g / 14 oz", "from": 849, "to": 869, "delta": 20, "pct": 2.4, "date": "2026-10-08"}
+{"sku": "388045", "type": "subio", "title": "Member's Selection Aceite de Oliva Extra Virgen 8 Unidades / 750 mL / 25.3 oz", "from": 6199, "to": 6299, "delta": 100, "pct": 1.6, "date": "2026-10-08"}
+{"sku": "750848", "type": "rebaja", "title": "Filete de Lomo Striploin Fresco Bandeja", "from": 2582, "to": 2478, "delta": -104, "pct": -4.0, "date": "2026-10-08"}
+{"sku": "336865", "type": "rebaja", "title": "Petit Nectar Surtido 27 Unidades / 200 mL / 6.76 oz", "from": 949, "to": 719, "delta": -230, "pct": -24.2, "date": "2026-10-08"}
+{"sku": "424009", "type": "rebaja", "title": "Pepsi, 7up, Mirinda, Grapette, Sodas en Lata Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "from": 1349, "to": 1249, "delta": -100, "pct": -7.4, "date": "2026-10-08"}
+{"sku": "284604", "type": "rebaja", "title": "Petit Nectar Surtido 24 Unidades / 330 mL / 11.2 oz", "from": 1319, "to": 1219, "delta": -100, "pct": -7.6, "date": "2026-10-08"}
+{"sku": "299550", "type": "rebaja", "title": "Salutaris Surtida 24 Unidades / 355 mL / 12 oz", "from": 1349, "to": 1259, "delta": -90, "pct": -6.7, "date": "2026-10-08"}
+{"sku": "479280", "type": "subio", "title": "Table Foods Pimientos Rellenos Variados 504 g / 18 oz", "from": 1279, "to": 1299, "delta": 20, "pct": 1.6, "date": "2026-10-08"}
+{"sku": "468107", "type": "rebaja", "title": "POM Jugo de Granada 1.77 L / 60 oz", "from": 1549, "to": 1077, "delta": -472, "pct": -30.5, "date": "2026-10-08"}
+{"sku": "373014", "type": "rebaja", "title": "Lipton Bebida de Té Frio con Sabores Variados 12 Unidades / 500 mL / 17 oz", "from": 1099, "to": 969, "delta": -130, "pct": -11.8, "date": "2026-10-08"}
+{"sku": "471170", "type": "subio", "title": "Member's Selection Chuleta Ahumada Fresca Bandeja", "from": 1321, "to": 1345, "delta": 24, "pct": 1.8, "date": "2026-10-08"}
+{"sku": "471189", "type": "rebaja", "title": "Member's Selection Bistec de Angelina Fresco Bandeja", "from": 1749, "to": 1686, "delta": -63, "pct": -3.6, "date": "2026-10-08"}
+{"sku": "297935", "type": "reaparecio", "title": "Chef-Mate Chili Con Carne Sazonada y Frijoles Rojos Enlatados 3 kg / 6.6 lb", "price": 1899, "prev_price": 1899, "days_out": 6, "date": "2026-10-08"}
+{"sku": "471187", "type": "subio", "title": "Member's Selection Filete de Puyaso Fresco Bandeja", "from": 2037, "to": 2168, "delta": 131, "pct": 6.4, "date": "2026-10-08"}
+{"sku": "471104", "type": "subio", "title": "Member's Selection Hueso de Yugo Fresco Bandeja", "from": 1019, "to": 1059, "delta": 40, "pct": 3.9, "date": "2026-10-08"}
+{"sku": "471085", "type": "rebaja", "title": "Lomo Rollizo (FM) Entero Fresco de Res Empacado al Vacío", "from": 2860, "to": 2622, "delta": -238, "pct": -8.3, "date": "2026-10-08"}
+{"sku": "471191", "type": "rebaja", "title": "Member's Selection Carne para Deshilar Fresca, Bandeja", "from": 1376, "to": 1325, "delta": -51, "pct": -3.7, "date": "2026-10-08"}
+{"sku": "525862", "type": "nuevo", "title": "Uva Zafiro Dulce 907 g / 2 lb", "price": 899, "date": "2026-10-08"}
+{"sku": "471172", "type": "subio", "title": "Member's Selection Bistec de Solomo Fresco Bandeja", "from": 1391, "to": 1410, "delta": 19, "pct": 1.4, "date": "2026-10-08"}
+{"sku": "471106", "type": "rebaja", "title": "Member's Selection Medallones de Lomo Rollizo Fresco Bandeja", "from": 2146, "to": 2033, "delta": -113, "pct": -5.3, "date": "2026-10-08"}
+{"sku": "519710", "type": "rebaja", "title": "Salutaris Toronjada con Soda Bebida Carbonatada 24 Unidades / 355 mL", "from": 1349, "to": 1259, "delta": -90, "pct": -6.7, "date": "2026-10-08"}
+{"sku": "330785", "type": "rebaja", "title": "Omoa Arroz Pre Cocido 25 Unidades / 453 g / 1 lb", "from": 1449, "to": 1349, "delta": -100, "pct": -6.9, "date": "2026-10-08"}
+{"sku": "471161", "type": "subio", "title": "Puyaso Entero Fresco Empacado al Vacío", "from": 1930, "to": 2107, "delta": 177, "pct": 9.2, "date": "2026-10-08"}
+{"sku": "475597", "type": "rebaja", "title": "Member's Selection Posta Grande / Aleta Fresca Caja", "from": 24925, "to": 23111, "delta": -1814, "pct": -7.3, "date": "2026-10-08"}
+{"sku": "471152", "type": "rebaja", "title": "Bistec al Minuto Fresco Bandeja", "from": 1305, "to": 1274, "delta": -31, "pct": -2.4, "date": "2026-10-08"}
+{"sku": "471183", "type": "subio", "title": "Member's Selection Tripa / Mondongo Empacado al Vacío", "from": 686, "to": 936, "delta": 250, "pct": 36.4, "date": "2026-10-08"}
+{"sku": "318504", "type": "rebaja", "title": "Pepsi Soda Surtida 6 Unidades / 3 L / 101 oz", "from": 1149, "to": 1099, "delta": -50, "pct": -4.4, "date": "2026-10-08"}
+{"sku": "341786", "type": "subio", "title": "Pierna de Cerdo Congelada Importada Rebanada", "from": 979, "to": 994, "delta": 15, "pct": 1.5, "date": "2026-10-08"}
+{"sku": "475593", "type": "rebaja", "title": "Member's Selection Angelina / Rochoy / Vuelta de Lomo Fresco Caja", "from": 30150, "to": 29625, "delta": -525, "pct": -1.7, "date": "2026-10-08"}
+{"sku": "910190", "type": "nuevo", "title": "Butterball Pavo Entero Caja 2 Unidades / 8 kg -9 kg / 18 lb - 20 lb", "price": 10449, "date": "2026-10-08"}
+{"sku": "475616", "type": "subio", "title": "Lengua de Res Congelada Caja", "from": 19283, "to": 19997, "delta": 714, "pct": 3.7, "date": "2026-10-08"}
+{"sku": "475574", "type": "subio", "title": "Member's Selection Costilla de Res Fresca Bandeja", "from": 12451, "to": 13132, "delta": 681, "pct": 5.5, "date": "2026-10-08"}
+{"sku": "475562", "type": "rebaja", "title": "Lomo Rollizo (FM) Fresco Caja", "from": 46163, "to": 41357, "delta": -4806, "pct": -10.4, "date": "2026-10-08"}
+{"sku": "475614", "type": "rebaja", "title": "Member's Selection Aleta Fresca Caja", "from": 32880, "to": 29771, "delta": -3109, "pct": -9.5, "date": "2026-10-08"}
+{"sku": "475596", "type": "rebaja", "title": "Member's Selection Lomo Pacho Viuda Lomo Ancho Fresco Caja", "from": 28093, "to": 27604, "delta": -489, "pct": -1.7, "date": "2026-10-08"}
+{"sku": "475585", "type": "rebaja", "title": "Salon Lomo de Res Fresco Caja", "from": 25416, "to": 24675, "delta": -741, "pct": -2.9, "date": "2026-10-08"}
+{"sku": "353784", "type": "rebaja", "title": "International Delight Crema de Caramelo 1.4 L / 48 oz", "from": 749, "to": 729, "delta": -20, "pct": -2.7, "date": "2026-10-08"}
+{"sku": "232869", "type": "agotado", "title": "Sea Viking Salmón Ahumado 227 g / 8 oz", "price": 1299, "date": "2026-10-08"}
+{"sku": "43566", "type": "subio", "title": "Member's Selection Helado Napolitano / 1.89 L / 64 oz", "from": 779, "to": 799, "delta": 20, "pct": 2.6, "date": "2026-10-08"}
+{"sku": "205486", "type": "subio", "title": "Spam Jamón de Cerdo Horneado 3 Unidades / 340.2 g / 12 oz", "from": 1329, "to": 1349, "delta": 20, "pct": 1.5, "date": "2026-10-08"}
+{"sku": "174601", "type": "agotado", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "date": "2026-10-08"}
+{"sku": "4726", "type": "agotado", "title": "Nature Valley Galletas de Canela Rellenas de Mantequilla de Almendras 30 Unidades 38 g / 1.35 oz", "price": 1499, "date": "2026-10-08"}
+{"sku": "104016", "type": "agotado", "title": "Lechuga Escarola Verde 2 Unidades", "price": 299, "date": "2026-10-08"}
+{"sku": "367252", "type": "agotado", "title": "Express Lechuga Hidropónica 340 g / 12 oz", "price": 529, "date": "2026-10-08"}
+{"sku": "521982", "type": "agotado", "title": "Uva Negra sin Semilla 907 g / 2 lb", "price": 849, "date": "2026-10-08"}
+{"sku": "96756", "type": "agotado", "title": "Evian Agua Mineral 6 Unidades / 1 L / 34 oz", "price": 1399, "date": "2026-10-08"}
+{"sku": "303387", "type": "subio", "title": "Maggi Sopas Surtidas 12 Unidades / 57 g / 2 oz", "from": 349, "to": 399, "delta": 50, "pct": 14.3, "date": "2026-10-08"}
+{"sku": "479925", "type": "agotado", "title": "Filete de Tilapia Sin Piel Sin Espinas Congelado Caja 4.54 kg / 10 lb", "price": 4299, "date": "2026-10-08"}
+{"sku": "877990", "type": "rebaja", "title": "Member’s Selection Toallas de Microfibra 36 Unidades", "from": 1899, "to": 1799, "delta": -100, "pct": -5.3, "date": "2026-10-08"}
+{"sku": "486387", "type": "subio", "title": "Schumacher Arrancador Auxiliar de Baterías Portátil Litio 1 500 amp", "from": 9399, "to": 9499, "delta": 100, "pct": 1.1, "date": "2026-10-08"}
+{"sku": "42660", "type": "rebaja", "title": "Member's Selection Aceite para Motor SAE 15W-40 / 4.73 L", "from": 2799, "to": 2499, "delta": -300, "pct": -10.7, "date": "2026-10-08"}
+{"sku": "481317-0843620134539", "type": "rebaja", "title": "Brookstone Juego de Tapetes Antideslizantes y Antiderrames para Auto 4 Piezas", "from": 1699, "to": 1599, "delta": -100, "pct": -5.9, "date": "2026-10-08"}
+{"sku": "513451", "type": "agotado", "title": "Powerbuilt Grúa de Taller Plegable para Motor ", "price": 24999, "date": "2026-10-08"}
+{"sku": "504986", "type": "reaparecio", "title": "Marcy Pro Máquina de Remo con Resistencia de Agua", "price": 54999, "prev_price": 54999, "days_out": 2, "date": "2026-10-08"}
+{"sku": "479361", "type": "agotado", "title": "Nordictrack Caminadora T Series 8 con Pantalla de Alto Contraste", "price": 94999, "date": "2026-10-08"}
+{"sku": "507311", "type": "subio", "title": "Ninja Deluxe Kitchen System Licuadora Inteligente Multifuncional con Procesador Auto-IQ 1 200 W CO905KS", "from": 18499, "to": 21999, "delta": 3500, "pct": 18.9, "date": "2026-10-08"}
+{"sku": "495612", "type": "rebaja", "title": "AlienPro Altavoz Portátil Bluetooth con Iluminación LED Cubix", "from": 12999, "to": 11499, "delta": -1500, "pct": -11.5, "date": "2026-10-08"}
+{"sku": "515532-0047237006788", "type": "nuevo", "title": "Singing Machine Mini Karaoke con Luces LED y 2 Micrófonos SML678", "price": 6599, "date": "2026-10-08"}
+{"sku": "511899", "type": "agotado", "title": "Insta360 Cámara de Acción 360° Resistente al Agua Incluye Selfie Stick", "price": 42977, "date": "2026-10-08"}
+{"sku": "464968", "type": "agotado", "title": "Forza Regulador de Voltaje 110 / 120 VAC 3 Unidades", "price": 2999, "date": "2026-10-08"}
+{"sku": "510115", "type": "agotado", "title": "Klip Xtreme Audífonos Tipo Banda para el Cuello", "price": 4499, "date": "2026-10-08"}
+{"sku": "498268", "type": "agotado", "title": "LG 191 cm / 75\" Pulgadas WebOS 25 4K QNED UHD TV 75QNED70AUA", "price": 94999, "date": "2026-10-08"}
+{"sku": "508224-061282114229", "type": "rebaja", "title": "Titan Lonchera con Aislamiento Therma-Flect a Prueba de Fugas", "from": 3999, "to": 3700, "delta": -299, "pct": -7.5, "date": "2026-10-08"}
+{"sku": "485354-0721427046449", "type": "rebaja", "title": "SwissGear Mochila para Mujer 16 L / 4.23 gal ", "from": 4099, "to": 3999, "delta": -100, "pct": -2.4, "date": "2026-10-08"}
+{"sku": "504039-0700522272564", "type": "rebaja", "title": "Fit + Fresh Kit de Lonchera con Recipiente para Almuerzo", "from": 1899, "to": 1799, "delta": -100, "pct": -5.3, "date": "2026-10-08"}
+{"sku": "456659", "type": "rebaja", "title": "Arctic Zone Nevera Rodante con Carro T.T. para 60 Latas - Hielo hasta por 3 Días", "from": 6999, "to": 6490, "delta": -509, "pct": -7.3, "date": "2026-10-08"}
+{"sku": "602140", "type": "agotado", "title": "Lifetime Cobertizo de Almacenamiento 243 cm x 304 cm / 8' x 10'", "price": 169999, "date": "2026-10-08"}
+{"sku": "294000", "type": "rebaja", "title": "Greenmade Caja de Almacenamiento Profesional 102 L / 27 gal", "from": 1799, "to": 1699, "delta": -100, "pct": -5.6, "date": "2026-10-08"}
+{"sku": "481872", "type": "subio", "title": "Cosco Carrito Convertible de Mano 4 en 1", "from": 17799, "to": 17999, "delta": 200, "pct": 1.1, "date": "2026-10-08"}
+{"sku": "485364", "type": "subio", "title": "Magna Cart Carretilla de Mano Plegable en Aluminio con 6 Ruedas", "from": 3599, "to": 3799, "delta": 200, "pct": 5.6, "date": "2026-10-08"}
+{"sku": "232749", "type": "reaparecio", "title": "OxiClean Removedor y Quitamanchas Líquido en Spray Libre de Cloro 2 Unidades / 931 mL / 31.5 oz", "price": 1299, "prev_price": 1299, "days_out": null, "date": "2026-10-08"}
+{"sku": "79875", "type": "subio", "title": "Ajax Triclorín con Cloro Limpiador Multiusos en Polvo 4 Unidades / 600 g", "from": 569, "to": 599, "delta": 30, "pct": 5.3, "date": "2026-10-08"}
+{"sku": "25096", "type": "reaparecio", "title": "Clorox Blanqueador Desinfectante en Espuma para Baño 3 Unidades / 887 mL / 30 oz", "price": 1399, "prev_price": 1399, "days_out": null, "date": "2026-10-08"}
+{"sku": "526991", "type": "nuevo", "title": "Suavitel Suavizante de Telas Piel Sensible 150 Lavadas / 8 L / 270 oz", "price": 1699, "date": "2026-10-08"}
+{"sku": "362232", "type": "reaparecio", "title": "Termogreen Vasos Desechables de Espuma 200 Unidades / 295 mL / 10 oz", "price": 719, "prev_price": 719, "days_out": null, "date": "2026-10-08"}
+{"sku": "505520-0607766533898", "type": "nuevo", "title": "Member's Selection Orquídeas Artificiales con Maceta de Cerámica", "price": 5490, "date": "2026-10-08"}
+{"sku": "504208-0843317101196", "type": "rebaja", "title": "Kind Lámpara de Pie Curva con Luz Ajustable", "from": 4599, "to": 3999, "delta": -600, "pct": -13.0, "date": "2026-10-08"}
+{"sku": "511327-0030772133132", "type": "subio", "title": "Febreze Clip Aromatizante para Carro 5 Unidades", "from": 1449, "to": 1499, "delta": 50, "pct": 3.5, "date": "2026-10-08"}
+{"sku": "506100", "type": "agotado", "title": "Kingrack Organizador de Juguetes con 8 Compartimentos", "price": 3999, "date": "2026-10-08"}
+{"sku": "504442", "type": "agotado", "title": "MZG Carrito Organizador con Ruedas para Almacenamiento 4 Cajones", "price": 4999, "date": "2026-10-08"}
+{"sku": "504442", "type": "rebaja", "title": "MZG Carrito Organizador con Ruedas para Almacenamiento 4 Cajones", "from": 5299, "to": 4999, "delta": -300, "pct": -5.7, "date": "2026-10-08"}
+{"sku": "498548-0840372305743", "type": "agotado", "title": "Aura LED Lámparas de Mesa LED Recargables con Control Táctil 2 Unidades", "price": 2477, "date": "2026-10-08"}
+{"sku": "347361-0034054187318", "type": "nuevo", "title": "Sound N Light Mascotas de Juguete para Caminar con Movimiento", "price": 1599, "date": "2026-10-08"}
+{"sku": "513639-0801310335215", "type": "nuevo", "title": "Transformers Vehículo a Control Remoto Convertible ", "price": 7299, "date": "2026-10-08"}
+{"sku": "379563", "type": "subio", "title": "Flor de Cana Ron Perfect 10 1 L / 33.81 oz", "from": 1779, "to": 1929, "delta": 150, "pct": 8.4, "date": "2026-10-08"}
+{"sku": "70683", "type": "subio", "title": "Johnnie Walker Etiqueta Negra 12 Años Botella de Whisky Escocés 1 L", "from": 5579, "to": 6199, "delta": 620, "pct": 11.1, "date": "2026-10-08"}
+{"sku": "428836", "type": "oferta_termino", "title": "Estrella Galicia Cerveza en Botella Neutra y Ligera 6 Unidades / 330 mL / 11.16 oz", "price": 1229, "from": 999, "to": 1229, "pct": 23.0, "date": "2026-10-08"}
+{"sku": "526263", "type": "agotado", "title": "ComfortStar Aire Acondicionado Serie CL20 WhisperAire 12 000 BTU CL20-12CA(I)", "price": 38999, "date": "2026-10-08"}
+{"sku": "508869-0194546498350", "type": "rebaja", "title": "Lucky Brand Set Pantalones Cortos Moldeadores para Mujer 2 Unidades", "from": 1599, "to": 1277, "delta": -322, "pct": -20.1, "date": "2026-10-08"}
+{"sku": "514569-0194777662841", "type": "rebaja", "title": "Free Country Pantalón Convertible para Hombre", "from": 2499, "to": 2149, "delta": -350, "pct": -14.0, "date": "2026-10-08"}
+{"sku": "514140-0194546512995", "type": "rebaja", "title": "Lucky Brand Conjunto de Pijama para Mujer 3 Piezas", "from": 1799, "to": 1477, "delta": -322, "pct": -17.9, "date": "2026-10-08"}
+{"sku": "514798-0194777662902", "type": "rebaja", "title": "Free Country Pantalón Convertible Color Caqui para Hombre ", "from": 2499, "to": 2149, "delta": -350, "pct": -14.0, "date": "2026-10-08"}
+{"sku": "508212-7453132170388", "type": "rebaja", "title": "Perry Ellis Tenis de Plataforma para Mujer", "from": 2899, "to": 2499, "delta": -400, "pct": -13.8, "date": "2026-10-08"}
+{"sku": "508218-0666688940627", "type": "rebaja", "title": "Tahari Zapatos Tipo Bailarina para Mujer", "from": 1299, "to": 977, "delta": -322, "pct": -24.8, "date": "2026-10-08"}
+{"sku": "510304-0192703159090", "type": "rebaja", "title": "Single Stitch Pantalón Deportivo Tipo Jogger para Hombre", "from": 1177, "to": 977, "delta": -200, "pct": -17.0, "date": "2026-10-08"}
+{"sku": "506387-0195160499785", "type": "rebaja", "title": "Copper and Oak Pantalón Jogger para Hombre 2 Unidades", "from": 1977, "to": 1477, "delta": -500, "pct": -25.3, "date": "2026-10-08"}
+{"sku": "519220-0885478196840", "type": "rebaja", "title": "Jezzie's Set de Sudadera y Jogger de Terciopelo para Niña 2 Piezas", "from": 1799, "to": 1499, "delta": -300, "pct": -16.7, "date": "2026-10-08"}
+{"sku": "508066-0195160508418", "type": "rebaja", "title": "Peloton Sostén Deportivo con Diseño Espalda Cruzada 2 Unidades", "from": 1677, "to": 1277, "delta": -400, "pct": -23.9, "date": "2026-10-08"}
+{"sku": "510083-0990368987177", "type": "rebaja", "title": "SmileyWorld Sudadera Hoodie Unisex para Niños y Niñas", "from": 977, "to": 677, "delta": -300, "pct": -30.7, "date": "2026-10-08"}
+{"sku": "517832-0824219037622", "type": "nuevo", "title": "Hurley Medias Cortas para Hombre 8 Pares", "price": 1099, "date": "2026-10-08"}
+{"sku": "513528-0198906297058", "type": "rebaja", "title": "Yogalicious Suéter Deportivo de Manga Larga con Cuello Redondo para Mujer", "from": 1499, "to": 1277, "delta": -222, "pct": -14.8, "date": "2026-10-08"}
+{"sku": "513396-0055216295887", "type": "rebaja", "title": "Nicole Miller Blusa Texturizada de Manga Corta para Mujer", "from": 1849, "to": 1577, "delta": -272, "pct": -14.7, "date": "2026-10-08"}
+{"sku": "515685-0199269267078", "type": "rebaja", "title": "Buffalo David Bitton Blusa Manga Larga de Tejido Texturizado para Mujer", "from": 1899, "to": 1677, "delta": -222, "pct": -11.7, "date": "2026-10-08"}
+{"sku": "514469-7453136807914", "type": "rebaja", "title": "Everlast Zapatillas Deportivas para Mujer", "from": 2499, "to": 1977, "delta": -522, "pct": -20.9, "date": "2026-10-08"}
+{"sku": "512693-0822540396371", "type": "rebaja", "title": "Pekkle Conjunto con Pantalón para Niña 3 Piezas", "from": 1399, "to": 1177, "delta": -222, "pct": -15.9, "date": "2026-10-08"}
+{"sku": "513390-7453117702054", "type": "rebaja", "title": "Perry Ellis Camiseta Deportiva Manga Corta para Hombre", "from": 1149, "to": 977, "delta": -172, "pct": -15.0, "date": "2026-10-08"}
+{"sku": "508204-0060206002741", "type": "rebaja", "title": "Dalia Pantalón con Bolsillos de Cremallera para Mujer", "from": 977, "to": 677, "delta": -300, "pct": -30.7, "date": "2026-10-08"}
+{"sku": "511921-0191804299865", "type": "rebaja", "title": "Matty M Chaleco de Algodón para Mujer ", "from": 1177, "to": 877, "delta": -300, "pct": -25.5, "date": "2026-10-08"}
+{"sku": "513466-0012899646528", "type": "rebaja", "title": "Kenneth Cole Zapatillas Estilo Urbano para Hombre", "from": 2599, "to": 2177, "delta": -422, "pct": -16.2, "date": "2026-10-08"}
+{"sku": "507937-0827118969476", "type": "rebaja", "title": "Dalia Pantalón Corte Recto para Mujer", "from": 1799, "to": 1477, "delta": -322, "pct": -17.9, "date": "2026-10-08"}
+{"sku": "512714-0822540396616", "type": "rebaja", "title": "Pekkle Conjunto en Tejido Suave para Niño 3 Piezas", "from": 1399, "to": 1177, "delta": -222, "pct": -15.9, "date": "2026-10-08"}
+{"sku": "515633-0198374702511", "type": "agotado", "title": "Weatherproof Vintage Jean Clásico Bota Recta para Hombre", "price": 2299, "date": "2026-10-08"}
+{"sku": "513694-0196633845351", "type": "rebaja", "title": "Kirkland Signature Camiseta Polo en Algodón para Hombre", "from": 1999, "to": 1677, "delta": -322, "pct": -16.1, "date": "2026-10-08"}
+{"sku": "507871-0827118969117", "type": "rebaja", "title": "Hilary Radley Blusa Manga Larga de Tejido Ligero para Mujer", "from": 1177, "to": 877, "delta": -300, "pct": -25.5, "date": "2026-10-08"}
+{"sku": "512349-0822540395985", "type": "rebaja", "title": "Pekkle Bodies en Algodón Manga Corta para Niña 4 Unidades", "from": 1199, "to": 977, "delta": -222, "pct": -18.5, "date": "2026-10-08"}
+{"sku": "514763-0194777662964", "type": "rebaja", "title": "Free Country Pantalón Verde Oliva Convertible para Hombre", "from": 2499, "to": 2149, "delta": -350, "pct": -14.0, "date": "2026-10-08"}
+{"sku": "515679-0191655436174", "type": "rebaja", "title": "ChickPea Set con Hoodie para Bebé Niño 3 Piezas", "from": 1299, "to": 1099, "delta": -200, "pct": -15.4, "date": "2026-10-08"}
+{"sku": "510426-0884453232764", "type": "rebaja", "title": "Leo & Nicole Sueter con Botones de Manga Larga para Mujer", "from": 977, "to": 677, "delta": -300, "pct": -30.7, "date": "2026-10-08"}
+{"sku": "506750-0882931317064", "type": "rebaja", "title": "Mondetta Set de Camisetas para Niña 2 Unidades", "from": 877, "to": 677, "delta": -200, "pct": -22.8, "date": "2026-10-08"}
+{"sku": "509739-0060204063102", "type": "rebaja", "title": "S.C. and Co Pantalón Corto con Cintura Elástica para Mujer", "from": 1799, "to": 1477, "delta": -322, "pct": -17.9, "date": "2026-10-08"}
+{"sku": "515255-7453136820166", "type": "rebaja", "title": "Runic Tenis Deportivos para Niños", "from": 1499, "to": 1399, "delta": -100, "pct": -6.7, "date": "2026-10-08"}
+{"sku": "516011-0191804318436", "type": "rebaja", "title": "Matty M Falda Ejecutiva Midi para Mujer", "from": 1599, "to": 1277, "delta": -322, "pct": -20.1, "date": "2026-10-08"}
+{"sku": "506736-0822540387720", "type": "rebaja", "title": "Pekkle Conjunto con Cintura Elástica y Tejido Suave para Niño 4 Piezas", "from": 1477, "to": 1177, "delta": -300, "pct": -20.3, "date": "2026-10-08"}
+{"sku": "509644-0192703151551", "type": "rebaja", "title": "Single Stitch Pantalón Ancho con Cintura Elástica para Mujer ", "from": 1177, "to": 877, "delta": -300, "pct": -25.5, "date": "2026-10-08"}
+{"sku": "513343-0197057931903", "type": "rebaja", "title": "Hurley Camisa Polo de Manga Corta para Hombre", "from": 1699, "to": 1477, "delta": -222, "pct": -13.1, "date": "2026-10-08"}
+{"sku": "511462-0191804305498", "type": "rebaja", "title": "Matty M Suéter de Manga Corta Cuello V para Mujer", "from": 977, "to": 677, "delta": -300, "pct": -30.7, "date": "2026-10-08"}
+{"sku": "512337-0822540395428", "type": "rebaja", "title": "Pekkle Bodies Manga Corta para Niño Bebé 4 Unidades", "from": 1199, "to": 977, "delta": -222, "pct": -18.5, "date": "2026-10-08"}
+{"sku": "514464-7453136807730", "type": "rebaja", "title": "Everlast Zapatos Deportivos para Mujer", "from": 2499, "to": 1977, "delta": -522, "pct": -20.9, "date": "2026-10-08"}
+{"sku": "512303-0012899646429", "type": "rebaja", "title": "Kenneth Cole Camiseta para Hombre", "from": 1049, "to": 877, "delta": -172, "pct": -16.4, "date": "2026-10-08"}
+{"sku": "506756-0822540387577", "type": "rebaja", "title": "Pekkle Conjunto de Ropa para Niña 4 Piezas", "from": 1477, "to": 1177, "delta": -300, "pct": -20.3, "date": "2026-10-08"}
+{"sku": "512494-0060206048022", "type": "rebaja", "title": "Hilary Radley Blusa Acanalada de Manga Corta para Mujer", "from": 1299, "to": 977, "delta": -322, "pct": -24.8, "date": "2026-10-08"}
+{"sku": "509529-0827118969698", "type": "rebaja", "title": "Dalia Pantalón Capri en Tejido Elástico para Mujer", "from": 1477, "to": 1177, "delta": -300, "pct": -20.3, "date": "2026-10-08"}
+{"sku": "501870-0889498619389", "type": "rebaja", "title": "Construct Pantaloneta de Baño en Poliéster para Hombre", "from": 677, "to": 477, "delta": -200, "pct": -29.5, "date": "2026-10-08"}
+{"sku": "511729-7453132133970", "type": "rebaja", "title": "Perry Ellis Camisa Polo con Diseño Degradado para Hombre", "from": 1599, "to": 1377, "delta": -222, "pct": -13.9, "date": "2026-10-08"}
+{"sku": "507859-7506392185484", "type": "rebaja", "title": "Ben Sherman Camiseta Polo para Hombre", "from": 1177, "to": 977, "delta": -200, "pct": -17.0, "date": "2026-10-08"}
+{"sku": "515682-0191655437973", "type": "rebaja", "title": "Chickpea Conjunto de Ropa para Niña Bebé 3 Piezas", "from": 1299, "to": 1099, "delta": -200, "pct": -15.4, "date": "2026-10-08"}
+{"sku": "446452", "type": "subio", "title": "Serta Colchón Full Matrimonial con Soporte Ortopédico 29 cm x 192 cm x 141 cm / 12\" x 76\" x 56\"", "from": 28999, "to": 30449, "delta": 1450, "pct": 5.0, "date": "2026-10-08"}
+{"sku": "453895", "type": "subio", "title": "Serta Colchón King con Comfort Care 29 cm x 202 cm x 201 cm / 12\" x 79\" x 79\"", "from": 41999, "to": 44449, "delta": 2450, "pct": 5.8, "date": "2026-10-08"}
+{"sku": "453894", "type": "subio", "title": "Serta Colchón Queen con Comfort Care 29 cm x 202 cm x 153 cm / 12\" x 79\" x  60\"", "from": 34999, "to": 36779, "delta": 1780, "pct": 5.1, "date": "2026-10-08"}
+{"sku": "453893", "type": "subio", "title": "Serta Colchón Twin con Comfort Care 29 cm x 192 cm x 103 cm / 12\" x 76\" x 41\"", "from": 22499, "to": 23449, "delta": 950, "pct": 4.2, "date": "2026-10-08"}
+{"sku": "473757", "type": "subio", "title": "Serta Base de Colchón Queen Comfortcare 152 cm x 199 cm x 22.9 cm / 59.84\" × 78.35\" × 9.02\"", "from": 10499, "to": 10999, "delta": 500, "pct": 4.8, "date": "2026-10-08"}
+{"sku": "484937", "type": "agotado", "title": "Flair Sillón Gris Reclinable ", "price": 29999, "date": "2026-10-08"}
+{"sku": "487242", "type": "agotado", "title": "Mueble Recibidor en Madera con 6 Cajones", "price": 37999, "date": "2026-10-08"}
+{"sku": "507416", "type": "rebaja", "title": "Member's Selection Pueblo Navideño Decorativo 20 Piezas", "from": 8599, "to": 8499, "delta": -100, "pct": -1.2, "date": "2026-10-08"}
+{"sku": "504046", "type": "rebaja", "title": "Member's Selection Caballo Mecedor Decorativo Iluminado para Navidad ", "from": 9399, "to": 9299, "delta": -100, "pct": -1.1, "date": "2026-10-08"}
+{"sku": "505769-0607766474559", "type": "rebaja", "title": "Member's Selection Pueblo Navideño Iluminado 6 Piezas", "from": 3699, "to": 3599, "delta": -100, "pct": -2.7, "date": "2026-10-08"}
+{"sku": "453550", "type": "subio", "title": "Crest Crema Dental Blanqueadora Scope Outlast 5 Unidades / 178 g / 6.3 oz", "from": 1099, "to": 1349, "delta": 250, "pct": 22.7, "date": "2026-10-08"}
+{"sku": "482034", "type": "rebaja", "title": "Member's Selection Jabón en Barra Aroma Original 12 Unidades / 105 g / 3.75 oz", "from": 899, "to": 849, "delta": -50, "pct": -5.6, "date": "2026-10-08"}
+{"sku": "467676", "type": "subio", "title": "Sani-Guard Guantes Desechables de Nitrilo Multiusos Talla Grande 2 Paquetes / 100 Unidades", "from": 1399, "to": 1449, "delta": 50, "pct": 3.6, "date": "2026-10-08"}
+{"sku": "999003", "type": "rebaja", "title": "Member's Selection Jabón Espumoso para Manos 4 Unidades / 236 mL / 8 oz", "from": 1179, "to": 1149, "delta": -30, "pct": -2.5, "date": "2026-10-08"}
+{"sku": "29284", "type": "subio", "title": "Degree Cool Rush Desodorante 5 Unidades / 76 g / 2.7 oz", "from": 1849, "to": 1899, "delta": 50, "pct": 2.7, "date": "2026-10-08"}
+{"sku": "336423", "type": "rebaja", "title": "Colgate Triple Acción Pasta Dental con Fórmula Anticaries Menta 6 Unidades / 125 mL / 4.22 oz", "from": 979, "to": 949, "delta": -30, "pct": -3.1, "date": "2026-10-08"}
+{"sku": "901414", "type": "subio", "title": "Coast Jabón de Baño con Aroma Pacific Force 16 Unidades / 113 g / 4 oz", "from": 1099, "to": 1149, "delta": 50, "pct": 4.5, "date": "2026-10-08"}
+{"sku": "23728", "type": "subio", "title": "Tampax Tampones Pearl Super Absorbentes 96 Unidades", "from": 2199, "to": 2249, "delta": 50, "pct": 2.3, "date": "2026-10-08"}
+{"sku": "453588", "type": "reaparecio", "title": "Depend Pañal para Adulto Talla G/XG 48 Unidades", "price": 3999, "prev_price": 3999, "days_out": null, "date": "2026-10-08"}
+{"sku": "468227", "type": "salio_del_catalogo", "title": "Granja del Sol Lomo de Cerdo Rebanado Fresco Bandeja", "price": 1046, "date": "2026-10-08"}
+{"sku": "468229", "type": "salio_del_catalogo", "title": "Chicharron Crudo Fresco Bandeja", "price": 1223, "date": "2026-10-08"}
+{"sku": "484228", "type": "salio_del_catalogo", "title": "Espárragos 498 g / 1.1 lb", "price": 749, "date": "2026-10-08"}
+{"sku": "519022", "type": "salio_del_catalogo", "title": "Dreo Ventilador de Pedestal Silencioso Circular con 9 Velocidades y 3 Modos DW-PF09", "price": 13499, "date": "2026-10-08"}
+{"sku": "511098", "type": "salio_del_catalogo", "title": "ArtStyle Platos Desechables con Diseño de Fútbol 200 Unidades", "price": 2479, "date": "2026-10-08"}
+{"sku": "500504-0843317101134", "type": "salio_del_catalogo", "title": "Kind Lámpara Decorativa de Mesa 65.41 cm / 25.75\"", "price": 2799, "date": "2026-10-08"}
+{"sku": "503359", "type": "salio_del_catalogo", "title": "Northridge Home Juego de Sala con Sillones Reclinables 3 Piezas", "price": 119999, "date": "2026-10-08"}
+{"sku": "422440", "type": "salio_del_catalogo", "title": "GNC Ultra Mega Women 90 Tabletas", "price": 3699, "date": "2026-10-08"}
+{"sku": "104016", "type": "club_agotado", "title": "Lechuga Escarola Verde 2 Unidades", "price": 299, "club": "Santa Ana", "prev_date": "2026-10-07", "date": "2026-10-08"}
+{"sku": "104016", "type": "club_agotado", "title": "Lechuga Escarola Verde 2 Unidades", "price": 299, "club": "El Salvador", "prev_date": "2026-10-07", "date": "2026-10-08"}
+{"sku": "104016", "type": "club_agotado", "title": "Lechuga Escarola Verde 2 Unidades", "price": 299, "club": "San Miguel", "prev_date": "2026-10-07", "date": "2026-10-08"}
+{"sku": "174601", "type": "club_agotado", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "club": "Santa Elena", "prev_date": "2026-10-07", "date": "2026-10-08"}
+{"sku": "174601", "type": "club_agotado", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "club": "Santa Ana", "prev_date": "2026-10-07", "date": "2026-10-08"}
+{"sku": "174601", "type": "club_agotado", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "club": "El Salvador", "prev_date": "2026-10-07", "date": "2026-10-08"}
+{"sku": "174601", "type": "club_agotado", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "club": "Los Héroes", "prev_date": "2026-10-07", "date": "2026-10-08"}
+{"sku": "25096", "type": "club_volvio", "title": "Clorox Blanqueador Desinfectante en Espuma para Baño 3 Unidades / 887 mL / 30 oz", "price": 1399, "club": "El Salvador", "prev_date": "2026-10-07", "date": "2026-10-08"}
+{"sku": "25096", "type": "club_volvio", "title": "Clorox Blanqueador Desinfectante en Espuma para Baño 3 Unidades / 887 mL / 30 oz", "price": 1399, "club": "Los Héroes", "prev_date": "2026-10-07", "date": "2026-10-08"}
+{"sku": "388857", "type": "club_volvio", "title": "Kirkland Vitarain Zero Bebida Enriquecida con Vitaminas 24 Unidades / 591 mL / 20 oz", "price": 1899, "club": "Santa Ana", "prev_date": "2026-10-07", "date": "2026-10-08"}
+{"sku": "388857", "type": "club_volvio", "title": "Kirkland Vitarain Zero Bebida Enriquecida con Vitaminas 24 Unidades / 591 mL / 20 oz", "price": 1899, "club": "Los Héroes", "prev_date": "2026-10-07", "date": "2026-10-08"}
+{"sku": "388857", "type": "club_volvio", "title": "Kirkland Vitarain Zero Bebida Enriquecida con Vitaminas 24 Unidades / 591 mL / 20 oz", "price": 1899, "club": "San Miguel", "prev_date": "2026-10-07", "date": "2026-10-08"}
+{"sku": "5512", "type": "se_agota", "title": "Badia Sazonador Completo - Combinación de Hierbas y Especias 793.8 g / 1.75 lb", "price": 609, "club": "San Miguel", "qty_from": 579, "qty_to": 273, "prev_date": "2026-10-07", "date": "2026-10-08"}
+{"sku": "55145", "type": "club_agotado", "title": "4C Bebida en Polvo con Sabor a Ponche de Frutas 2.06 kg / 4 lb ", "price": 999, "club": "Santa Elena", "prev_date": "2026-10-07", "date": "2026-10-08"}
