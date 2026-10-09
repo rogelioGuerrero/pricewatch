@@ -2349,3 +2349,20 @@
 {"sku": "244383", "type": "club_volvio", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "El Salvador", "prev_date": "2026-10-08", "date": "2026-10-09"}
 {"sku": "244383", "type": "club_volvio", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "San Miguel", "prev_date": "2026-10-08", "date": "2026-10-09"}
 {"sku": "600491", "type": "se_agota", "title": "McCain Hashbrowns / Torta de Papa 1.3 kg / 2.8 lb", "price": 559, "club": "Los Héroes", "qty_from": 65, "qty_to": 29, "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "104013", "type": "se_agota", "title": "Espárrago 340 g / 12 oz", "price": 699, "club": "Santa Elena", "qty_from": 69, "qty_to": 26, "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "104013", "type": "se_agota", "title": "Espárrago 340 g / 12 oz", "price": 699, "club": "El Salvador", "qty_from": 72, "qty_to": 35, "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "104013", "type": "se_agota", "title": "Espárrago 340 g / 12 oz", "price": 699, "club": "Los Héroes", "qty_from": 23, "qty_to": 9, "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "104013", "type": "club_agotado", "title": "Espárrago 340 g / 12 oz", "price": 699, "club": "San Miguel", "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "243695", "type": "club_agotado", "title": "Margherita Pepperoni 907 g / 2 lb", "price": 1299, "club": "Santa Elena", "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "298509", "type": "se_agota", "title": "President Brie Soft-Ripened Queso 555 g / 1.2 lb", "price": 999, "club": "Santa Elena", "qty_from": 16, "qty_to": 7, "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "301760", "type": "club_agotado", "title": "Cascada Mini Soda Surtida 24 Unidades / 192 mL / 6.5 oz ", "price": 329, "club": "San Miguel", "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "307056", "type": "club_agotado", "title": "Nabisco Galleta Oreo Original 36 Unidades / 36 g / 1.26 oz", "price": 869, "club": "Santa Elena", "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "391991", "type": "club_agotado", "title": "Rinso Detergente en Polvo 2 Unidades / 4.5 kg / 110 Lavadas", "price": 1379, "club": "Santa Elena", "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "39533", "type": "club_agotado", "title": "Ferrero Rocher Bombones Rellenos con Avellanas y Crema de Chocolate 24 Unidades / 12.5 g / 0.4 oz", "price": 1899, "club": "San Miguel", "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "43546", "type": "se_agota", "title": "Member's Selection Papa Francesa Congelada Corte Recto para Freír 10 kg / 22 lb", "price": 2029, "club": "Santa Ana", "qty_from": 110, "qty_to": 62, "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "43546", "type": "se_agota", "title": "Member's Selection Papa Francesa Congelada Corte Recto para Freír 10 kg / 22 lb", "price": 2029, "club": "Los Héroes", "qty_from": 291, "qty_to": 146, "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "43565", "type": "club_volvio", "title": "Member's Selection Helado de Vainilla 1.89 L / 64 oz", "price": 799, "club": "Los Héroes", "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "43569", "type": "club_volvio", "title": "Member's Selection Arandanos 1.36 kg / 3 lb", "price": 1349, "club": "Los Héroes", "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "43572", "type": "club_volvio", "title": "Member's Selection Mezcla de Frutos del Bosque 1.8 kg / 4 lb", "price": 2349, "club": "Los Héroes", "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "446452", "type": "se_agota", "title": "Serta Colchón Full Matrimonial con Soporte Ortopédico 29 cm x 192 cm x 141 cm / 12\" x 76\" x 56\"", "price": 30449, "club": "Santa Ana", "qty_from": 5, "qty_to": 3, "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "465702", "type": "club_agotado", "title": "Klip Xtreme Teclado y Ratón Inalámbricos", "price": 3299, "club": "Santa Elena", "prev_date": "2026-10-08", "date": "2026-10-09"}
