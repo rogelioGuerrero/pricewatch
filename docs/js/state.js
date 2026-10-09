@@ -253,7 +253,9 @@ function verdict(sku){
   const save = l[3]||0, prev = s.length>=2 ? s[s.length-2][1] : null;
   const chg = prev!=null && prev ? Math.round((l[1]-prev)/prev*1000)/10 : 0;
   if (!l[2]) return {rank:8, cls:"agotado", label:"sin stock",
-                     tip:`lleva ${a.d_out||1}d agotado`};
+                     tip:(a.d_out||0) >= s.length
+                       ? `agotado desde que lo seguimos (${s.length}d)`
+                       : `lleva ${a.d_out||1}d agotado`};
   if (save>0 && s.length>=3 && a.pct_min<=0)
     return {rank:0, cls:"real", label:"buen momento",
             tip:`oferta real: ahorra $${(+save).toFixed(2)} y está en su mínimo`};

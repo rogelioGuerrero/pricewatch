@@ -43,6 +43,11 @@ const deadPrice = e =>
   && !!e.date && stockOn(e.sku, e.date) === 0;
 // lo nuevo desde tu ultima visita, sin los ajustes fantasmas
 const NEWV = NEWEV.filter(e => !deadPrice(e));
+// auditoria de fantasmas: la confesion los despliega atenuados
+let SHOW_DEAD = false;
+document.addEventListener("click", e => {
+  if (e.target.closest(".dead-toggle")) { SHOW_DEAD = !SHOW_DEAD; render(); }
+});
 function card(e, clubs){
   const p = D.products[e.sku]||{};
   let price;
@@ -102,17 +107,23 @@ function render(){
   if (cfe === "bajo")  cambios.sort((a,b) => (a.pct??0) - (b.pct??0));
   if (cfe === "subio") cambios.sort((a,b) => (b.pct??0) - (a.pct??0));
   // confesion: cuantos ajustes de catalogo se ocultaron EN ESTA VISTA
-  // (mismo alcance del chip activo) — filtro auditable, feed limpio
-  const nDead = ev.filter(e => deadPrice(e) && f(e) && (cfe==="new"
+  // (mismo alcance del chip activo). Clic = auditoria: los muestra
+  // atenuados, claramente marcados — no se mezclan con lo accionable
+  const dead = ev.filter(e => deadPrice(e) && f(e) && (cfe==="new"
     ? NEWSET.has(e)
     : ["bajo","subio","oferta_termino","rebaja"].includes(e.type)
       && (cfe==="all" || (cfe==="fav" ? FAV.has(e.sku)
-          : cfe==="bajo" ? e.type==="rebaja" : e.type===cfe)))).length;
+          : cfe==="bajo" ? e.type==="rebaja" : e.type===cfe))));
+  const nDead = dead.length;
+  const deadHtml = SHOW_DEAD ? "<div class='deadzone'>"
+    + groupClubs(dead).map(g => card(g[0], g)).join("") + "</div>" : "";
   $("#g-cambios").innerHTML = (groupClubs(cambios)
     .map(g => card(g[0], g)).join("")
     || "<p class='meta'>Sin cambios</p>")
-    + (nDead ? `<p class='meta' style='grid-column:1/-1'>`
-      + `${nDead} ajuste${nDead>1?"s":""} de precio en artículos sin stock — ocultos</p>` : "");
+    + deadHtml
+    + (nDead ? `<p class='meta dead-toggle' style='grid-column:1/-1;cursor:pointer'>`
+      + `${nDead} ajuste${nDead>1?"s":""} de precio en artículos sin stock`
+      + ` — ${SHOW_DEAD ? "mostrando" : "ocultos"} ${SHOW_DEAD ? "▲" : "▸ ver"}</p>` : "");
   $("#cf-new").style.display = NEWV.length ? "" : "none";
   movChart(cambios);
   const dealList = DEALS

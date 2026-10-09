@@ -65,6 +65,23 @@ if os.path.exists(EVENTS):
         if line:
             events.append(json.loads(line))
 events = events[-200:]
+# ajustes de catalogo: precio movido sobre articulo sin stock ese dia —
+# el front y notify.py los ocultan; el conteo queda en el log del build
+# para que el filtro sea auditable (si revienta, se nota aqui)
+PRICE_TYPES = ("bajo", "subio", "oferta", "oferta_termino", "rebaja")
+def _stock_on(sku, dt):
+    st = None
+    for r in series.get(sku, []):
+        if r[0] <= dt:
+            st = r[2]
+        else:
+            break
+    return st
+n_dead = sum(1 for e in events if e["type"] in PRICE_TYPES
+             and e.get("date") and _stock_on(e.get("sku"), e["date"]) == 0)
+if n_dead:
+    print(f"  {n_dead} ajustes de catalogo sobre articulos sin stock "
+          f"(ocultos en front/email)")
 
 mis = []
 if os.path.exists(MIS_COMPRAS):

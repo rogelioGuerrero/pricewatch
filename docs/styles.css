@@ -28,6 +28,12 @@
   input { background:var(--card); border:1px solid var(--line); color:var(--txt);
           border-radius:8px; padding:8px 10px; font-size:13px; width:280px }
   .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:10px }
+  /* auditoria de fantasmas: los ajustes ocultos se muestran apagados,
+     en su propia zona al pie del feed — nunca se leen como accionables */
+  .deadzone { grid-column:1/-1; display:grid; gap:10px; opacity:.5;
+              grid-template-columns:repeat(auto-fill,minmax(330px,1fr)) }
+  .deadzone .card:hover { border-color:var(--line) }
+  .dead-toggle:hover { color:var(--txt) }
   .card { background:var(--card); border:1px solid var(--line); border-radius:10px;
           padding:10px 12px; cursor:pointer; display:flex; gap:10px;
           transition:border-color .15s }

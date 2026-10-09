@@ -156,6 +156,7 @@ const PV_PRESETS = {
                 ["dias_cambio","<=",30]],
   up:         [["ult_chg_pct",">",0]],
   clubout:    [["mi_club","==","no"]],
+  agotados:   [["stock","==","no"]],
 };
 async function loadExplorer(attempt=0){
   if (pvDone) return;
