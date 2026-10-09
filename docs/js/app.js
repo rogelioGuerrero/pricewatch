@@ -8,7 +8,9 @@ let chart, chCal;
 const BARS = {};
 const TABS = [
   ["favs","Mi lista", FAV.size],
-  ["cambios","Movimientos", byType("bajo").length + byType("subio").length + byType("oferta_termino").length + byType("rebaja").length],
+  ["cambios","Movimientos", ev.filter(e =>
+    ["bajo","subio","oferta_termino","rebaja"].includes(e.type)
+    && !deadPrice(e)).length],
   ["ofertas","Gangas", DEALS.length],
   ["stock","Se acabó / Volvió",
    byType("agotado").length + byType("reaparecio").length

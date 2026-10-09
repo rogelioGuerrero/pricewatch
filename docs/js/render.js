@@ -35,6 +35,14 @@ const saTag = sku => {
     || (a===MYCLUB ? -1 : b===MYCLUB ? 1 : a.localeCompare(b)));
   return `<span class="tag se_agota">se agota en ${ns.map(clubName).join(" · ")}</span>`;
 };
+// rebaja/subida sobre un articulo sin stock ESE dia = ajuste mecanico
+// de catalogo (markdown de liquidacion): nunca fue comprable, no es
+// movimiento accionable — se oculta del feed pero queda en los datos
+const deadPrice = e =>
+  ["bajo","subio","oferta_termino","rebaja","oferta"].includes(e.type)
+  && !!e.date && stockOn(e.sku, e.date) === 0;
+// lo nuevo desde tu ultima visita, sin los ajustes fantasmas
+const NEWV = NEWEV.filter(e => !deadPrice(e));
 function card(e, clubs){
   const p = D.products[e.sku]||{};
   let price;
@@ -56,9 +64,10 @@ function card(e, clubs){
   const oe = e.type==="oferta_termino" && ea.of_end;
   const odur = oe ? ` · oferta ${oe[0].slice(5)}→${oe[1].slice(5)}` : "";
   const ocd = oe && ea.of_every ? ` · vuelve ~cada ${ea.of_every}d` : "";
-  // contexto actual: "subio +12%" junto a "mínimo histórico" = no pasa nada
+  // contexto actual: "subio +12%" junto a "mínimo histórico" = no pasa
+  // nada; y si el articulo quedo sin stock, la card lo admite
   const vd = verdict(e.sku);
-  const vtag = e.type !== "oferta" && vd.rank <= 3
+  const vtag = e.type !== "oferta" && (vd.rank <= 3 || vd.rank === 8)
     ? ` <span class="tag ${vd.cls}">${vd.label}</span>` : "";
   // el movimiento ya se reverto por completo (promo titilando): la card
   // admite que el evento quedo obsoleto en vez de contradecir el spark
@@ -80,22 +89,31 @@ function card(e, clubs){
 function render(){
   const q = $("#q").value.trim();
   const f = e => !q || matchQ(q, e.title, (D.products[e.sku]||{}).title);
-  const cfe = cf === "new" && !NEWEV.length ? "all" : cf;
+  const cfe = cf === "new" && !NEWV.length ? "all" : cf;
   // "nuevas" muestra TODO lo nuevo (no solo precios): el chip del resumen
   // cuenta stock y nuevos tambien, el destino debe coincidir
-  const cambios = ev.filter(e=>cfe==="new"
+  const cambios = ev.filter(e=>!deadPrice(e) && (cfe==="new"
     ? NEWSET.has(e) && f(e)
     : ["bajo","subio","oferta_termino","rebaja"].includes(e.type)
       && (cfe==="all" ? true : cfe==="fav" ? FAV.has(e.sku)
           : cfe==="bajo" ? e.type==="rebaja" : e.type===cfe)
-      && f(e));
+      && f(e)));
   // bajaron/subieron van por magnitud: el Eufy -48% no se entierra bajo -2%s
   if (cfe === "bajo")  cambios.sort((a,b) => (a.pct??0) - (b.pct??0));
   if (cfe === "subio") cambios.sort((a,b) => (b.pct??0) - (a.pct??0));
-  $("#g-cambios").innerHTML = groupClubs(cambios)
+  // confesion: cuantos ajustes de catalogo se ocultaron EN ESTA VISTA
+  // (mismo alcance del chip activo) — filtro auditable, feed limpio
+  const nDead = ev.filter(e => deadPrice(e) && f(e) && (cfe==="new"
+    ? NEWSET.has(e)
+    : ["bajo","subio","oferta_termino","rebaja"].includes(e.type)
+      && (cfe==="all" || (cfe==="fav" ? FAV.has(e.sku)
+          : cfe==="bajo" ? e.type==="rebaja" : e.type===cfe)))).length;
+  $("#g-cambios").innerHTML = (groupClubs(cambios)
     .map(g => card(g[0], g)).join("")
-    || "<p class='meta'>Sin cambios</p>";
-  $("#cf-new").style.display = NEWEV.length ? "" : "none";
+    || "<p class='meta'>Sin cambios</p>")
+    + (nDead ? `<p class='meta' style='grid-column:1/-1'>`
+      + `${nDead} ajuste${nDead>1?"s":""} de precio en artículos sin stock — ocultos</p>` : "");
+  $("#cf-new").style.display = NEWV.length ? "" : "none";
   movChart(cambios);
   const dealList = DEALS
     .filter(s => dealOK(s, OF_F)
@@ -128,7 +146,7 @@ function render(){
   if (favOut.length) alerts.push([`${favOut.length} de tu lista sin stock`,"favs","","sinstock"]);
   if (MYCLUB && clubOut.length)
     alerts.push([`${clubOut.length} de tu lista agotado en ${MYCLUB}`,"favs","","clubout"]);
-  const nReb = byType("rebaja").length;
+  const nReb = byType("rebaja").filter(e=>!deadPrice(e)).length;
   if (nReb) alerts.push([`${nReb} rebaja${nReb>1?"s":""} silenciosa${nReb>1?"s":""}`,"cambios","bajo"]);
   const simAl = simanAlerts(), nSiman = simAl.length;
   if (nSiman) alerts.push([`${nSiman} ganga${nSiman>1?"s":""} en Siman`,"siman"]);
@@ -138,12 +156,12 @@ function render(){
       alerts.push([`🎯 ${(D.products[s]||{}).title||s} a ${fmt(l[1])} (objetivo ${fmt(TARGETS[s])})`, "", "", "", s]);
   }
   let deltaTxt = "";
-  if (NEWEV.length) {
-    const nt = t => NEWEV.filter(e => e.type === t).length, parts = [];
+  if (NEWV.length) {
+    const nt = t => NEWEV.filter(e => e.type === t && !deadPrice(e)).length, parts = [];
     const nb = nt("bajo")+nt("rebaja"), ns = nt("subio"), nof = nt("oferta"),
           nr = nt("reaparecio")+nt("club_volvio")+nt("regreso"),
           na = nt("agotado")+nt("club_agotado"), nc = nt("se_agota"),
-          nn = nt("nuevo"), nf = NEWEV.filter(e => FAV.has(e.sku)).length;
+          nn = nt("nuevo"), nf = NEWEV.filter(e => FAV.has(e.sku) && !deadPrice(e)).length;
     if (nb)  parts.push(`${nb} bajada${nb>1?"s":""}`);
     if (ns)  parts.push(`${ns} subida${ns>1?"s":""}`);
     if (nof) parts.push(`${nof} oferta${nof>1?"s":""}`);

@@ -292,10 +292,19 @@ def siman_items():
 
 # ---------------- decision de ruido ----------------
 
+# precio movido sin stock ese dia = ajuste mecanico de catalogo
+# (liquidacion): nunca fue comprable — ni push ni fila de email
+PRICE_TYPES = ("bajo", "subio", "oferta", "oferta_termino", "rebaja")
+
+def live(e, cat):
+    return (e["type"] not in PRICE_TYPES
+            or bool(cat.get(e.get("sku"), {}).get("in_stock")))
+
+
 def build_alerts(events, cat, favs, paid, tgts):
     fav_ids = set(favs)
     drops = sorted([e for e in events if e["type"] in ("bajo", "rebaja")
-                    and e.get("pct")],
+                    and e.get("pct") and live(e, cat)],
                    key=lambda e: e["pct"])
     # eventos por club agrupados por sku: un producto que se acaba en
     # 3 tiendas es UN hecho, no tres — igual que la web
@@ -313,7 +322,7 @@ def build_alerts(events, cat, favs, paid, tgts):
         "drops": drops,
         "fav_drop": [e for e in drops if e["sku"] in fav_ids],
         "fav_oferta": [e for e in events if e["type"] == "oferta"
-                       and e["sku"] in fav_ids],
+                       and e["sku"] in fav_ids and live(e, cat)],
         "fav_out": [e for e in events
                     if e["type"] in ("agotado", "salio_del_catalogo")
                     and e["sku"] in fav_ids],
@@ -343,6 +352,8 @@ def build_alerts(events, cat, favs, paid, tgts):
     # prev_price cubre 'reaparecio'; 'oferta' no trae origen -> si el
     # precio actual ya esta bajo el objetivo, avisa igual
     for e in events:
+        if not live(e, cat):
+            continue
         t = tgts.get(str(e.get("sku") or ""))
         if not t:
             continue
@@ -740,7 +751,7 @@ def main():
                  "tgt": t,
                  "pct_away": round((cat[s]["price"] - t) / t * 100)}
                 for s, t in tgts.items()
-                if s in cat and cat[s]["price"]
+                if s in cat and cat[s]["in_stock"] and cat[s]["price"]
                 and t < cat[s]["price"] <= t * 1.05]
 
     # gangas silenciosas vigentes (espejo de atMin del frontend)
@@ -757,7 +768,8 @@ def main():
 
     counts = {}
     for e in events:
-        counts[e["type"]] = counts.get(e["type"], 0) + 1
+        if live(e, cat):
+            counts[e["type"]] = counts.get(e["type"], 0) + 1
     n_fav = len(a["fav_drop"]) + len(a["fav_oferta"])
 
     # ---- push: solo lo urgente ----

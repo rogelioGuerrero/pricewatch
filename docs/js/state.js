@@ -14,6 +14,15 @@ const esc = s => String(s||"").replace(/[&<>"]/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const byType = t => ev.filter(e=>e.type===t);
 const lastOf = s => (D.series[s]||[]).slice(-1)[0];
+// stock observado en una fecha: ultima lectura <= date (series van
+// asc). null = sin dato — no afirmar nada
+const stockOn = (sku, date) => {
+  let st = null;
+  for (const r of D.series[sku] || []) {
+    if (r[0] <= date) st = r[2]; else break;
+  }
+  return st;
+};
 // "desde tu ultima visita": eventos posteriores al ultimo build que viste
 const LASTSEEN = localStorage.getItem("pw-lastseen") || "";
 const NEWEV = LASTSEEN && LASTSEEN < D.generated
@@ -40,7 +49,9 @@ const DEALS = (() => {
     const a = D.agg[s];
     if (atMin(s) || (a.vs_med != null && a.vs_med < 0)) m.add(s);
   });
-  return [...m];
+  // ganga sin stock no es ganga: el letrero de ahorro puede venir de
+  // un sku agotado — solo lo comprable entra a la lista
+  return [...m].filter(s => lastOf(s)?.[2]);
 })();
 const dealOK = (s, f) => {
   const a = D.agg[s]||{}, l = lastOf(s), sv = l?.[3]||0;
