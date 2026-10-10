@@ -2366,3 +2366,84 @@
 {"sku": "43572", "type": "club_volvio", "title": "Member's Selection Mezcla de Frutos del Bosque 1.8 kg / 4 lb", "price": 2349, "club": "Los Héroes", "prev_date": "2026-10-08", "date": "2026-10-09"}
 {"sku": "446452", "type": "se_agota", "title": "Serta Colchón Full Matrimonial con Soporte Ortopédico 29 cm x 192 cm x 141 cm / 12\" x 76\" x 56\"", "price": 30449, "club": "Santa Ana", "qty_from": 5, "qty_to": 3, "prev_date": "2026-10-08", "date": "2026-10-09"}
 {"sku": "465702", "type": "club_agotado", "title": "Klip Xtreme Teclado y Ratón Inalámbricos", "price": 3299, "club": "Santa Elena", "prev_date": "2026-10-08", "date": "2026-10-09"}
+{"sku": "81341", "type": "reaparecio", "title": "Maíz Dulce 8 Unidades", "price": 649, "prev_price": 649, "days_out": 6, "date": "2026-10-10"}
+{"sku": "174601", "type": "reaparecio", "title": "Fresa Extra Grande Fresca 907 g / 2 lb", "price": 729, "prev_price": 729, "days_out": 3, "date": "2026-10-10"}
+{"sku": "507911", "type": "reaparecio", "title": "Coffruvex Mix de Frutos Rojos 907 g / 2 lb", "price": 1799, "prev_price": 1799, "days_out": 4, "date": "2026-10-10"}
+{"sku": "259017", "type": "reaparecio", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "prev_price": 549, "days_out": null, "date": "2026-10-10"}
+{"sku": "104016", "type": "reaparecio", "title": "Lechuga Escarola Verde 2 Unidades", "price": 299, "prev_price": 299, "days_out": 3, "date": "2026-10-10"}
+{"sku": "497237", "type": "rebaja", "title": "Member's Selection Pollo Fresco Empacado al Vacío", "from": 1043, "to": 1032, "delta": -11, "pct": -1.1, "date": "2026-10-10"}
+{"sku": "341786", "type": "subio", "title": "Pierna de Cerdo Congelada Importada Rebanada", "from": 994, "to": 1004, "delta": 10, "pct": 1.0, "date": "2026-10-10"}
+{"sku": "521153", "type": "rebaja", "title": "Cola de Res Porcionada Congelada ", "from": 2317, "to": 2250, "delta": -67, "pct": -2.9, "date": "2026-10-10"}
+{"sku": "275453", "type": "reaparecio", "title": "La Carreta Piña Sweet Baby 2 Unidades", "price": 719, "prev_price": 719, "days_out": null, "date": "2026-10-10"}
+{"sku": "475614", "type": "subio", "title": "Member's Selection Aleta Fresca Caja", "from": 29771, "to": 30150, "delta": 379, "pct": 1.3, "date": "2026-10-10"}
+{"sku": "475668", "type": "agotado", "title": "Belgioioso Queso Ricotta con Leche Entera 453 g / 1 lb", "price": 499, "date": "2026-10-10"}
+{"sku": "80109", "type": "agotado", "title": "Dos Pinos Leche Entera 12 unidades / 1 L / 33.81 oz", "price": 2089, "date": "2026-10-10"}
+{"sku": "452083", "type": "agotado", "title": "Pepsi Soda Regular 24 Unidades / 355 mL / 12 oz", "price": 779, "date": "2026-10-10"}
+{"sku": "521813", "type": "nuevo", "title": "Dell 39.62 cm / 15.6\" Pulgadas Portátil AMD Ryzen 7 16 Gigabytes / 512 Gigabytes + Antivirus ESET", "price": 87999, "date": "2026-10-10"}
+{"sku": "520937", "type": "rebaja", "title": "Lenovo 68.9 cm / 27\" Pulgadas Computador de Escritorio AMD Ryzen 5 16 Gigabytes / 512 Gigabytes F0HQ001EUS + Antivirus ESET", "from": 114999, "to": 94977, "delta": -20022, "pct": -17.4, "date": "2026-10-10"}
+{"sku": "498227", "type": "rebaja", "title": "Ninja Swirl by CREAMi Máquina de Helados con 13 Programas NC701", "from": 19977, "to": 17977, "delta": -2000, "pct": -10.0, "date": "2026-10-10"}
+{"sku": "508391", "type": "rebaja", "title": "Shark FlexFusion Moldeador y Secador de Cabello Multifuncional con Accesorios 5 en 1 HD672SCO", "from": 28977, "to": 21977, "delta": -7000, "pct": -24.2, "date": "2026-10-10"}
+{"sku": "512031", "type": "rebaja", "title": "Sharper Image Masajeador Multiárea Powerboost Roll 6 Velocidades", "from": 9977, "to": 7977, "delta": -2000, "pct": -20.0, "date": "2026-10-10"}
+{"sku": "512762", "type": "rebaja", "title": "Neakasa Vaporizador Portátil de Ropa con Depósito de Agua", "from": 6977, "to": 5477, "delta": -1500, "pct": -21.5, "date": "2026-10-10"}
+{"sku": "507307", "type": "rebaja", "title": "ICEMAN Máquina de Hielo Tipo Nugget 1.5 L / 51 oz", "from": 19499, "to": 15977, "delta": -3522, "pct": -18.1, "date": "2026-10-10"}
+{"sku": "510047", "type": "rebaja", "title": "Sharper Image Realtouch 3D Masajeador de Cuello y Hombros Recargable 1020825", "from": 5499, "to": 3977, "delta": -1522, "pct": -27.7, "date": "2026-10-10"}
+{"sku": "512292", "type": "rebaja", "title": "Sharper Image EDGE+ Masajeador de Percusión Inalámbrico Recargable USB-C con 4 Velocidades", "from": 3477, "to": 2977, "delta": -500, "pct": -14.4, "date": "2026-10-10"}
+{"sku": "510851", "type": "rebaja", "title": "Corenine Silla de Masaje con Calor y 12 Programas Automáticos", "from": 99977, "to": 79977, "delta": -20000, "pct": -20.0, "date": "2026-10-10"}
+{"sku": "498218-0622356651295", "type": "agotado", "title": "Ninja Blast Max Licuadora Portátil con 3 Modos Predefinidos y Base desmontable", "price": 6977, "date": "2026-10-10"}
+{"sku": "461289", "type": "subio", "title": "Bytech Protector Contra Sobretensiones con 7 Tomas y 2 Puertos USB 2 Unidades", "from": 2299, "to": 2399, "delta": 100, "pct": 4.3, "date": "2026-10-10"}
+{"sku": "504726", "type": "rebaja", "title": "Tzumi Teatro en Casa con Proyector, Altavoz Bluetooth y Micrófono ", "from": 11499, "to": 10999, "delta": -500, "pct": -4.3, "date": "2026-10-10"}
+{"sku": "461772", "type": "reaparecio", "title": "Forza Regulador de Voltaje con 8 Entradas 1200VA", "price": 1999, "prev_price": 1999, "days_out": null, "date": "2026-10-10"}
+{"sku": "511899", "type": "rebaja", "title": "Insta360 Cámara de Acción 360° Resistente al Agua Incluye Selfie Stick", "from": 42977, "to": 37977, "delta": -5000, "pct": -11.6, "date": "2026-10-10"}
+{"sku": "474405", "type": "rebaja", "title": "Backyard Discovery Columpio de Cedro para Porche Estilo Granja", "from": 13499, "to": 10999, "delta": -2500, "pct": -18.5, "date": "2026-10-10"}
+{"sku": "502557", "type": "rebaja", "title": "Creative Surfaces Panel de Plantas Artificiales para Pared con Luces LED 100 cm x 100 cm / 39.3\" x 39.3\"", "from": 1977, "to": 1477, "delta": -500, "pct": -25.3, "date": "2026-10-10"}
+{"sku": "498615", "type": "rebaja", "title": "Fanttik Mini Motosierra Ligera con Luz LED Integrada", "from": 9977, "to": 7977, "delta": -2000, "pct": -20.0, "date": "2026-10-10"}
+{"sku": "499187", "type": "rebaja", "title": "Eden Grace Silla Mecedora de Madera de Acacia ", "from": 10999, "to": 8977, "delta": -2022, "pct": -18.4, "date": "2026-10-10"}
+{"sku": "506945", "type": "rebaja", "title": "Lifetime Mesa Plegable Tipo Picnic para Exteriores 1.83 m / 6 ft", "from": 27999, "to": 23999, "delta": -4000, "pct": -14.3, "date": "2026-10-10"}
+{"sku": "500364", "type": "rebaja", "title": "Yardsmith Juego de Boquillas con Mango Antideslizante 7 Piezas", "from": 2599, "to": 1977, "delta": -622, "pct": -23.9, "date": "2026-10-10"}
+{"sku": "503919-0737839657548", "type": "rebaja", "title": "Greenmade Maceta para Plantas 55.8 cm / 22\"", "from": 2799, "to": 1977, "delta": -822, "pct": -29.4, "date": "2026-10-10"}
+{"sku": "503511", "type": "rebaja", "title": "Juego de Sala para Exterior con Estructura Metálica Resistente 3 Piezas", "from": 29977, "to": 19977, "delta": -10000, "pct": -33.4, "date": "2026-10-10"}
+{"sku": "492667", "type": "subio", "title": "Artika Luces LED Solares en Cadena 20 Bombillos 12. 8 m / 42 ft", "from": 3799, "to": 3999, "delta": 200, "pct": 5.3, "date": "2026-10-10"}
+{"sku": "494055", "type": "rebaja", "title": "Globe Bombillos LED con Batería de Respaldo 6 Unidades + 2 Adaptadores", "from": 1899, "to": 1477, "delta": -422, "pct": -22.2, "date": "2026-10-10"}
+{"sku": "494577", "type": "rebaja", "title": "Powerbuilt Set de Pintura HVLP con Regulador de Aire y Accesorios 23 Piezas", "from": 4977, "to": 3977, "delta": -1000, "pct": -20.1, "date": "2026-10-10"}
+{"sku": "501569", "type": "rebaja", "title": "Wattbricks Energy Estación de Energía Portátil 120 W H100B", "from": 7499, "to": 5977, "delta": -1522, "pct": -20.3, "date": "2026-10-10"}
+{"sku": "500820", "type": "rebaja", "title": "Iris Contenedor Apilable para Uso Pesado 78.44 cm x 40.34 cm x 36.83 cm / 30.88\" x 15.88\" x 14.5\"", "from": 1799, "to": 1477, "delta": -322, "pct": -17.9, "date": "2026-10-10"}
+{"sku": "500388", "type": "rebaja", "title": "Feit Electric Lampara de Techo LED Panel Plano 35.5 cm / 14\"", "from": 1777, "to": 1277, "delta": -500, "pct": -28.1, "date": "2026-10-10"}
+{"sku": "513589", "type": "rebaja", "title": "Greenmade Set de Cajas Contenedoras Transparentes con Tapa 3 Unidades", "from": 5799, "to": 4977, "delta": -822, "pct": -14.2, "date": "2026-10-10"}
+{"sku": "499617", "type": "rebaja", "title": "Stylecraft Juego de Lámparas de Pie y para Mesa 2 Piezas", "from": 7999, "to": 5977, "delta": -2022, "pct": -25.3, "date": "2026-10-10"}
+{"sku": "521674", "type": "rebaja", "title": "Suavitel Suavizante Acondicionador de Telas Momentos Mágicos 8 L", "from": 2149, "to": 1899, "delta": -250, "pct": -11.6, "date": "2026-10-10"}
+{"sku": "485718", "type": "nuevo", "title": "Lysol Desinfectante de Ropa 0 % Cloro 4.43 L / 150 oz ", "price": 1999, "date": "2026-10-10"}
+{"sku": "465011-0797786175519", "type": "rebaja", "title": "Mohawk Home Tapete de Exteriores 1.8 m x 2.4 m / 6' x  8'", "from": 2177, "to": 1677, "delta": -500, "pct": -23.0, "date": "2026-10-10"}
+{"sku": "502699-0193595004345", "type": "rebaja", "title": "The Mod Greenhouse Planta Decorativa de Piso en Maceta de Cerámica", "from": 3799, "to": 2977, "delta": -822, "pct": -21.6, "date": "2026-10-10"}
+{"sku": "496047-0196557464034", "type": "nuevo", "title": "Manna Termo para Bebida en Acero Inoxidable 2 Unidades / 1.18 L / 40 oz", "price": 2899, "date": "2026-10-10"}
+{"sku": "492780-0752760036583", "type": "rebaja", "title": "BAUM Carrito Multiusos con Cestas de Almacenamiento y Ruedas Giratorias 3 Niveles", "from": 4299, "to": 3277, "delta": -1022, "pct": -23.8, "date": "2026-10-10"}
+{"sku": "498548-0840372305743", "type": "rebaja", "title": "Aura LED Lámparas de Mesa LED Recargables con Control Táctil 2 Unidades", "from": 2477, "to": 1477, "delta": -1000, "pct": -40.4, "date": "2026-10-10"}
+{"sku": "503045-0810151389677", "type": "agotado", "title": "Caro Home Toallas de Mano Bordadas 2 Unidades / 45 cm x 71 cm / 18\" x 28\"", "price": 799, "date": "2026-10-10"}
+{"sku": "513745", "type": "rebaja", "title": "Make It Real Set de Manualidades para Crear Pulseras 3 118 Piezas", "from": 1999, "to": 1777, "delta": -222, "pct": -11.1, "date": "2026-10-10"}
+{"sku": "507788", "type": "rebaja", "title": "Red Bull/Ferrari Circuito de Carreras con Control Remoto", "from": 7977, "to": 6977, "delta": -1000, "pct": -12.5, "date": "2026-10-10"}
+{"sku": "506438", "type": "rebaja", "title": "Robo Alive Juego de Acuario Interactivo de Peces Activado con Agua y Luz 15 Piezas", "from": 5999, "to": 3977, "delta": -2022, "pct": -33.7, "date": "2026-10-10"}
+{"sku": "513766", "type": "rebaja", "title": "Robo Alive Juguete de Arañas y Serpiente con Movimiento", "from": 2799, "to": 1977, "delta": -822, "pct": -29.4, "date": "2026-10-10"}
+{"sku": "509155-0062243492370", "type": "rebaja", "title": "Our Generation Casa de Juegos para Mascota de Peluche", "from": 2699, "to": 1977, "delta": -722, "pct": -26.8, "date": "2026-10-10"}
+{"sku": "509930-0719856543547", "type": "rebaja", "title": "Goffa Peluche de Cachorro de Felpa con Acabado Suave", "from": 1199, "to": 777, "delta": -422, "pct": -35.2, "date": "2026-10-10"}
+{"sku": "446891", "type": "nuevo", "title": "Erdinger Oktoberfest Cervezas Alemanas en Botella 12 Unidades / 500 mL", "price": 4299, "date": "2026-10-10"}
+{"sku": "526863", "type": "nuevo", "title": "Bayreuther Hell Cerveza Alemana Premium Pilsner 6 Unidades / 500 mL", "price": 2299, "date": "2026-10-10"}
+{"sku": "500416", "type": "reaparecio", "title": "Chefman Horno Microondas de 31 L / 8.18 gal", "price": 13499, "prev_price": 13499, "days_out": null, "date": "2026-10-10"}
+{"sku": "522590", "type": "reaparecio", "title": "Mabe Vitrina Refrigerada 416 L ALASKAVIT416CEG", "price": 64999, "prev_price": 64999, "days_out": null, "date": "2026-10-10"}
+{"sku": "503815", "type": "agotado", "title": "ComfortStar Aire Acondicionado 18 000 BTU 19 Seer CT3218CD", "price": 49999, "date": "2026-10-10"}
+{"sku": "491614-0885478187824", "type": "agotado", "title": "Black Bow Pantie de Encaje para Mujer 5 Unidades", "price": 1599, "date": "2026-10-10"}
+{"sku": "499559", "type": "rebaja", "title": "Northridge Home Sofá Seccional Fijo Color Marrón", "from": 109999, "to": 89977, "delta": -20022, "pct": -18.2, "date": "2026-10-10"}
+{"sku": "505184", "type": "rebaja", "title": "Stakmore Set de Comedor y Sillas Plegable para Niños 3 Piezas", "from": 11999, "to": 9977, "delta": -2022, "pct": -16.9, "date": "2026-10-10"}
+{"sku": "498308-0017641302684", "type": "rebaja", "title": "Seville Baúl Otomano Tapizado de Almacenamiento y Reposapiés 71.12 cm x 38.1 cm x 38.1 cm / 28\" x 15\" x 15\"", "from": 3299, "to": 2477, "delta": -822, "pct": -24.9, "date": "2026-10-10"}
+{"sku": "484937", "type": "rebaja", "title": "Flair Sillón Gris Reclinable ", "from": 29999, "to": 19977, "delta": -10022, "pct": -33.4, "date": "2026-10-10"}
+{"sku": "488999", "type": "rebaja", "title": "Urban Home Organizador en Acrílico Multiusos ", "from": 2999, "to": 1977, "delta": -1022, "pct": -34.1, "date": "2026-10-10"}
+{"sku": "339810", "type": "nuevo", "title": "Acuvue Oasys Lentes de Contacto Oasys Esférico 6 Unidades / -0.75", "price": 6499, "date": "2026-10-10"}
+{"sku": "521079", "type": "rebaja", "title": "Palmolive Naturals Jabón de Baño en Barra Surtidos 12 Unidades / 100 g / 3.5 oz", "from": 749, "to": 649, "delta": -100, "pct": -13.4, "date": "2026-10-10"}
+{"sku": "436684", "type": "salio_del_catalogo", "title": "A-iPower Generador Portátil 12 kW / 9 kW", "price": 82999, "date": "2026-10-10"}
+{"sku": "496047-0196557321245", "type": "salio_del_catalogo", "title": "Manna Termo para Bebida en Acero Inoxidable 2 Unidades / 1.18 L / 40 oz", "price": 2899, "date": "2026-10-10"}
+{"sku": "104016", "type": "club_volvio", "title": "Lechuga Escarola Verde 2 Unidades", "price": 299, "club": "Santa Elena", "prev_date": "2026-10-09", "date": "2026-10-10"}
+{"sku": "104016", "type": "club_volvio", "title": "Lechuga Escarola Verde 2 Unidades", "price": 299, "club": "El Salvador", "prev_date": "2026-10-09", "date": "2026-10-10"}
+{"sku": "104016", "type": "club_volvio", "title": "Lechuga Escarola Verde 2 Unidades", "price": 299, "club": "San Miguel", "prev_date": "2026-10-09", "date": "2026-10-10"}
+{"sku": "259017", "type": "club_volvio", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "club": "Santa Elena", "prev_date": "2026-10-09", "date": "2026-10-10"}
+{"sku": "259017", "type": "club_volvio", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "club": "Santa Ana", "prev_date": "2026-10-09", "date": "2026-10-10"}
+{"sku": "259017", "type": "club_volvio", "title": "Cascada Soda Sabores Surtidos 24 Unidades / 355 mL / 12 oz", "price": 549, "club": "El Salvador", "prev_date": "2026-10-09", "date": "2026-10-10"}
+{"sku": "495264", "type": "se_agota", "title": "L'Oréal Glycolic bright Kit Antimanchas Serum 30 mL + Crema día 50 mL", "price": 2777, "club": "Los Héroes", "qty_from": 5, "qty_to": 2, "prev_date": "2026-10-09", "date": "2026-10-10"}
+{"sku": "497237", "type": "club_volvio", "title": "Member's Selection Pollo Fresco Empacado al Vacío", "price": 1032, "club": "Santa Ana", "prev_date": "2026-10-09", "date": "2026-10-10"}
