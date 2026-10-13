@@ -2642,3 +2642,47 @@
 {"sku": "468164", "type": "se_agota", "title": "Coffee Mate Crema de Café Italiano Dulce 1.89 L / 64 oz", "price": 979, "club": "El Salvador", "qty_from": 54, "qty_to": 17, "prev_date": "2026-10-11", "date": "2026-10-12"}
 {"sku": "468164", "type": "club_agotado", "title": "Coffee Mate Crema de Café Italiano Dulce 1.89 L / 64 oz", "price": 979, "club": "Los Héroes", "prev_date": "2026-10-11", "date": "2026-10-12"}
 {"sku": "468164", "type": "se_agota", "title": "Coffee Mate Crema de Café Italiano Dulce 1.89 L / 64 oz", "price": 979, "club": "San Miguel", "qty_from": 32, "qty_to": 17, "prev_date": "2026-10-11", "date": "2026-10-12"}
+{"sku": "507420", "type": "subio", "title": "Uva Verde Sin Semilla 907 g / 2 lb", "from": 529, "to": 599, "delta": 70, "pct": 13.2, "date": "2026-10-13"}
+{"sku": "521071", "type": "rebaja", "title": "Tosh Barras de Cereal Sabor a Crema de Maní 30 Unidades", "from": 1429, "to": 1239, "delta": -190, "pct": -13.3, "date": "2026-10-13"}
+{"sku": "475668", "type": "reaparecio", "title": "Belgioioso Queso Ricotta con Leche Entera 453 g / 1 lb", "price": 499, "prev_price": 499, "days_out": 4, "date": "2026-10-13"}
+{"sku": "526178", "type": "nuevo", "title": "Manzana Lucy Rose 907 g / 2 lb", "price": 699, "date": "2026-10-13"}
+{"sku": "750848", "type": "subio", "title": "Filete de Lomo Striploin Fresco Bandeja", "from": 2478, "to": 2575, "delta": 97, "pct": 3.9, "date": "2026-10-13"}
+{"sku": "273596", "type": "subio", "title": "Shaka Laka Bebida de Leche Saborizada 24 Unidades / 200 mL / 6.7 oz", "from": 969, "to": 1029, "delta": 60, "pct": 6.2, "date": "2026-10-13"}
+{"sku": "452083", "type": "reaparecio", "title": "Pepsi Soda Regular 24 Unidades / 355 mL / 12 oz", "price": 779, "prev_price": 779, "days_out": 4, "date": "2026-10-13"}
+{"sku": "367252", "type": "reaparecio", "title": "Express Lechuga Hidropónica 340 g / 12 oz", "price": 529, "prev_price": 529, "days_out": 3, "date": "2026-10-13"}
+{"sku": "750841", "type": "subio", "title": "Filete de Ribeye / Ojo de Bife Fresco Empacado al Vacío", "from": 33725, "to": 35347, "delta": 1622, "pct": 4.8, "date": "2026-10-13"}
+{"sku": "484911", "type": "nuevo", "title": "Calabaza Halloween Fresca", "price": 1399, "date": "2026-10-13"}
+{"sku": "341786", "type": "subio", "title": "Pierna de Cerdo Congelada Importada Rebanada", "from": 994, "to": 1004, "delta": 10, "pct": 1.0, "date": "2026-10-13"}
+{"sku": "504417", "type": "subio", "title": "Macesa Lomo Rollizo de Res Congelado Empacado al Vacío", "from": 4647, "to": 4839, "delta": 192, "pct": 4.1, "date": "2026-10-13"}
+{"sku": "258813", "type": "reaparecio", "title": "La Canasta Bebida en Polvo Refresco Rosa de Jamaica 908 g", "price": 749, "prev_price": 749, "days_out": null, "date": "2026-10-13"}
+{"sku": "515901", "type": "nuevo", "title": "Sugarbee Manzana Fresca 907 g / 2 lb", "price": 699, "date": "2026-10-13"}
+{"sku": "781060", "type": "agotado", "title": "Member's Selection Mayonesa Cremosa con Sabor Natural 3.78 L / 128 oz", "price": 1449, "date": "2026-10-13"}
+{"sku": "465641", "type": "agotado", "title": "Dos Pinos Leche Deslactosada y Descremada 12 Unidades 946 mL / 31.98 oz", "price": 2289, "date": "2026-10-13"}
+{"sku": "521680", "type": "agotado", "title": "Lucky Charms Cereal Sabor Chocolate con Malvaviscos 1 kg", "price": 799, "date": "2026-10-13"}
+{"sku": "522190", "type": "agotado", "title": "Dr Juice Bebida de Rosa de Jamaica 2 Unidades / 145 L / 49 oz", "price": 877, "date": "2026-10-13"}
+{"sku": "522190", "type": "rebaja", "title": "Dr Juice Bebida de Rosa de Jamaica 2 Unidades / 145 L / 49 oz", "from": 1049, "to": 877, "delta": -172, "pct": -16.4, "date": "2026-10-13"}
+{"sku": "522188", "type": "agotado", "title": "J&E Queso Gouda Ahumado en Cubos 340 g / 12 oz", "price": 1079, "date": "2026-10-13"}
+{"sku": "523985", "type": "rebaja", "title": "J&E Queso con Chiles Jalapeños 340 g / 12 oz", "from": 729, "to": 377, "delta": -352, "pct": -48.3, "date": "2026-10-13"}
+{"sku": "469547", "type": "reaparecio", "title": "Cooper Llanta 235/60R18 Evolution Sport", "price": 13699, "prev_price": 13699, "days_out": 7, "date": "2026-10-13"}
+{"sku": "524539", "type": "nuevo", "title": "HP 39.6 cm / 15.6\" Pulgadas Laptop Ryzen 7 8 Gigabytes / 512 Gigabytes 15-FC0287LA + Antivirus ESET", "price": 77999, "date": "2026-10-13"}
+{"sku": "514220", "type": "reaparecio", "title": "Xiaomi Patineta Eléctrica Elite ", "price": 35999, "prev_price": 35999, "days_out": null, "date": "2026-10-13"}
+{"sku": "3364", "type": "reaparecio", "title": "Lasko Wind Machine Ventilador de Piso 50 cm / 20\"", "price": 5499, "prev_price": 5499, "days_out": null, "date": "2026-10-13"}
+{"sku": "521152", "type": "reaparecio", "title": "Xiaomi Cafetera Espresso de Acero Inoxidable con Espumador de Leche CME003-US", "price": 11799, "prev_price": 11799, "days_out": null, "date": "2026-10-13"}
+{"sku": "522693", "type": "reaparecio", "title": "Xiaomi Aspiradora Robot Vacuum E5 C108", "price": 10499, "prev_price": 10499, "days_out": null, "date": "2026-10-13"}
+{"sku": "521156", "type": "reaparecio", "title": "Xiaomi Redmi Audífonos Inalámbricos Buds 8 Lite", "price": 1999, "prev_price": 1999, "days_out": null, "date": "2026-10-13"}
+{"sku": "522605", "type": "reaparecio", "title": "Xiaomi Sound Outdoor Altavoz Portátil MDZ-38-DB", "price": 4899, "prev_price": 4899, "days_out": null, "date": "2026-10-13"}
+{"sku": "498421", "type": "nuevo", "title": "JVC 81 cm / 32\" Pulgadas Smart Google HD TV Multi H2 Series LT-32KM158", "price": 12499, "date": "2026-10-13"}
+{"sku": "512983", "type": "reaparecio", "title": "Juego de Comedor para Exteriores en Madera de Eucalipto 7 Piezas", "price": 119999, "prev_price": 119999, "days_out": null, "date": "2026-10-13"}
+{"sku": "362232", "type": "reaparecio", "title": "Termogreen Vasos Desechables de Espuma 200 Unidades / 295 mL / 10 oz", "price": 719, "prev_price": 719, "days_out": 2, "date": "2026-10-13"}
+{"sku": "508080", "type": "agotado", "title": "Chinet Platos Desechables de Plástico 85 Unidades / 26 cm / 10.2\"", "price": 1749, "date": "2026-10-13"}
+{"sku": "506336-0032281800987", "type": "agotado", "title": "Disney & Marvel Almohada Corporal Infantil 46 x 91 cm / 18\" x 36\"", "price": 1799, "date": "2026-10-13"}
+{"sku": "515266-0060204064208", "type": "agotado", "title": "S.C. and Co. Pantalón Formal con Control de Abdomen sin Cremallera para Mujer", "price": 1999, "date": "2026-10-13"}
+{"sku": "463691", "type": "subio", "title": "Escritorio de Altura Ajustable", "from": 28999, "to": 31999, "delta": 3000, "pct": 10.3, "date": "2026-10-13"}
+{"sku": "339839", "type": "agotado", "title": "Acuvue Oasys -3.50 Lentes de Contacto 6 Unidades", "price": 6499, "date": "2026-10-13"}
+{"sku": "525998", "type": "subio", "title": "Pozuelo Pastel Navideño Relleno de Crema con Especias 3 Unidades", "from": 679, "to": 699, "delta": 20, "pct": 2.9, "date": "2026-10-13"}
+{"sku": "379212", "type": "subio", "title": "Pozuelo Galletas Navideñas Surtidas 3 Unidades / 366 g", "from": 1109, "to": 1129, "delta": 20, "pct": 1.8, "date": "2026-10-13"}
+{"sku": "466276", "type": "salio_del_catalogo", "title": "Just About Foods Mango Deshidratado Orgánico 15 Unidades / 28.35 g / 0.89 oz          ", "price": 1199, "date": "2026-10-13"}
+{"sku": "473254", "type": "salio_del_catalogo", "title": "Kumho Llanta 195/50R16 Solus TA51a", "price": 12777, "date": "2026-10-13"}
+{"sku": "506362", "type": "salio_del_catalogo", "title": "Pocket Juice Batería Portátil con Cable Extensible 2 Unidades", "price": 1777, "date": "2026-10-13"}
+{"sku": "511887-0191730881523", "type": "salio_del_catalogo", "title": "FIFA Balon de Fútbol Copa Mundial Tamaño 5", "price": 2699, "date": "2026-10-13"}
+{"sku": "509930-0719856543547", "type": "salio_del_catalogo", "title": "Goffa Peluche de Cachorro de Felpa con Acabado Suave", "price": 777, "date": "2026-10-13"}
