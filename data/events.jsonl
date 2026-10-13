@@ -2686,3 +2686,36 @@
 {"sku": "506362", "type": "salio_del_catalogo", "title": "Pocket Juice Batería Portátil con Cable Extensible 2 Unidades", "price": 1777, "date": "2026-10-13"}
 {"sku": "511887-0191730881523", "type": "salio_del_catalogo", "title": "FIFA Balon de Fútbol Copa Mundial Tamaño 5", "price": 2699, "date": "2026-10-13"}
 {"sku": "509930-0719856543547", "type": "salio_del_catalogo", "title": "Goffa Peluche de Cachorro de Felpa con Acabado Suave", "price": 777, "date": "2026-10-13"}
+{"sku": "1019", "type": "se_agota", "title": "1019", "price": null, "club": "Los Héroes", "qty_from": 69, "qty_to": 29, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "240158", "type": "club_agotado", "title": "Member's Selection Bolsas de Plástico con Cierre 4 Unidades / 50 Bolsas / 27 cm x 28.5 cm / 10.6\" x 11.2\"", "price": 1999, "club": "San Miguel", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "244383", "type": "club_agotado", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "Santa Elena", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "244383", "type": "se_agota", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "El Salvador", "qty_from": 62, "qty_to": 18, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "244383", "type": "club_agotado", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "Los Héroes", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "244383", "type": "se_agota", "title": "Camote Dulce 2.2 kg / 5 lb", "price": 1199, "club": "San Miguel", "qty_from": 9, "qty_to": 4, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "245214", "type": "se_agota", "title": "Uva Red Globe 907 g / 2 lb", "price": 699, "club": "San Miguel", "qty_from": 31, "qty_to": 14, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "258130", "type": "se_agota", "title": "Breakstone's Queso Cottage 680 g / 1.5 lb", "price": 599, "club": "Santa Elena", "qty_from": 144, "qty_to": 64, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "296415", "type": "se_agota", "title": "24 Siete Ice Pops Sabores Surtidos 48 Unidades / 85 mL / 2.87 oz", "price": 629, "club": "Santa Ana", "qty_from": 128, "qty_to": 41, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "296415", "type": "se_agota", "title": "24 Siete Ice Pops Sabores Surtidos 48 Unidades / 85 mL / 2.87 oz", "price": 629, "club": "El Salvador", "qty_from": 128, "qty_to": 41, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "299550", "type": "se_agota", "title": "Salutaris Surtida 24 Unidades / 355 mL / 12 oz", "price": 1259, "club": "Santa Elena", "qty_from": 128, "qty_to": 37, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "299550", "type": "club_agotado", "title": "Salutaris Surtida 24 Unidades / 355 mL / 12 oz", "price": 1259, "club": "Los Héroes", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "301760", "type": "club_agotado", "title": "Cascada Mini Soda Surtida 24 Unidades / 192 mL / 6.5 oz ", "price": 329, "club": "Santa Ana", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "301760", "type": "club_volvio", "title": "Cascada Mini Soda Surtida 24 Unidades / 192 mL / 6.5 oz ", "price": 329, "club": "San Miguel", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "308581", "type": "club_volvio", "title": "Light and Fit Yogur sin Grasa 12 Unidades / 113 g / 4 oz", "price": 729, "club": "Santa Elena", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "347261", "type": "club_agotado", "title": "Member's Selection Pasta Penne 4 Unidades / 454 g / 16 oz", "price": 829, "club": "Santa Elena", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "347361-0034054187318", "type": "se_agota", "title": "Sound N Light Mascotas de Juguete para Caminar con Movimiento", "price": 1599, "club": "Los Héroes", "qty_from": 9, "qty_to": 2, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "387421", "type": "club_agotado", "title": "Lifetime Mesa Plegable de 73 cm x 183 cm x 76 cm / 29\" x 72\" x 30\"", "price": 6999, "club": "Santa Elena", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "388857", "type": "se_agota", "title": "Kirkland Vitarain Zero Bebida Enriquecida con Vitaminas 24 Unidades / 591 mL / 20 oz", "price": 1899, "club": "Los Héroes", "qty_from": 35, "qty_to": 21, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "43546", "type": "se_agota", "title": "Member's Selection Papa Francesa Congelada Corte Recto para Freír 10 kg / 22 lb", "price": 2029, "club": "Los Héroes", "qty_from": 260, "qty_to": 131, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "43569", "type": "club_agotado", "title": "Member's Selection Arandanos 1.36 kg / 3 lb", "price": 1349, "club": "Santa Elena", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "43569", "type": "club_agotado", "title": "Member's Selection Arandanos 1.36 kg / 3 lb", "price": 1349, "club": "Los Héroes", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "452083", "type": "club_volvio", "title": "Pepsi Soda Regular 24 Unidades / 355 mL / 12 oz", "price": 779, "club": "Santa Elena", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "452083", "type": "club_volvio", "title": "Pepsi Soda Regular 24 Unidades / 355 mL / 12 oz", "price": 779, "club": "Santa Ana", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "452083", "type": "club_volvio", "title": "Pepsi Soda Regular 24 Unidades / 355 mL / 12 oz", "price": 779, "club": "El Salvador", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "452083", "type": "club_volvio", "title": "Pepsi Soda Regular 24 Unidades / 355 mL / 12 oz", "price": 779, "club": "San Miguel", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "467384", "type": "se_agota", "title": "NO! Break Contenedores de Plástico 3 Unidades / 41 L / 11 gal", "price": 2799, "club": "Santa Elena", "qty_from": 19, "qty_to": 8, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "468164", "type": "club_volvio", "title": "Coffee Mate Crema de Café Italiano Dulce 1.89 L / 64 oz", "price": 979, "club": "Santa Elena", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "468164", "type": "club_volvio", "title": "Coffee Mate Crema de Café Italiano Dulce 1.89 L / 64 oz", "price": 979, "club": "Santa Ana", "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "468164", "type": "se_agota", "title": "Coffee Mate Crema de Café Italiano Dulce 1.89 L / 64 oz", "price": 979, "club": "San Miguel", "qty_from": 17, "qty_to": 8, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "471241", "type": "se_agota", "title": "Cebolla Morada Fresca 2.2 kg / 5 lb", "price": 899, "club": "San Miguel", "qty_from": 23, "qty_to": 12, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "473757", "type": "se_agota", "title": "Serta Base de Colchón Queen Comfortcare 152 cm x 199 cm x 22.9 cm / 59.84\" × 78.35\" × 9.02\"", "price": 10999, "club": "Santa Elena", "qty_from": 5, "qty_to": 2, "prev_date": "2026-10-12", "date": "2026-10-13"}
+{"sku": "615230", "type": "se_agota", "title": "Wesson Aceite Vegetal de Soya 4.73 L / 160 oz", "price": 1439, "club": "Los Héroes", "qty_from": 82, "qty_to": 38, "prev_date": "2026-10-12", "date": "2026-10-13"}
