@@ -11,3 +11,9 @@ data/snapshots/
 data/siman_snapshots/
 data/events.jsonl
 data/siman_events.jsonl
+
+# Outputs del build: build_site.py los regenera en cada corrida y el
+# sitio se publica como artefacto de Pages — no viven en git.
+docs/index.html
+docs/data.json
+docs/version.json
