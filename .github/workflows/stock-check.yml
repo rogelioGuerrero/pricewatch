@@ -25,6 +25,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          # shallow pero con fondo: el bootstrap necesita git log para
+          # rescatar data/*.jsonl del ultimo commit que los tuvo
+          fetch-depth: 25
 
       - name: Restore data cache (db + snapshots + logs viven fuera de git)
         uses: actions/cache/restore@v4
