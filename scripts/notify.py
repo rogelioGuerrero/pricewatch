@@ -410,7 +410,10 @@ def siman_gangas(events, sitems=None):
         pt = rule.split("|")
         if len(pt) < 2:
             return rule == tk
-        if pt[0] == str(it.get("pid") or "") or pt[1] == tk:
+        # segmentos vacios no matchean ("" == "" daria positivo con un
+        # item sin pid ante una regla malformada "|tkey|hash")
+        if (pt[0] and pt[0] == str(it.get("pid") or "")) \
+                or (pt[1] and pt[1] == tk):
             return True
         ih = it.get("imghash")
         hs = pt[2] if len(pt) > 2 else ""
