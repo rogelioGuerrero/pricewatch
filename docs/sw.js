@@ -1,8 +1,13 @@
 // PriceWatch SV — navegación network-first (abrir la app trae la
 // versión fresca); sin señal cae al último snapshot cacheado.
-const CACHE = "pricewatch-v23";
+const CACHE = "pricewatch-v24";
+// shell completa precacheada: si el SW se actualiza y el usuario abre
+// offline antes de navegar online, los js/css ya estan en el cache
+// nuevo (antes solo sobrevivian si ya se habian pedido)
 const CORE = ["./", "./index.html", "./manifest.webmanifest",
-             "./data.json"];
+             "./data.json", "./styles.css",
+             "./js/state.js", "./js/siman.js", "./js/sync.js",
+             "./js/render.js", "./js/app.js"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c =>

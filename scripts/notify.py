@@ -23,6 +23,7 @@ Env:
 
 import json
 import os
+import re
 import sqlite3
 import statistics
 import sys
@@ -32,10 +33,10 @@ from html import escape as hesc
 
 if hasattr(sys.stdout, "reconfigure"):   # consolas cp1252 (Windows)
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-from datetime import datetime, timedelta, timezone
-from urllib.error import HTTPError
+from datetime import date, datetime, timedelta, timezone
 from urllib.parse import quote
-from urllib.request import Request, urlopen
+
+import requests
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -52,12 +53,28 @@ AW_DB = "pricewatch"
 SITE = os.environ.get("SITE_URL",
                       "https://rogelioguerrero.github.io/pricewatch/")
 TODAY = datetime.now(timezone(timedelta(hours=-6))).date().isoformat()
+
+# una sola sesion HTTP: keep-alive TLS + gzip automatico (urllib abria
+# una conexion nueva y bajaba sin comprimir en cada request)
+SESSION = requests.Session()
 FRESH_DAYS = 30          # ganga "al minimo" vence a los 30d sin moverse
 BIG_DROP = -30.0         # rebaja silenciosa >=30% amerita push
 
 
 def money(c):
     return "—" if c is None else f"${c / 100:.2f}"
+
+
+def _talla_hit(vname, talla):
+    """Misma regla que sweep_siman.talla_hit: la variante corresponde a
+    la talla pedida? Solo match de token exacto (11 != 110)."""
+    if not talla:
+        return True
+    v = (vname or "").upper()
+    v = re.sub(r"(?<=\d)[Xx](?=\d)", " ", v)
+    v = re.sub(r"[:/\-_,]", " ", v)
+    t = str(talla).upper()
+    return re.search(rf"(?<![0-9A-Z]){re.escape(t)}(?![0-9A-Z])", v) is not None
 
 
 def tkey(s):
@@ -76,21 +93,17 @@ UA = {"User-Agent": "PriceWatch-Notify/1.0 (+github-actions)"}
 def aw(method, path, body=None):
     if not (AW_EP and AW_PID and AW_KEY):
         return {}, 0
-    req = Request(f"{AW_EP}{path}", method=method,
-                  data=json.dumps(body).encode() if body is not None else None,
-                  headers={"content-type": "application/json",
-                           "X-Appwrite-Project": AW_PID,
-                           "X-Appwrite-Key": AW_KEY, **UA})
     try:
-        with urlopen(req, timeout=20) as r:
-            return json.loads(r.read() or b"{}"), r.status
-    except HTTPError as e:
-        try:
-            return json.loads(e.read() or b"{}"), e.code
-        except json.JSONDecodeError:
-            return {}, e.code
+        r = SESSION.request(method, f"{AW_EP}{path}", json=body,
+                            headers={"X-Appwrite-Project": AW_PID,
+                                     "X-Appwrite-Key": AW_KEY, **UA},
+                            timeout=20)
     except Exception:
         return {}, 0
+    try:
+        return r.json() or {}, r.status_code
+    except ValueError:
+        return {}, r.status_code
 
 
 def aw_rows(table):
@@ -101,12 +114,14 @@ def aw_rows(table):
 
 
 def aw_health():
-    """True si Appwrite no responde bien con creds (pausada por
-    inactividad o caida). Sin creds es corrida local: no aplica."""
+    """(caido, ids_de_tablas): el GET de tablas ya devuelve la lista —
+    reusarla ahorra un GET por tabla a los ensure_*_table."""
     if not (AW_EP and AW_PID and AW_KEY):
-        return False
-    _, code = aw("GET", f"/tablesdb/{AW_DB}/tables")
-    return code != 200
+        return False, set()
+    res, code = aw("GET", f"/tablesdb/{AW_DB}/tables")
+    ids = {t.get("$id") or t.get("tableId") or t.get("id")
+           for t in res.get("tables", [])}
+    return code != 200, {i for i in ids if i}
 
 
 # consola del proyecto (region va embebida en el endpoint: sfo.cloud...)
@@ -114,8 +129,10 @@ AW_CONSOLE = ("https://cloud.appwrite.io/console/project-"
               + AW_EP.split("//")[-1].split(".")[0] + "-" + AW_PID)
 
 
-def ensure_push_table():
+def ensure_push_table(known=None):
     """Crea push_subs si falta — el correo/digest no depende de ella."""
+    if known is not None and "push_subs" in known:
+        return
     _, code = aw("GET", f"/tablesdb/{AW_DB}/tables/push_subs")
     if code == 200:
         return
@@ -146,8 +163,10 @@ def ensure_push_table():
     print("  + push_subs lista")
 
 
-def ensure_targets_table():
+def ensure_targets_table(known=None):
     """Crea targets si falta — el sync del PWA escribe directo ahi."""
+    if known is not None and "targets" in known:
+        return
     _, code = aw("GET", f"/tablesdb/{AW_DB}/tables/targets")
     if code == 200:
         return
@@ -173,7 +192,7 @@ def ensure_targets_table():
     print("  + targets lista")
 
 
-def ensure_siman_tables():
+def ensure_siman_tables(known=None):
     """Crea siman_watch/muted/seen si faltan — el sync del PWA las usa
     directo desde el navegador; sin ellas el sync pegaba 404 en loop."""
     spec = [
@@ -189,6 +208,8 @@ def ensure_siman_tables():
           ("string", {"key": "date", "size": 10, "required": True})]),
     ]
     for t, name, cols in spec:
+        if known is not None and t in known:
+            continue
         _, code = aw("GET", f"/tablesdb/{AW_DB}/tables/{t}")
         if code == 200:
             continue
@@ -264,7 +285,8 @@ def catalog_state():
             "min": min(prices) if prices else None,
             "max": max(prices) if prices else None,
             "n_ch": len(ch), "last_ch": last["date"] if ch else None,
-            "d_ch": (datetime.now().date() - d_last).days if d_last else None,
+            "d_ch": (date.fromisoformat(TODAY) - d_last).days
+                    if d_last else None,
         }
     # indice del dia: mediana del % de cambio entre las 2 ultimas
     # observaciones por sku — el mismo "indice" del sitio
@@ -367,8 +389,11 @@ def build_alerts(events, cat, favs, paid, tgts):
     return out
 
 
-def siman_gangas(events):
-    """bajos/ofertas de Siman hoy, menos lo muteado/ya visto."""
+def siman_gangas(events, sitems=None):
+    """bajos/ofertas de Siman hoy, menos lo muteado/ya visto y lo que
+    no se puede comprar (variante agotada u otra talla)."""
+    if sitems is None:
+        sitems = siman_items()
     muted = {r["tkey"] for r in aw_rows("siman_muted")}
     seen = {r["tkey"]: r["price"] for r in aw_rows("siman_seen")}
     def hit(rule, tk):
@@ -381,14 +406,26 @@ def siman_gangas(events):
     for e in events:
         if e["type"] not in ("bajo", "oferta"):
             continue
+        it = sitems.get(str(e.get("iid"))) or {}
+        if it and not it.get("avail"):
+            continue   # la variante esta agotada: nada que comprar hoy
+        if it.get("talla") and not _talla_hit(it.get("vname"),
+                                             it["talla"]):
+            continue   # bajo otra talla, no la vigilada
         tk = tkey(e.get("title"))
         if any(hit(r, tk) for r in muted):
             continue
+        # 'bajo' trae from/to (no price) — sin este fallback el filtro
+        # de ya-visto nunca se evaluaba y re-alertaba todos los dias
+        cur_p = e.get("to") if e.get("to") is not None else e.get("price")
         sp = next((p for r, p in seen.items() if hit(r, tk)), None)
-        if sp is not None and e.get("price") and e["price"] >= sp:
+        if sp is not None and cur_p is not None and cur_p >= sp:
             continue
-        # normalizar a centavos (Siman reporta USD; PS reporta cents)
-        for k in ("price", "from", "to"):
+        # copiar antes de escalar a centavos: mutar el evento en sitio
+        # corrompia el dict compartido (Siman USD -> cents de PS).
+        # 'list' tambien se escala: el email lo mostraba como $1.00
+        e = dict(e)
+        for k in ("price", "from", "to", "list"):
             if e.get(k) is not None:
                 e[k] = round(e[k] * 100)
         out.append(e)
@@ -437,17 +474,18 @@ def send_email(subject, html, text):
         print("  ! sin RESEND_API_KEY/RESEND_TO — email omitido")
         return
     # Cloudflare (1010) banea el UA por defecto de urllib; mandar uno propio
-    req = Request("https://api.resend.com/emails", method="POST",
-                  data=json.dumps({"from": frm, "to": to,
-                                   "subject": subject,
-                                   "html": html, "text": text}).encode(),
-                  headers={"Authorization": f"Bearer {key}",
-                           "Content-Type": "application/json", **UA})
     try:
-        with urlopen(req, timeout=30) as r:
-            print(f"  email enviado: {json.loads(r.read()).get('id')}")
-    except HTTPError as e:
-        print(f"  ! Resend HTTP {e.code}: {e.read()[:300]}")
+        r = SESSION.post("https://api.resend.com/emails",
+                         json={"from": frm, "to": to, "subject": subject,
+                               "html": html, "text": text},
+                         headers={"Authorization": f"Bearer {key}", **UA},
+                         timeout=30)
+        if r.ok:
+            print(f"  email enviado: {r.json().get('id')}")
+        else:
+            print(f"  ! Resend HTTP {r.status_code}: {r.text[:300]}")
+    except Exception as e:
+        print(f"  ! Resend fallo: {e}")
 
 
 # ---------------- digest ----------------
@@ -601,7 +639,8 @@ def siman_row(e, items):
     it = items.get(str(e.get("iid"))) or {}
     t = hesc((e.get("title") or it.get("title") or "?").strip())
     link = it.get("link")
-    title = (f"<a href='{link}' style='color:#111;text-decoration:none'>"
+    title = (f"<a href='{hesc(link, quote=True)}' "
+             f"style='color:#111;text-decoration:none'>"
              f"<b>{t}</b> <span style='color:#6b7280'>↗</span></a>"
              if link else f"<b>{t}</b>")
     meta = (f"<span style='font-size:12px;color:#6b7280'>vigilado por "
@@ -728,15 +767,15 @@ def main():
     events = load_events(EVENTS_LOG)
     sevents = load_events(SIMAN_LOG)
     cat, indice = catalog_state()
-    aw_down = aw_health()
+    aw_down, aw_tables = aw_health()
     if aw_down:
         print("  ! Appwrite no responde — DB posiblemente pausada "
               "por inactividad")
     favs = [r["sku"] for r in aw_rows("favs")] if AW_KEY else []
     tgts = {}
     if AW_KEY:
-        ensure_targets_table()
-        ensure_siman_tables()
+        ensure_targets_table(aw_tables)
+        ensure_siman_tables(aw_tables)
         tgts = {str(r["sku"]): r["target"] for r in aw_rows("targets")
                 if r.get("sku") and r.get("target")}
     paid, paid_d = {}, {}
@@ -745,8 +784,10 @@ def main():
             paid[r["sku"]], paid_d[r["sku"]] = r["paid"], r.get("date", "")
 
     a = build_alerts(events, cat, favs, paid, tgts)
-    siman = siman_gangas(sevents)   # aw_rows() devuelve [] sin creds
-    sitems = siman_items()          # foto/link de cada itemId para el mail
+    sitems = siman_items()          # foto/link/avail de cada itemId
+    # sitems ya cargado: el filtro de gangas lo usa para no alertar
+    # variantes agotadas ni tallas ajenas al watch
+    siman = siman_gangas(sevents, sitems)   # aw_rows() -> [] sin creds
     # "casi en objetivo": a <=5% de cruzar el target — anticipa el aviso
     # de mañana en vez de solo reportar los que ya cruzaron
     near_tgt = [{"sku": s, "title": cat[s]["title"], "price": cat[s]["price"],
@@ -788,7 +829,7 @@ def main():
     if siman:
         push_items.append(f"{len(siman)} ganga Siman")
     if push_items and AW_KEY:
-        ensure_push_table()
+        ensure_push_table(aw_tables)
         subs = aw_rows("push_subs")
         print(f"  push -> {len(subs)} subs: {' · '.join(push_items)}")
         send_push(subs, {"title": "PriceWatch",

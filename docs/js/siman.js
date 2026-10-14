@@ -193,7 +193,9 @@ $("#sw-add").onclick = () => {
 $("#siman-watches").onclick = e => {
   const a = e.target.closest("a[data-wq]");
   if (!a) return;
-  const [q, t] = a.dataset.wq.split("|");
+  // split por el ULTIMO "|": la busqueda del usuario puede traer "|"
+  const i = a.dataset.wq.lastIndexOf("|");
+  const q = a.dataset.wq.slice(0, i), t = a.dataset.wq.slice(i + 1);
   SWATCH = SWATCH.filter(w => !(w.q === q && (w.talla||"") === (t||"")));
   saveSWatch();
   if (AW.user) watchDown(q, t);

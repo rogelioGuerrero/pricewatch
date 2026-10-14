@@ -50,14 +50,16 @@ async function syncAll(){
       COMPRAS.push({sku:String(m.sku), paid:m.paid, date:m.date});
   const [rf, rc] = await Promise.all([listAll(COL_F), listAll(COL_C)]);
   const rset = new Set(rf.map(d=>d.sku));
-  for (const s of [...FAV]) if (!rset.has(s)) await favUp(s);
+  // subidas independientes en paralelo: en serie el login tardaba
+  // ~1 request por item; en paralelo es un solo round-trip efectivo
+  await Promise.all([...FAV].filter(s => !rset.has(s)).map(favUp));
   for (const d of rf) FAV.add(d.sku);
   const rmap = {}; rc.forEach(d => rmap[ckey(d)] = d.$id);
-  for (const c of COMPRAS) {
+  await Promise.all(COMPRAS.map(async c => {
     const k = ckey(c);
     if (rmap[k]) c.rid = rmap[k];
     else { const d = await compraUp(c).catch(()=>null); if (d) c.rid = d.$id; }
-  }
+  }));
   for (const d of rc)
     if (!COMPRAS.some(c => ckey(c) === ckey(d)))
       COMPRAS.push({sku:d.sku, paid:d.paid, date:d.date, rid:d.$id});
@@ -80,16 +82,17 @@ async function syncAll(){
     if (!SWATCH.some(x => wKey(x) === wKey(w))) SWATCH.push(w);
   }
   if (Rw.ok)
-    for (const w of SWATCH) if (!rwSet.has(wKey(w))) await watchUp(w);
+    await Promise.all(SWATCH.filter(w => !rwSet.has(wKey(w)))
+      .map(watchUp));
   rm.forEach(d => SMUTE.add(d.tkey));
   rs.forEach(d => { SSEEN[d.tkey] = d.price; });
   const rmSet = new Set(rm.map(d => d.tkey));
   if (Rm.ok)
-    for (const t of SMUTE) if (!rmSet.has(t)) await muteUp(t);
+    await Promise.all([...SMUTE].filter(t => !rmSet.has(t)).map(muteUp));
   const rsSet = new Set(rs.map(d => d.tkey));
   if (Rs.ok)
-    for (const [t, p] of Object.entries(SSEEN))
-      if (!rsSet.has(t)) await seenUp(t, p);
+    await Promise.all(Object.entries(SSEEN)
+      .filter(([t]) => !rsSet.has(t)).map(([t, p]) => seenUp(t, p)));
   // targets: union como favs — baja los de la nube y sube los que solo
   // existen local (fijados sin sesion). La nube gana si difieren.
   const rtSet = {};
@@ -97,8 +100,8 @@ async function syncAll(){
   const localT = {...TARGETS};
   for (const [s, t] of Object.entries(rtSet)) TARGETS[s] = t;
   if (Rt.ok)
-    for (const [s, t] of Object.entries(localT))
-      if (!(s in rtSet)) await tgtSet(s, t);
+    await Promise.all(Object.entries(localT)
+      .filter(([s]) => !(s in rtSet)).map(([s, t]) => tgtSet(s, t)));
   localStorage.setItem("pw-targets", JSON.stringify(TARGETS));
   saveSMute(); saveSSeen(); saveSWatch();
   localStorage.setItem("pw-favs", JSON.stringify([...FAV]));

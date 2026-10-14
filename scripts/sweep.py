@@ -17,7 +17,8 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
-from urllib.request import Request, urlopen
+
+import requests
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "data")
@@ -59,6 +60,12 @@ FIELDS = ["title", "brand", "slug", "thumb_image", "price_SV", "sign_price_SV",
           "original_price_without_saving_SV", "saving_amount_SV",
           "inventory_SV", "availability_SV"]
 
+# una sola sesion para todo el barrido: keep-alive TLS + gzip (el batch
+# de ct/getProduct pesa ~220KB/producto sin comprimir). urllib abria
+# conexion nueva en cada pagina y cada lote de clubes.
+SESSION = requests.Session()
+PS_HEADERS = {"cookie": COOKIE, "accept": "application/json"}
+
 
 def fetch_category(cat_key):
     """Pagina una categoria completa; devuelve docs y el numFound reportado."""
@@ -73,16 +80,13 @@ def fetch_category(cat_key):
             "domain_key": "pricesmart_bloomreach_io_es",
             "fl": FL, "view_id": "SV",
         }]
-        req = Request(API, data=json.dumps(body).encode(),
-                      headers={"content-type": "application/json",
-                               "cookie": COOKIE, "accept": "application/json"})
         try:
-            with urlopen(req, timeout=30) as r:
-                resp = json.loads(r.read())["response"]
+            resp = SESSION.post(API, json=body, headers=PS_HEADERS,
+                                timeout=30).json()["response"]
         except Exception:
             time.sleep(3)
-            with urlopen(req, timeout=30) as r:  # un reintento por pagina
-                resp = json.loads(r.read())["response"]
+            resp = SESSION.post(API, json=body, headers=PS_HEADERS,
+                                timeout=30).json()["response"]  # 1 reintento
         if num_found is None:
             num_found = resp["numFound"]
         docs.extend(resp["docs"])
@@ -358,18 +362,17 @@ def fetch_club_stock(skus, date):
     conn.execute("""CREATE TABLE IF NOT EXISTS club_stock (
         sku TEXT, date TEXT, club TEXT, club_name TEXT,
         in_stock INT, qty INT, PRIMARY KEY (sku, date, club))""")
-    headers = {"content-type": "application/json", "cookie": COOKIE,
-               "accept": "application/json"}
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_club_stock_date "
+                 "ON club_stock(date)")
+    rows = []
     for i in range(0, len(skus), 50):
         batch = skus[i:i + 50]
         body = [{"skus": batch},
                 {"products": "getProductBySKU",
                  "metadata": {"channelId": CHANNEL}}]
         try:
-            req = Request(API_PRODUCT, data=json.dumps(body).encode(),
-                          headers=headers)
-            with urlopen(req, timeout=60) as r:
-                res = json.loads(r.read())["data"]["products"]["results"]
+            res = SESSION.post(API_PRODUCT, json=body, headers=PS_HEADERS,
+                               timeout=60).json()["data"]["products"]["results"]
         except Exception as e:
             print(f"  ! club_stock batch {i}: fallo ({e})")
             continue
@@ -384,11 +387,21 @@ def fetch_club_stock(skus, date):
                     name = (c["channel"].get("nameAllLocales")
                             or [{"value": key}])[0]["value"]
                     a = c["availability"]
-                    conn.execute(
-                        "INSERT OR REPLACE INTO club_stock VALUES (?,?,?,?,?,?)",
-                        (v["sku"], date, key, name,
-                         int(a["isOnStock"]), a["availableQuantity"]))
+                    rows.append((v["sku"], date, key, name,
+                                 int(a["isOnStock"]),
+                                 a["availableQuantity"]))
         time.sleep(SLEEP)
+    conn.executemany(
+        "INSERT OR REPLACE INTO club_stock VALUES (?,?,?,?,?,?)", rows)
+    # poda: club_stock crecia ~2000 filas/dia sin tope. Quedan 90 dias
+    # + las 2 fechas mas recientes (la penultima es la linea base del
+    # diff: sin ella el proximo run no tendria con que comparar)
+    cutoff = (datetime.strptime(date, "%Y-%m-%d").date()
+              - timedelta(days=90)).isoformat()
+    conn.execute(
+        "DELETE FROM club_stock WHERE date < ? AND date NOT IN "
+        "(SELECT DISTINCT date FROM club_stock ORDER BY date DESC LIMIT 2)",
+        (cutoff,))
     conn.commit()
     conn.close()
 
@@ -408,17 +421,19 @@ def record_history(products, date, skip=None):
         conn.execute("ALTER TABLE products ADD COLUMN image TEXT")
     except sqlite3.OperationalError:
         pass  # columna ya existe
-    for sku, p in products.items():
-        if skip and sku in skip:
-            continue
-        conn.execute(
-            "INSERT OR REPLACE INTO prices VALUES (?,?,?,?,?,?)",
-            (sku, date, p.get("price_SV"), p.get("sign_price_SV"),
-             p.get("saving_usd"), int(p.get("inventory_SV") == "in stock")))
-        conn.execute(
-            "INSERT OR REPLACE INTO products VALUES (?,?,?,?,?,?)",
-            (sku, p.get("title"), p.get("brand"), p.get("category"),
-             p.get("slug"), p.get("thumb_image")))
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_prices_date "
+                 "ON prices(date)")
+    items = [(sku, p) for sku, p in products.items()
+             if not (skip and sku in skip)]
+    conn.executemany(
+        "INSERT OR REPLACE INTO prices VALUES (?,?,?,?,?,?)",
+        [(sku, date, p.get("price_SV"), p.get("sign_price_SV"),
+          p.get("saving_usd"), int(p.get("inventory_SV") == "in stock"))
+         for sku, p in items])
+    conn.executemany(
+        "INSERT OR REPLACE INTO products VALUES (?,?,?,?,?,?)",
+        [(sku, p.get("title"), p.get("brand"), p.get("category"),
+          p.get("slug"), p.get("thumb_image")) for sku, p in items])
     conn.commit()
     conn.close()
 
@@ -433,11 +448,11 @@ def favs_remote():
         return set()
     try:
         q = quote('{"method":"limit","values":[500]}')
-        req = Request(f"{ep}/tablesdb/pricewatch/tables/favs/rows"
-                      f"?queries%5B%5D={q}",
-                      headers={"X-Appwrite-Project": pid,
-                               "X-Appwrite-Key": key})
-        rows = json.load(urlopen(req, timeout=15)).get("rows", [])
+        rows = SESSION.get(
+            f"{ep}/tablesdb/pricewatch/tables/favs/rows"
+            f"?queries%5B%5D={q}",
+            headers={"X-Appwrite-Project": pid, "X-Appwrite-Key": key},
+            timeout=15).json().get("rows", [])
         return {str(r.get("sku")) for r in rows if r.get("sku")}
     except Exception as e:
         print(f"  (favs remotos no disponibles: {e})")
@@ -623,24 +638,26 @@ def main():
     if len(events) > 15:
         print(f"  ... y {len(events)-15} mas")
 
-    # Nivel 2: stock por club para lo que importa (ofertas + lista + eventos)
-    if "--dry" not in sys.argv:
-        pri = {s for s, p in cur.items()
-               if (p.get("saving_usd") or 0) > 0} - set(inherited)
-        pri |= favs_remote()
-        rest = {e["sku"] for e in events} - pri
-        skus_ev = _priority_watch(pri, rest, 400)
-        if skus_ev:
-            print(f"Detalle por club para {len(skus_ev)} productos "
-                  "(ofertas + lista + eventos)…")
-            fetch_club_stock(skus_ev, today)
-            club_ev = club_stock_diff(today, skus_ev, cur)
-            if club_ev:
-                print(f"Transiciones por club: {len(club_ev)}")
-                events.extend(club_ev)
-
+    # Los eventos del catalogo entran al log ANTES de calcular
+    # candidatos: stock_candidates lee los eventos de los ultimos 14d
+    # del log, y los de hoy deben estar incluidos
     if events and "--dry" not in sys.argv:
         append_events(events, today)
+
+    # Nivel 2: stock por club de los candidatos (ofertas + lista +
+    # eventos de 14 dias). Un solo fetch: antes el --stock-check de la
+    # tarde repetia esta misma descarga contra la misma fecha base
+    if "--dry" not in sys.argv:
+        cands = stock_candidates(today, cur, favs_remote()) \
+            - set(inherited)
+        if cands:
+            print(f"Detalle por club para {len(cands)} productos "
+                  "(ofertas + lista + eventos recientes)…")
+            fetch_club_stock(cands, today)
+            club_ev = club_stock_diff(today, cands, cur)
+            if club_ev:
+                print(f"Transiciones por club: {len(club_ev)}")
+                append_events(club_ev, today)
 
 
 if __name__ == "__main__":

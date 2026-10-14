@@ -101,10 +101,12 @@ function render(){
     ? NEWSET.has(e) && f(e)
     : ["bajo","subio","oferta_termino","rebaja"].includes(e.type)
       && (cfe==="all" ? true : cfe==="fav" ? FAV.has(e.sku)
-          : cfe==="bajo" ? e.type==="rebaja" : e.type===cfe)
+          : cfe==="bajo" ? (e.type==="bajo"||e.type==="rebaja")
+          : e.type===cfe)
       && f(e)));
   // bajaron/subieron van por magnitud: el Eufy -48% no se entierra bajo -2%s
-  if (cfe === "bajo")  cambios.sort((a,b) => (a.pct??0) - (b.pct??0));
+  if (cfe === "bajo" || cfe === "rebaja")
+    cambios.sort((a,b) => (a.pct??0) - (b.pct??0));
   if (cfe === "subio") cambios.sort((a,b) => (b.pct??0) - (a.pct??0));
   // confesion: cuantos ajustes de catalogo se ocultaron EN ESTA VISTA
   // (mismo alcance del chip activo). Clic = auditoria: los muestra
@@ -113,7 +115,8 @@ function render(){
     ? NEWSET.has(e)
     : ["bajo","subio","oferta_termino","rebaja"].includes(e.type)
       && (cfe==="all" || (cfe==="fav" ? FAV.has(e.sku)
-          : cfe==="bajo" ? e.type==="rebaja" : e.type===cfe))));
+          : cfe==="bajo" ? (e.type==="bajo"||e.type==="rebaja")
+          : e.type===cfe))));
   const nDead = dead.length;
   const deadHtml = SHOW_DEAD ? "<div class='deadzone'>"
     + groupClubs(dead).map(g => card(g[0], g)).join("") + "</div>" : "";
@@ -158,7 +161,9 @@ function render(){
   if (MYCLUB && clubOut.length)
     alerts.push([`${clubOut.length} de tu lista agotado en ${MYCLUB}`,"favs","","clubout"]);
   const nReb = byType("rebaja").filter(e=>!deadPrice(e)).length;
-  if (nReb) alerts.push([`${nReb} rebaja${nReb>1?"s":""} silenciosa${nReb>1?"s":""}`,"cambios","bajo"]);
+  // "rebaja" es un cf dedicado (sin chip propio): el alerta de
+  // silenciosas no debe mezclarse con las bajadas con letrero
+  if (nReb) alerts.push([`${nReb} rebaja${nReb>1?"s":""} silenciosa${nReb>1?"s":""}`,"cambios","rebaja"]);
   const simAl = simanAlerts(), nSiman = simAl.length;
   if (nSiman) alerts.push([`${nSiman} ganga${nSiman>1?"s":""} en Siman`,"siman"]);
   for (const s in TARGETS) {
@@ -334,7 +339,10 @@ function favCard(sku){
       <div class="spark" data-sku="${sku}"></div></div></div>`;
 }
 function sparks(){
-  document.querySelectorAll(".spark").forEach(el => {
+  // solo el panel visible: render() reconstruye los 7 panes en cada
+  // tecla del buscador — pintar sparks de panes ocultos era trabajo
+  // tirado (los panes ocultos se rellenan al cambiar de tab)
+  document.querySelectorAll(".pane.on .spark").forEach(el => {
     const s = D.series[el.dataset.sku]||[];
     if (s.length < 2) return;
     const pts = s.map(p=>p[1]), mn=Math.min(...pts), mx=Math.max(...pts);

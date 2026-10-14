@@ -23,7 +23,7 @@ def types(events):
 # ---------- _move_type ----------
 
 def test_move_type_bajada_con_letrero():
-    assert sweep._move_type(800, 1000, 200) == "bajo"
+    assert sweep._move_type(800, 1000, 2.0) == "bajo"
 
 
 def test_move_type_rebaja_sin_letrero():
@@ -38,8 +38,10 @@ def test_move_type_subio():
 # ---------- diff ----------
 
 def test_diff_bajada_emite_bajo():
-    prev = {"A": prod(1000, saving=200)}
-    cur = {"A": prod(800, saving=400)}
+    # saving_usd viaja en DOLARES (la API lo reporta asi; se escala a
+    # centavos solo al comparar contra precios)
+    prev = {"A": prod(1000, saving=2.0)}
+    cur = {"A": prod(800, saving=4.0)}
     ev = sweep.diff(prev, cur, "2026-10-14")
     assert ("bajo", -20.0) in [(e["type"], e.get("pct")) for e in ev]
 
@@ -103,7 +105,7 @@ def test_diff_salio_del_catalogo():
 def test_diff_oferta_termino_por_reversion():
     """El precio sube hasta el regular (lo que costaba sin letrero):
     no es 'subio', termino la oferta. Un solo evento."""
-    prev = {"A": prod(800, saving=200)}   # regular 1000
+    prev = {"A": prod(800, saving=2.0)}   # regular 1000
     cur = {"A": prod(1000, saving=0)}
     ev = sweep.diff(prev, cur, "2026-10-14")
     assert types(ev) == ["oferta_termino"]
@@ -111,7 +113,7 @@ def test_diff_oferta_termino_por_reversion():
 
 def test_diff_oferta_nueva_mismo_precio():
     prev = {"A": prod(1000, saving=0)}
-    cur = {"A": prod(1000, saving=150)}
+    cur = {"A": prod(1000, saving=1.5)}
     ev = sweep.diff(prev, cur, "2026-10-14")
     assert types(ev) == ["oferta"]
 
@@ -143,3 +145,61 @@ def test_prune_log_sin_archivo_no_falla(tmp_path, monkeypatch):
     monkeypatch.setattr(sweep, "EVENTS_LOG",
                         str(tmp_path / "inexistente.jsonl"))
     sweep.prune_log()   # no-op, sin excepcion
+
+
+# ---------- club_stock_diff ----------
+
+def _club_db(tmp_path, rows):
+    """club_stock con rows = (sku, date, club, name, in_stock, qty)."""
+    import sqlite3
+    db = tmp_path / "prices.db"
+    conn = sqlite3.connect(db)
+    conn.execute("""CREATE TABLE club_stock (
+        sku TEXT, date TEXT, club TEXT, club_name TEXT,
+        in_stock INT, qty INT, PRIMARY KEY (sku, date, club))""")
+    conn.executemany("INSERT INTO club_stock VALUES (?,?,?,?,?,?)", rows)
+    conn.commit()
+    conn.close()
+    return str(db)
+
+
+def test_club_stock_diff_transiciones(tmp_path, monkeypatch):
+    monkeypatch.setattr(sweep, "DB_PATH", _club_db(tmp_path, [
+        ("A", "2026-10-13", "sa", "Santa Ana", 1, 10),
+        ("A", "2026-10-14", "sa", "Santa Ana", 0, 0),   # club_agotado
+        ("B", "2026-10-13", "sa", "Santa Ana", 0, 0),
+        ("B", "2026-10-14", "sa", "Santa Ana", 1, 4),   # club_volvio
+        ("C", "2026-10-13", "sa", "Santa Ana", 1, 10),
+        ("C", "2026-10-14", "sa", "Santa Ana", 1, 5),   # se_agota (-50%)
+        ("D", "2026-10-13", "sa", "Santa Ana", 1, 10),
+        ("D", "2026-10-14", "sa", "Santa Ana", 1, 9),   # -10%: nada
+    ]))
+    products = {s: {"title": s, "price_SV": 100} for s in "ABCD"}
+    ev = sweep.club_stock_diff("2026-10-14", {"A", "B", "C", "D"},
+                               products)
+    por_sku = {e["sku"]: e["type"] for e in ev}
+    assert por_sku == {"A": "club_agotado", "B": "club_volvio",
+                       "C": "se_agota"}
+    assert ev[2]["qty_from"] == 10 and ev[2]["qty_to"] == 5
+
+
+def test_club_stock_diff_solo_candidatos(tmp_path, monkeypatch):
+    monkeypatch.setattr(sweep, "DB_PATH", _club_db(tmp_path, [
+        ("A", "2026-10-13", "sa", "Santa Ana", 1, 10),
+        ("A", "2026-10-14", "sa", "Santa Ana", 0, 0),
+        ("Z", "2026-10-13", "sa", "Santa Ana", 1, 10),
+        ("Z", "2026-10-14", "sa", "Santa Ana", 0, 0),
+    ]))
+    ev = sweep.club_stock_diff("2026-10-14", {"A"}, {})
+    assert [e["sku"] for e in ev] == ["A"]   # Z no es candidato
+
+
+def test_club_stock_diff_sin_dia_previo(tmp_path, monkeypatch):
+    monkeypatch.setattr(sweep, "DB_PATH", _club_db(tmp_path, [
+        ("A", "2026-10-14", "sa", "Santa Ana", 0, 0)]))
+    assert sweep.club_stock_diff("2026-10-14", {"A"}, {}) == []
+
+
+def test_club_stock_diff_sin_db(tmp_path, monkeypatch):
+    monkeypatch.setattr(sweep, "DB_PATH", str(tmp_path / "nada.db"))
+    assert sweep.club_stock_diff("2026-10-14", {"A"}, {}) == []

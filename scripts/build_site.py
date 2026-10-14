@@ -19,7 +19,9 @@ MIS_COMPRAS = os.path.join(ROOT, "data", "mis-compras.json")
 conn = sqlite3.connect(DB)
 conn.row_factory = sqlite3.Row
 products = {r["sku"]: dict(r) for r in conn.execute("SELECT * FROM products")}
-rows = conn.execute("SELECT * FROM prices ORDER BY date").fetchall()
+# ORDER BY sku,date recorre el indice primario en orden — ORDER BY date
+# solo forzaba un sort completo en memoria/disco sin ganar nada
+rows = conn.execute("SELECT * FROM prices ORDER BY sku, date").fetchall()
 
 series = defaultdict(list)
 for r in rows:
@@ -37,9 +39,10 @@ for r in conn.execute(
 clubs = defaultdict(dict)
 try:
     for r in conn.execute(
-            "SELECT sku, club_name, in_stock, qty FROM club_stock cs "
-            "WHERE date = (SELECT MAX(date) FROM club_stock "
-            "              WHERE sku = cs.sku)"):
+            "SELECT cs.sku, cs.club_name, cs.in_stock, cs.qty "
+            "FROM club_stock cs "
+            "JOIN (SELECT sku, MAX(date) AS md FROM club_stock "
+            "      GROUP BY sku) m ON cs.sku = m.sku AND cs.date = m.md"):
         clubs[r["sku"]][r["club_name"]] = {
             "in_stock": bool(r["in_stock"]), "qty": r["qty"]}
 except sqlite3.OperationalError:
@@ -48,7 +51,9 @@ except sqlite3.OperationalError:
 # trayectoria): ~3 semanas bastan para ver el drenaje sin inflar payload
 clubh = defaultdict(lambda: defaultdict(list))
 try:
-    cutoff = (datetime.now(timezone.utc).date()
+    # fecha SV (GMT-6), consistente con el resto del pipeline — UTC
+    # puro podia cortar un dia de borde en runs cercanos a medianoche
+    cutoff = (datetime.now(timezone(timedelta(hours=-6))).date()
               - timedelta(days=21)).isoformat()
     for r in conn.execute(
             "SELECT sku, club_name, date, qty FROM club_stock "
@@ -281,7 +286,7 @@ if os.path.isdir(SNAP_DIR):
             pass
 
 data = {
-    "generated": max((r[0] for s in series.values() for r in s), default=""),
+    "generated": gen,
     "built": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     "demo": demo,
     "n_products": len(latest),
@@ -296,7 +301,7 @@ os.makedirs(os.path.dirname(OUT), exist_ok=True)
 # payload separado del HTML: el shell (~14 KB) se cachea solo y solo
 # data.json cambia entre builds — antes cada visita bajaba los ~4 MB
 # completos con los datos inline
-payload = json.dumps(data, ensure_ascii=False)
+payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 with open(os.path.join(ROOT, "docs", "data.json"), "w",
           encoding="utf-8") as f:
     f.write(payload)

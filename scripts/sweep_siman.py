@@ -24,7 +24,8 @@ import time
 import unicodedata
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
-from urllib.request import Request, urlopen
+
+import requests
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "data")
@@ -35,6 +36,9 @@ WATCH_FILE = os.path.join(DATA_DIR, "watchlist_siman.json")
 
 API = "https://sv.siman.com/api/catalog_system/pub/products/search/"
 HEADERS = {"accept": "application/json", "user-agent": "Mozilla/5.0"}
+
+# una sola sesion: keep-alive TLS + gzip automatico en todos los fetch
+SESSION = requests.Session()
 ROWS = 50          # por pagina
 MAX_PAGES = 3      # cap: 150 productos por busqueda
 SLEEP = 0.4        # educado
@@ -63,7 +67,9 @@ def img_hash(url):
         import io
 
         from PIL import Image
-        data = urlopen(Request(url, headers=HEADERS), timeout=20).read()
+        r = SESSION.get(url, headers=HEADERS, timeout=20)
+        r.raise_for_status()
+        data = r.content
         im = Image.open(io.BytesIO(data)).convert("L")
         im = im.resize((8, 8), Image.LANCZOS)
         px = list(im.getdata())
@@ -124,14 +130,12 @@ def fetch_search(q):
     for page in range(MAX_PAGES):
         url = (f"{API}?ft={quote(q)}&_from={page*ROWS}"
                f"&_to={page*ROWS + ROWS - 1}")
-        req = Request(url, headers=HEADERS)
         try:
-            with urlopen(req, timeout=30) as r:
-                res = json.loads(r.read())
+            res = SESSION.get(url, headers=HEADERS, timeout=30).json()
         except Exception:
             time.sleep(3)
-            with urlopen(req, timeout=30) as r:   # un reintento por pagina
-                res = json.loads(r.read())
+            res = SESSION.get(url, headers=HEADERS,
+                              timeout=30).json()   # un reintento por pagina
         if not res:
             break
         for p in res:
@@ -178,11 +182,11 @@ def watches_remote():
         return []
     try:
         q = quote('{"method":"limit","values":[500]}')
-        req = Request(f"{ep}/tablesdb/pricewatch/tables/siman_watch/rows"
-                      f"?queries%5B%5D={q}",
-                      headers={"X-Appwrite-Project": pid,
-                               "X-Appwrite-Key": key})
-        rows = json.load(urlopen(req, timeout=15)).get("rows", [])
+        rows = SESSION.get(
+            f"{ep}/tablesdb/pricewatch/tables/siman_watch/rows"
+            f"?queries%5B%5D={q}",
+            headers={"X-Appwrite-Project": pid, "X-Appwrite-Key": key},
+            timeout=15).json().get("rows", [])
         out = []
         for r in rows:
             w = {"q": r.get("q")}
@@ -266,23 +270,23 @@ def record_history(items, date):
     conn.execute("""CREATE TABLE IF NOT EXISTS prices (
         itemId TEXT, date TEXT, price REAL, list REAL, qty INT,
         avail INT, card INT, PRIMARY KEY (itemId, date))""")
-    for iid, p in items.items():
-        conn.execute(
-            """INSERT INTO items (itemId, pid, title, brand, link, image,
-               vname, watch, talla, first_seen, last_seen, imghash)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
-               ON CONFLICT(itemId) DO UPDATE SET
-               pid=excluded.pid, title=excluded.title,
-               link=excluded.link, image=excluded.image,
-               vname=excluded.vname, last_seen=excluded.last_seen,
-               imghash=excluded.imghash""",
-            (iid, p["pid"], p["title"], p["brand"], p["link"],
-             p["image"], p["vname"], p.get("watch"), p.get("talla"),
-             date, date, p.get("imghash")))
-        conn.execute(
-            "INSERT OR REPLACE INTO prices VALUES (?,?,?,?,?,?,?)",
-            (iid, date, p.get("price"), p.get("list"), p.get("qty"),
-             int(p["avail"]), int(p.get("card") or 0)))
+    conn.executemany(
+        """INSERT INTO items (itemId, pid, title, brand, link, image,
+           vname, watch, talla, first_seen, last_seen, imghash)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+           ON CONFLICT(itemId) DO UPDATE SET
+           pid=excluded.pid, title=excluded.title,
+           link=excluded.link, image=excluded.image,
+           vname=excluded.vname, last_seen=excluded.last_seen,
+           imghash=excluded.imghash""",
+        [(iid, p["pid"], p["title"], p["brand"], p["link"],
+          p["image"], p["vname"], p.get("watch"), p.get("talla"),
+          date, date, p.get("imghash")) for iid, p in items.items()])
+    conn.executemany(
+        "INSERT OR REPLACE INTO prices VALUES (?,?,?,?,?,?,?)",
+        [(iid, date, p.get("price"), p.get("list"), p.get("qty"),
+          int(p["avail"]), int(p.get("card") or 0))
+         for iid, p in items.items()])
     conn.commit()
     conn.close()
 

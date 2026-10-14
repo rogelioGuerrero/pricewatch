@@ -39,6 +39,7 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   if (t.dataset.t==="explorar") loadExplorer();
   if (t.dataset.t==="cambios") paintBar("ch-cambios");
   if (t.dataset.t==="ofertas") paintBar("ch-ofertas");
+  sparks();   // los sparks de este pane no se pintaron en el render
 });
 // abre en el ultimo tab usado (o Mi lista)
 const urlTab = new URLSearchParams(location.search).get("tab");
@@ -124,7 +125,8 @@ function pspFilter(id){
   (PV_PRESETS[PV_PRE]||[]).forEach(x => f.push(x));
   document.getElementById(id).restore({filter: f});
 }
-$("#q").oninput = () => {
+let qT;
+$("#q").oninput = () => { clearTimeout(qT); qT = setTimeout(() => {
   const q = $("#q").value.trim();
   const t = document.querySelector(".tab.on")?.dataset.t;
   document.querySelectorAll(".pane").forEach(x=>x.classList.remove("on"));
@@ -136,7 +138,7 @@ $("#q").oninput = () => {
   else document.getElementById("pane-"+t)?.classList.add("on");
   render();
   if (t === "explorar" && pvDone) pspFilter("pv");
-};
+}, 120); };   // debounce: render() reconstruye los panes completos
 
 const COLS_BASE = ["sku","producto","marca","categoria","precio","ahorro",
                    "desc_pct","stock"];
@@ -165,6 +167,11 @@ async function loadExplorer(attempt=0){
     pane.insertAdjacentHTML("beforeend", `<p class="meta pv-status" style="padding:10px">${t}</p>`); };
   msg("Cargando catálogo (WASM, solo la primera vez)…");
   try {
+    // el css del viewer solo se baja si el usuario abre el explorador
+    if (!document.getElementById("pv-themes"))
+      document.head.insertAdjacentHTML("beforeend",
+        '<link id="pv-themes" rel="stylesheet" crossorigin="anonymous" '
+        + 'href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.8.0/dist/css/themes.css">');
     const psp = (await import('https://cdn.jsdelivr.net/npm/@finos/perspective@3.8.0/dist/cdn/perspective.js')).default;
     await import('https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.8.0/dist/cdn/perspective-viewer.js');
     await import('https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-datagrid@3.8.0/dist/cdn/perspective-viewer-datagrid.js');

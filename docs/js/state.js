@@ -10,8 +10,8 @@ document.getElementById("gen").textContent = `${+_d} ${MESES[+_m-1]} ${_y}`;
 if (D.demo) document.getElementById("demo-banner").style.display = "";
 const img = sku => (D.products[sku]||{}).image || "";
 const ev = D.events.slice().reverse();
-const esc = s => String(s||"").replace(/[&<>"]/g,
-  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s||"").replace(/[&<>"']/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const byType = t => ev.filter(e=>e.type===t);
 const lastOf = s => (D.series[s]||[]).slice(-1)[0];
 // stock observado en una fecha: ultima lectura <= date (series van
