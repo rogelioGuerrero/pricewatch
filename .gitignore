@@ -3,9 +3,11 @@ __pycache__/
 node_modules/
 .playwright-mcp/
 
-# Historia y snapshots: viven en el cache de Actions, no en git.
-# (los archivos siguen tracked en este commit para sembrar el cache;
-#  se remueven del repo una vez verificado el primer run)
+# Datos vivos (DBs, snapshots, logs de eventos): viven en el cache de
+# Actions (pwdata-*), no en git. El bootstrap del workflow rescata los
+# logs del último commit si el cache llega vacío.
 data/*.db
 data/snapshots/
 data/siman_snapshots/
+data/events.jsonl
+data/siman_events.jsonl

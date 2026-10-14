@@ -7,7 +7,9 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  contents: write
+  contents: read   # el sitio viaja como artefacto: nada de commits al repo
+  pages: write
+  id-token: write
 
 concurrency:
   group: pricewatch-siman
@@ -16,10 +18,13 @@ concurrency:
 jobs:
   sweep:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
 
-      - name: Restore data cache (db + snapshots viven fuera de git)
+      - name: Restore data cache (db + snapshots + logs viven fuera de git)
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -27,17 +32,23 @@ jobs:
             data/siman.db
             data/snapshots/
             data/siman_snapshots/
+            data/events.jsonl
+            data/siman_events.jsonl
           key: pwdata-${{ github.run_id }}
           restore-keys: pwdata-
 
-      - name: Bootstrap data desde el commit anterior (solo si no hay cache)
+      - name: Bootstrap de eventos si el cache llegó vacío
+        # rescata los jsonl del último commit que los trajo (cache perdido
+        # o primera corrida tras sacarlos de git)
         run: |
-          if [ ! -f data/prices.db ]; then
-            SRC=$(git log --diff-filter=d --format=%H -1 -- data/prices.db || true)
-            if [ -n "$SRC" ]; then
-              git restore --source="$SRC" -- data/ 2>/dev/null || true
+          for f in data/events.jsonl data/siman_events.jsonl; do
+            if [ ! -s "$f" ]; then
+              SRC=$(git log --diff-filter=d --format=%H -1 -- "$f" || true)
+              if [ -n "$SRC" ]; then
+                git restore --source="$SRC" -- "$f" 2>/dev/null || true
+              fi
             fi
-          fi
+          done
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -64,18 +75,15 @@ jobs:
             data/siman.db
             data/snapshots/
             data/siman_snapshots/
+            data/events.jsonl
+            data/siman_events.jsonl
           key: pwdata-${{ github.run_id }}
 
-      - name: Commit data + dashboard
-        run: |
-          git config user.name "pricewatch-bot"
-          git config user.email "bot@users.noreply.github.com"
-          git add docs/ data/events.jsonl data/siman_events.jsonl \
-                  data/mis-compras.json data/watchlist_siman.json
-          git diff --staged --quiet || git commit -m "siman sweep: $(date +%F)"
-          for i in 1 2 3; do
-            git push && exit 0
-            git pull --no-edit -X ours || git merge --abort
-            sleep 10
-          done
-          git push
+      - name: Empaquetar sitio (artefacto)
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs
+
+      - name: Publicar a GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
