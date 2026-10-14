@@ -33,9 +33,9 @@ from html import escape as hesc
 if hasattr(sys.stdout, "reconfigure"):   # consolas cp1252 (Windows)
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 from datetime import datetime, timedelta, timezone
+from urllib.error import HTTPError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
-from urllib.error import HTTPError
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -404,7 +404,7 @@ def siman_gangas(events):
 
 def send_push(subs, payload):
     try:
-        from pywebpush import webpush, WebPushException
+        from pywebpush import WebPushException, webpush
     except ImportError:
         print("  ! pywebpush no instalado — push omitido")
         return

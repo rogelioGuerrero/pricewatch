@@ -1,0 +1,7 @@
+# Reglas con valor real para este repo: errores (F), estilo basico
+# (E/W) e imports ordenados (I). Las reglas estrictas de ruff nuevo
+# (BLE001, S110/S112, SIM115, DTZ*) quedan fuera a proposito: el estilo
+# defensivo (except amplio que sobrevive lineas corruptas, open() sin
+# with, fechas naive para comparar dias) es intencional y testeado.
+[lint]
+select = ["E", "F", "W", "I"]

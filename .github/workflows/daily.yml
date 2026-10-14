@@ -1,11 +1,11 @@
-name: PriceWatch Stock Check
+name: PriceWatch Daily
 
 on:
   schedule:
-    # Diario 8am GMT-6 = 14:00 UTC: chequeo ligero de stock por club
-    # en candidatos (ofertas + eventos recientes). Detecta velocidad
-    # de venta (se_agota) sin barrer el catalogo.
-    - cron: '0 14 * * *'
+    # Diario 6am GMT-6 = 12:00 UTC: los 3 sweeps corren secuenciales en
+    # un solo run — un solo cache save (sin carreras entre workflows),
+    # el digest ve siempre el estado completo y hay un solo deploy/dia.
+    - cron: '0 12 * * *'
   workflow_dispatch: {}
 
 permissions:
@@ -14,11 +14,11 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pricewatch-stock-check
+  group: pricewatch-daily
   cancel-in-progress: false
 
 jobs:
-  stock-check:
+  daily:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -62,14 +62,49 @@ jobs:
           python-version: '3.12'
           cache: pip
 
-      - name: Stock check + rebuild dashboard
+      - name: Instalar dependencias
+        run: python -m pip install -r requirements.txt -q
+
+      - name: PriceSmart sweep + diff + historia
         env:
           APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
           APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
           APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
-        run: |
-          python scripts/sweep.py --stock-check
-          python scripts/build_site.py
+        run: python scripts/sweep.py
+
+      - name: Siman watchlist sweep
+        env:
+          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: python scripts/sweep_siman.py
+
+      - name: Stock check por club (candidatos)
+        # chequeo ligero sobre ofertas + eventos recientes: detecta
+        # velocidad de venta (se_agota) sin barrer el catalogo de nuevo
+        env:
+          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: python scripts/sweep.py --stock-check
+
+      - name: Rebuild dashboard
+        run: python scripts/build_site.py
+
+      - name: Digest email + push alerts (solo si hay novedades)
+        # consolida los 3 sweeps del run; notify.py decide los umbrales.
+        # Va antes del deploy: un fallo de Pages nunca bloquea el digest.
+        env:
+          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: PriceWatch <info@agtisa.com>
+          RESEND_TO: ${{ vars.RESEND_TO }}
+          VAPID_PUBLIC: BCe97olK0g7PDhtvuC4BknYtgjzkzSlXv8MJ_Ve-9tMwnagCAU-lQmI1JtSgrSNrQZQE2pBr0O4H-vruxep4H6c
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          SITE_URL: https://rogelioguerrero.github.io/pricewatch/
+        run: python scripts/notify.py
 
       - name: Save data cache
         if: always()
@@ -83,24 +118,6 @@ jobs:
             data/events.jsonl
             data/siman_events.jsonl
           key: pwdata-${{ github.run_id }}
-
-      - name: Digest email + push alerts (solo si hay novedades)
-        # Ultimo job del dia (8am SV): consolida sweep + siman + stock-check.
-        # notify.py decide los umbrales; sin novedades no envia nada.
-        # Va antes del deploy: un fallo de Pages nunca bloquea el digest.
-        env:
-          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
-          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
-          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          RESEND_FROM: PriceWatch <info@agtisa.com>
-          RESEND_TO: ${{ vars.RESEND_TO }}
-          VAPID_PUBLIC: BCe97olK0g7PDhtvuC4BknYtgjzkzSlXv8MJ_Ve-9tMwnagCAU-lQmI1JtSgrSNrQZQE2pBr0O4H-vruxep4H6c
-          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
-          SITE_URL: https://rogelioguerrero.github.io/pricewatch/
-        run: |
-          python -m pip install -r requirements.txt -q
-          python scripts/notify.py
 
       - name: Empaquetar sitio (artefacto)
         uses: actions/upload-pages-artifact@v5

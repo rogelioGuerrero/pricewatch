@@ -61,6 +61,7 @@ def img_hash(url):
     misma: distancia observada ~2/64 bits tras re-encoding."""
     try:
         import io
+
         from PIL import Image
         data = urlopen(Request(url, headers=HEADERS), timeout=20).read()
         im = Image.open(io.BytesIO(data)).convert("L")

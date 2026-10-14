@@ -20,8 +20,8 @@ import json
 import os
 import sys
 import time
-from urllib.request import Request, urlopen
 from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
 ENDPOINT = os.environ["APPWRITE_ENDPOINT"].rstrip("/")
 PROJECT = os.environ["APPWRITE_PROJECT_ID"]

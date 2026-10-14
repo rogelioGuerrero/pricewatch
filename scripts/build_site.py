@@ -143,12 +143,15 @@ for sku, s in series.items():
     last_of = next((r[0] for r in reversed(s) if (r[3] or 0) > 0), None)
     saves = [r[3] for r in s if (r[3] or 0) > 0]
     # racha de letrero activa (of_cur) y ultima racha ya terminada (of_end)
-    run = None; last_run = None
+    run = None
+    last_run = None
     for i, r in enumerate(s):
         if (r[3] or 0) > 0:
-            if run is None: run = r[0]
+            if run is None:
+                run = r[0]
         elif run is not None:
-            last_run = [run, s[i - 1][0]]; run = None
+            last_run = [run, s[i - 1][0]]
+            run = None
     agg[sku] = {
         "min": min_p, "max": max_p, "med": round(med),
         "pct_min": round((last_p - min_p) / min_p * 100, 1) if min_p else None,
