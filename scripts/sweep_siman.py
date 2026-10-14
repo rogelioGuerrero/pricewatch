@@ -182,11 +182,13 @@ def watches_remote():
         return []
     try:
         q = quote('{"method":"limit","values":[500]}')
-        rows = SESSION.get(
+        r = SESSION.get(
             f"{ep}/tablesdb/pricewatch/tables/siman_watch/rows"
             f"?queries%5B%5D={q}",
             headers={"X-Appwrite-Project": pid, "X-Appwrite-Key": key},
-            timeout=15).json().get("rows", [])
+            timeout=15)
+        r.raise_for_status()   # requests no lanza en 4xx/5xx
+        rows = r.json().get("rows", [])
         out = []
         for r in rows:
             w = {"q": r.get("q")}

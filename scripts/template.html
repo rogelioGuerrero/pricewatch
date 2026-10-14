@@ -18,6 +18,15 @@
 <!-- themes.css de Perspective se carga bajo demanda en loadExplorer()
      (movil nunca abre el explorador: ~60KB ahorrados) -->
 <link rel="stylesheet" href="styles.css">
+<!-- preload de los modulos: el scanner del navegador los baja en
+     paralelo con data.json usando destination "script" — un fetch()
+     manual tendria destination "" y el SW revalidaria cada archivo
+     dos veces (10 requests en vez de 5) -->
+<link rel="preload" as="script" href="js/state.js">
+<link rel="preload" as="script" href="js/siman.js">
+<link rel="preload" as="script" href="js/sync.js">
+<link rel="preload" as="script" href="js/render.js">
+<link rel="preload" as="script" href="js/app.js">
 </head>
 <body>
 <div class="wrap">
@@ -177,18 +186,13 @@
   try {
     const MODS = ["js/state.js", "js/siman.js", "js/sync.js",
                   "js/render.js", "js/app.js"];
-    // todo en paralelo: los modulos calientan cache HTTP mientras baja
-    // data.json (el payload grande); se EJECUTAN en orden solo cuando
-    // D existe — los modulos leen window.D al evaluarse
-    const dataP = fetch("data.json").then(r => {
+    // los modulos ya vienen precargados via <link rel="preload"> en el
+    // head; aqui solo baja data.json y luego se EJECUTAN en orden —
+    // los modulos leen window.D al evaluarse
+    window.D = await fetch("data.json").then(r => {
       if (!r.ok) throw new Error("HTTP " + r.status);
       return r.json();
     });
-    const warm = Promise.all(MODS.map(s => fetch(s).then(r => {
-      if (!r.ok) throw new Error("fallo cargando " + s);
-    })));
-    window.D = await dataP;
-    await warm;
     for (const src of MODS)
       await new Promise((ok, bad) => {
         const s = document.createElement("script");

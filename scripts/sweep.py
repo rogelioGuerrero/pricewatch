@@ -253,9 +253,9 @@ def diff(prev, cur, today=None, known=None, last=None, last_in=None):
         sv_new, sv_old = p.get("saving_usd") or 0, old.get("saving_usd") or 0
         # Si el precio sube justo hasta el precio regular (lo que costaba
         # sin el letrero), no "subio": termino la oferta. Un solo evento.
-        offer_reverted = (sv_old > 0 and sv_new < sv_old
+        offer_reverted = (sv_old > 0 and sv_new == 0
                           and price_changed and p_new > p_old
-                          and p_new <= p_old + round(sv_old * 100) + 1)
+                          and abs(p_new - (p_old + round(sv_old * 100))) <= 5)
         if offer_reverted:
             events.append({"sku": sku, "type": "oferta_termino",
                            "title": p["title"], "price": p_new,
@@ -292,7 +292,10 @@ def diff(prev, cur, today=None, known=None, last=None, last_in=None):
                 events.append({"sku": sku, "type": "oferta",
                                "title": p["title"], "saving": sv_new,
                                "price": p_new})
-            elif not offer_reverted:
+            elif not sv_new and not offer_reverted:
+                # el letrero desaparecio del todo (sv_new==0). Si solo
+                # menguo (2.00 -> 0.50) la oferta sigue activa: no es
+                # "termino" aunque el ahorro baje
                 events.append({"sku": sku, "type": "oferta_termino",
                                "title": p["title"], "price": p_new})
     for sku, old in prev.items():
@@ -448,12 +451,16 @@ def favs_remote():
         return set()
     try:
         q = quote('{"method":"limit","values":[500]}')
-        rows = SESSION.get(
+        r = SESSION.get(
             f"{ep}/tablesdb/pricewatch/tables/favs/rows"
             f"?queries%5B%5D={q}",
             headers={"X-Appwrite-Project": pid, "X-Appwrite-Key": key},
-            timeout=15).json().get("rows", [])
-        return {str(r.get("sku")) for r in rows if r.get("sku")}
+            timeout=15)
+        # requests no lanza en 4xx/5xx: sin esto un error JSON devolvia
+        # rows=[] en silencio (con urlopen saltaba HTTPError al except)
+        r.raise_for_status()
+        rows = r.json().get("rows", [])
+        return {str(x.get("sku")) for x in rows if x.get("sku")}
     except Exception as e:
         print(f"  (favs remotos no disponibles: {e})")
         return set()

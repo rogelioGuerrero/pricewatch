@@ -396,12 +396,26 @@ def siman_gangas(events, sitems=None):
         sitems = siman_items()
     muted = {r["tkey"] for r in aw_rows("siman_muted")}
     seen = {r["tkey"]: r["price"] for r in aw_rows("siman_seen")}
-    def hit(rule, tk):
-        # reglas "pid|tkey|hash,...": el tkey es el 2do segmento
-        # (split("|",1) dejaba los hashes pegados y nunca igualaba);
-        # legacy "tkey" plano no tiene "|"
+    def hdist(a, b):
+        try:
+            return bin(int(a, 16) ^ int(b, 16)).count("1")
+        except (ValueError, TypeError):
+            return 99
+    def hit(rule, tk, it):
+        # paridad con ruleHit del PWA: "pid|tkey|h1,h2,.." matchea por
+        # CUALQUIERA — el pid cubre titulos editados, el tkey cubre
+        # recodificados, la foto cubre recodes con renombre. Sin esto,
+        # un "no me gusta" del PWA se ignoraba en el correo si Siman
+        # renombraba el producto. legacy "tkey" plano no tiene "|"
         pt = rule.split("|")
-        return (pt[1] if len(pt) > 1 else rule) == tk
+        if len(pt) < 2:
+            return rule == tk
+        if pt[0] == str(it.get("pid") or "") or pt[1] == tk:
+            return True
+        ih = it.get("imghash")
+        hs = pt[2] if len(pt) > 2 else ""
+        return bool(ih and hs) and any(
+            hdist(h, ih) <= 8 for h in hs.split(","))
     out = []
     for e in events:
         if e["type"] not in ("bajo", "oferta"):
@@ -413,12 +427,15 @@ def siman_gangas(events, sitems=None):
                                              it["talla"]):
             continue   # bajo otra talla, no la vigilada
         tk = tkey(e.get("title"))
-        if any(hit(r, tk) for r in muted):
+        if any(hit(r, tk, it) for r in muted):
             continue
         # 'bajo' trae from/to (no price) — sin este fallback el filtro
         # de ya-visto nunca se evaluaba y re-alertaba todos los dias
         cur_p = e.get("to") if e.get("to") is not None else e.get("price")
-        sp = next((p for r, p in seen.items() if hit(r, tk)), None)
+        # max(): como seenAt del PWA — reavisa solo si baja de lo que
+        # ya reconociste en cualquiera de las reglas que matchean
+        sp = max((p for r, p in seen.items() if hit(r, tk, it)),
+                 default=None)
         if sp is not None and cur_p is not None and cur_p >= sp:
             continue
         # copiar antes de escalar a centavos: mutar el evento en sitio

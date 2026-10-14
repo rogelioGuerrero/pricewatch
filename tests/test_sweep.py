@@ -111,6 +111,31 @@ def test_diff_oferta_termino_por_reversion():
     assert types(ev) == ["oferta_termino"]
 
 
+def test_diff_ahorro_mengua_no_es_termino():
+    """El letrero baja de $2.00 a $0.50 con precio intacto: la oferta
+    sigue activa, no 'termino' — antes se reportaba oferta_termino."""
+    prev = {"A": prod(1000, saving=2.0)}
+    cur = {"A": prod(1000, saving=0.5)}
+    assert types(sweep.diff(prev, cur, "2026-10-14")) == []
+
+
+def test_diff_letrero_desaparece_precio_igual():
+    """Sin letrero y sin cambio de precio: la oferta termino igual."""
+    prev = {"A": prod(800, saving=2.0)}
+    cur = {"A": prod(800, saving=0)}
+    ev = sweep.diff(prev, cur, "2026-10-14")
+    assert types(ev) == ["oferta_termino"]
+
+
+def test_diff_subida_parcial_no_es_reversion():
+    """El precio sube pero NO llega al regular y el letrero cae: dos
+    hechos ciertos — 'subio' + 'oferta_termino' (no es reversion)."""
+    prev = {"A": prod(800, saving=2.0)}   # regular 1000
+    cur = {"A": prod(950, saving=0)}
+    ev = sweep.diff(prev, cur, "2026-10-14")
+    assert types(ev) == ["subio", "oferta_termino"]
+
+
 def test_diff_oferta_nueva_mismo_precio():
     prev = {"A": prod(1000, saving=0)}
     cur = {"A": prod(1000, saving=1.5)}
