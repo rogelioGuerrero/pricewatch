@@ -15,7 +15,7 @@ sweep.py (cron diario 6am)       → catálogo completo SV vía API interna
 sweep.py --stock-check (8am)     → stock por club de candidatos (se_agota)
 sweep_siman.py (7am)             → radar Siman por búsquedas vigiladas
 notify.py (8am)                  → digest email + push (solo si hay novedades)
-build_site.py                    → docs/index.html (dashboard estático)
+build_site.py                    → docs/index.html + data.json (dashboard)
 GitHub Pages                     → publicación
 Appwrite Cloud                   → sync de Mi lista + compras + targets entre
                                    dispositivos (botón "cuenta" en la app)

@@ -385,6 +385,35 @@ def append_events(events, today):
         for e in events:
             e["date"] = today
             f.write(json.dumps(e, ensure_ascii=False) + "\n")
+    prune_log()
+
+
+def prune_log(keep_days=45):
+    """Recorta el log a los ultimos `keep_days` dias: el sitio solo
+    muestra los ultimos 200 y el digest solo lee hoy; la historia
+    vive en siman.db. Sin esto el archivo crece sin tope (y viaja
+    en git a diario)."""
+    if not os.path.exists(EVENTS_LOG):
+        return
+    cutoff = (datetime.now(timezone(timedelta(hours=-6))).date()
+              - timedelta(days=keep_days)).isoformat()
+    with open(EVENTS_LOG, encoding="utf-8") as f:
+        lines = f.readlines()
+    keep = []
+    for line in lines:
+        try:
+            if json.loads(line).get("date", "") >= cutoff:
+                keep.append(line)
+        except Exception:
+            continue  # linea corrupta: fuera
+    if len(keep) == len(lines):
+        return
+    tmp = EVENTS_LOG + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.writelines(keep)
+    os.replace(tmp, EVENTS_LOG)
+    print(f"log podado: -{len(lines) - len(keep)} eventos "
+          f"anteriores a {cutoff}")
 
 
 def main():

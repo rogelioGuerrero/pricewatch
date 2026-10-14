@@ -1,10 +1,14 @@
 // PriceWatch SV — navegación network-first (abrir la app trae la
 // versión fresca); sin señal cae al último snapshot cacheado.
-const CACHE = "pricewatch-v22";
-const CORE = ["./", "./index.html", "./manifest.webmanifest"];
+const CACHE = "pricewatch-v23";
+const CORE = ["./", "./index.html", "./manifest.webmanifest",
+             "./data.json"];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)));
+  e.waitUntil(caches.open(CACHE).then(c =>
+    // add por recurso (no addAll): si algo faltara en un deploy no
+    // tumba la instalacion entera del SW
+    Promise.all(CORE.map(u => c.add(u).catch(() => {})))));
   self.skipWaiting();
 });
 
@@ -23,6 +27,19 @@ self.addEventListener("fetch", e => {
 
   // version.json nunca se cachea: es el detector de builds nuevos
   if (url.pathname.endsWith("version.json")) return;
+
+  // data.json: red primero (igual que la navegación) — es lo único
+  // que cambia entre builds; sin señal cae al último snapshot
+  if (url.pathname.endsWith("data.json")) {
+    e.respondWith(
+      fetch(e.request).then(r => {
+        if (r.ok) { const cp = r.clone();
+          caches.open(CACHE).then(c => c.put(e.request, cp)); }
+        return r;
+      }).catch(() => caches.open(CACHE).then(c => c.match(e.request)))
+    );
+    return;
+  }
 
   // navegación: red primero, último snapshot si no hay señal
   if (e.request.mode === "navigate") {

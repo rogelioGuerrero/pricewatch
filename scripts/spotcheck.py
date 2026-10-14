@@ -1,10 +1,17 @@
 """Spot-check temporal: snapshot de hoy vs API getProduct en vivo."""
 import json
+import os
 import random
 from urllib.request import Request, urlopen
 
-snap = json.load(open('data/snapshots/2026-09-29.json',
-                      encoding='utf-8'))['products']
+snap_dir = 'data/snapshots'
+snaps = sorted(f for f in os.listdir(snap_dir) if f.endswith('.json'))
+if not snaps:
+    raise SystemExit('no hay snapshots en data/snapshots/ — '
+                     'corre sweep.py primero')
+snap_path = os.path.join(snap_dir, snaps[-1])
+snap = json.load(open(snap_path, encoding='utf-8'))['products']
+print('snapshot:', snap_path)
 oferta = next((s for s, p in snap.items() if (p.get('saving_usd') or 0) > 0),
               None)
 skus = random.sample(list(snap), 6) + ([oferta] if oferta else [])

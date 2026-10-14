@@ -290,9 +290,16 @@ data = {
     "siman": siman,
 }
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
+# payload separado del HTML: el shell (~14 KB) se cachea solo y solo
+# data.json cambia entre builds — antes cada visita bajaba los ~4 MB
+# completos con los datos inline
+payload = json.dumps(data, ensure_ascii=False)
+with open(os.path.join(ROOT, "docs", "data.json"), "w",
+          encoding="utf-8") as f:
+    f.write(payload)
 with open(os.path.join(ROOT, "scripts", "template.html"),
           encoding="utf-8") as f:
-    html = f.read().replace("__DATA__", json.dumps(data, ensure_ascii=False))
+    html = f.read()
 with open(OUT, "w", encoding="utf-8") as f:
     f.write(html)
 # version.json: ~50 bytes que el PWA consulta (sin pasar por el cache
@@ -300,4 +307,4 @@ with open(OUT, "w", encoding="utf-8") as f:
 with open(os.path.join(ROOT, "docs", "version.json"), "w",
           encoding="utf-8") as f:
     json.dump({"built": data["built"]}, f)
-print(f"Dashboard: {OUT}")
+print(f"Dashboard: {OUT} + data.json ({len(payload) // 1024} KiB)")

@@ -227,10 +227,12 @@ def load_events(path, today=True):
             if not today or e.get("date") == TODAY:
                 out.append(e)
     # un mismo (sku,type) puede repetirse entre sweep y stock-check:
-    # quedarse con el ultimo
+    # quedarse con el ultimo. El club entra en la llave — un producto
+    # agotado en 3 tiendas son 3 eventos que el digest luego agrupa
     dedup = {}
     for e in out:
-        dedup[(e.get("sku") or e.get("iid"), e["type"])] = e
+        dedup[(e.get("sku") or e.get("iid"), e["type"],
+               e.get("club"))] = e
     return list(dedup.values())
 
 

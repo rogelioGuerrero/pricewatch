@@ -28,6 +28,7 @@
     <span class="demo" id="demo-banner" style="display:none">DEMO — el historial es sintético hasta acumular corridas reales (mar/jue)</span>
   </header>
   <div class="tabs" id="tabs"></div>
+  <p class="meta" id="boot" style="display:none;padding:12px">Cargando datos…</p>
   <div id="alerts"></div>
   <div class="filters"><input id="q" type="search" autocomplete="off" name="pw-search" inputmode="search" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" placeholder="Buscar en todo el catálogo (nombre, marca, SKU)…"></div>
   <div class="pane" id="pane-buscar"><div class="grid" id="g-buscar"></div></div>
@@ -164,12 +165,31 @@
   <p class="meta" id="lg-msg" style="margin-top:10px"></p>
 </dialog>
 <script>
-const D = __DATA__;
+// El payload (~4 MB) vive en data.json, separado del HTML: el shell
+// pesa ~14 KB y se cachea solo; data.json lo trae el fetch (red
+// primero, ultimo snapshot si no hay senal). Los modulos cargan en
+// orden una vez D existe — mismo orden que cuando iban en <script>.
+(async () => {
+  const boot = document.getElementById("boot");
+  boot.style.display = "";
+  try {
+    const r = await fetch("data.json");
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    window.D = await r.json();
+    for (const src of ["js/state.js", "js/siman.js", "js/sync.js",
+                       "js/render.js", "js/app.js"])
+      await new Promise((ok, bad) => {
+        const s = document.createElement("script");
+        s.src = src; s.onload = ok;
+        s.onerror = () => bad(new Error("fallo cargando " + src));
+        document.head.appendChild(s);
+      });
+    boot.remove();
+  } catch (e) {
+    boot.textContent = "No se pudieron cargar los datos — revisa la " +
+      "conexión y recarga. (" + (e.message || e) + ")";
+  }
+})();
 </script>
-<script src="js/state.js"></script>
-<script src="js/siman.js"></script>
-<script src="js/sync.js"></script>
-<script src="js/render.js"></script>
-<script src="js/app.js"></script>
 </body>
 </html>
