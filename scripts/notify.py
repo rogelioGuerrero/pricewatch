@@ -23,20 +23,26 @@ Env:
 
 import json
 import os
-import re
 import sqlite3
 import statistics
 import sys
-import time
-import unicodedata
 from html import escape as hesc
 
 if hasattr(sys.stdout, "reconfigure"):   # consolas cp1252 (Windows)
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-from datetime import date, datetime, timedelta, timezone
-from urllib.parse import quote
+from datetime import date, datetime
 
 import requests
+from common import (
+    aw_request,
+    aw_rows,
+    aw_tables,
+    ensure_table,
+    hamming,
+    talla_hit,
+    tkey,
+    today_sv,
+)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -52,7 +58,7 @@ AW_DB = "pricewatch"
 
 SITE = os.environ.get("SITE_URL",
                       "https://rogelioguerrero.github.io/pricewatch/")
-TODAY = datetime.now(timezone(timedelta(hours=-6))).date().isoformat()
+TODAY = today_sv()
 
 # una sola sesion HTTP: keep-alive TLS + gzip automatico (urllib abria
 # una conexion nueva y bajaba sin comprimir en cada request)
@@ -65,63 +71,20 @@ def money(c):
     return "—" if c is None else f"${c / 100:.2f}"
 
 
-def _talla_hit(vname, talla):
-    """Misma regla que sweep_siman.talla_hit: la variante corresponde a
-    la talla pedida? Solo match de token exacto (11 != 110)."""
-    if not talla:
-        return True
-    v = (vname or "").upper()
-    v = re.sub(r"(?<=\d)[Xx](?=\d)", " ", v)
-    v = re.sub(r"[:/\-_,]", " ", v)
-    t = str(talla).upper()
-    return re.search(rf"(?<![0-9A-Z]){re.escape(t)}(?![0-9A-Z])", v) is not None
-
-
-def tkey(s):
-    """Espejo de tkeyJS del frontend: minúsculas, sin acentos,
-    no-alfanumérico → un espacio, bordes recortados."""
-    s = unicodedata.normalize("NFD", (s or "").lower())
-    s = "".join(c for c in s if not unicodedata.combining(c))
-    return " ".join("".join(c if c.isalnum() else " " for c in s).split())
-
-
 # ---------------- Appwrite (server-side, API key) ----------------
 
 UA = {"User-Agent": "PriceWatch-Notify/1.0 (+github-actions)"}
 
 
 def aw(method, path, body=None):
-    if not (AW_EP and AW_PID and AW_KEY):
-        return {}, 0
-    try:
-        r = SESSION.request(method, f"{AW_EP}{path}", json=body,
-                            headers={"X-Appwrite-Project": AW_PID,
-                                     "X-Appwrite-Key": AW_KEY, **UA},
-                            timeout=20)
-    except Exception:
-        return {}, 0
-    try:
-        return r.json() or {}, r.status_code
-    except ValueError:
-        return {}, r.status_code
-
-
-def aw_rows(table):
-    q = quote('{"method":"limit","values":[500]}')
-    res, code = aw("GET", f"/tablesdb/{AW_DB}/tables/{table}/rows"
-                         f"?queries%5B%5D={q}")
-    return res.get("rows", []) if code == 200 else []
+    """Request Appwrite -> (json, status). Wrapper fino de common."""
+    return aw_request(method, path, body)
 
 
 def aw_health():
     """(caido, ids_de_tablas): el GET de tablas ya devuelve la lista —
     reusarla ahorra un GET por tabla a los ensure_*_table."""
-    if not (AW_EP and AW_PID and AW_KEY):
-        return False, set()
-    res, code = aw("GET", f"/tablesdb/{AW_DB}/tables")
-    ids = {t.get("$id") or t.get("tableId") or t.get("id")
-           for t in res.get("tables", [])}
-    return code != 200, {i for i in ids if i}
+    return aw_tables()
 
 
 # consola del proyecto (region va embebida en el endpoint: sfo.cloud...)
@@ -131,106 +94,19 @@ AW_CONSOLE = ("https://cloud.appwrite.io/console/project-"
 
 def ensure_push_table(known=None):
     """Crea push_subs si falta — el correo/digest no depende de ella."""
-    if known is not None and "push_subs" in known:
-        return
-    _, code = aw("GET", f"/tablesdb/{AW_DB}/tables/push_subs")
-    if code == 200:
-        return
-    res, code = aw("POST", f"/tablesdb/{AW_DB}/tables", {
-        "tableId": "push_subs", "name": "Suscripciones push",
-        # cualquiera puede suscribirse (no requiere cuenta); solo el
-        # servidor lee/borra — unsubscribe mata el endpoint en origen
-        # y el sender lo poda al recibir 404/410
-        "permissions": ['create("any")'], "rowSecurity": True,
-        "enabled": True})
-    if code not in (200, 201, 409):
-        print(f"  ! push_subs: HTTP {code} {res.get('message')}")
-        return
-    for kind, kw in [("string", {"key": "endpoint", "size": 500,
-                                 "required": True}),
-                     ("string", {"key": "keys", "size": 500,
-                                 "required": True}),
-                     ("string", {"key": "ua", "size": 250,
-                                 "required": False})]:
-        aw("POST", f"/tablesdb/{AW_DB}/tables/push_subs/columns/{kind}", kw)
-    for _ in range(20):
-        time.sleep(1)
-        r, _ = aw("GET", f"/tablesdb/{AW_DB}/tables/push_subs")
-        st = {c["key"]: c["status"]
-              for c in r.get("columns", r.get("attributes", []))}
-        if st and all(v == "available" for v in st.values()):
-            break
-    print("  + push_subs lista")
+    ensure_table("push_subs", known)
 
 
 def ensure_targets_table(known=None):
     """Crea targets si falta — el sync del PWA escribe directo ahi."""
-    if known is not None and "targets" in known:
-        return
-    _, code = aw("GET", f"/tablesdb/{AW_DB}/tables/targets")
-    if code == 200:
-        return
-    res, code = aw("POST", f"/tablesdb/{AW_DB}/tables", {
-        "tableId": "targets", "name": "Precios objetivo",
-        "permissions": ['create("users")', 'read("users")',
-                        'update("users")', 'delete("users")'],
-        "rowSecurity": True, "enabled": True})
-    if code not in (200, 201, 409):
-        print(f"  ! targets: HTTP {code} {res.get('message')}")
-        return
-    for kind, kw in [("string", {"key": "sku", "size": 36,
-                                 "required": True}),
-                     ("integer", {"key": "target", "required": True})]:
-        aw("POST", f"/tablesdb/{AW_DB}/tables/targets/columns/{kind}", kw)
-    for _ in range(20):
-        time.sleep(1)
-        r, _ = aw("GET", f"/tablesdb/{AW_DB}/tables/targets")
-        st = {c["key"]: c["status"]
-              for c in r.get("columns", r.get("attributes", []))}
-        if st and all(v == "available" for v in st.values()):
-            break
-    print("  + targets lista")
+    ensure_table("targets", known)
 
 
 def ensure_siman_tables(known=None):
     """Crea siman_watch/muted/seen si faltan — el sync del PWA las usa
     directo desde el navegador; sin ellas el sync pegaba 404 en loop."""
-    spec = [
-        ("siman_watch", "Siman busquedas vigiladas",
-         [("string", {"key": "q", "size": 120, "required": True}),
-          ("string", {"key": "talla", "size": 12, "required": False}),
-          ("string", {"key": "filtro", "size": 200, "required": False})]),
-        ("siman_muted", "Siman productos muteados",
-         [("string", {"key": "tkey", "size": 250, "required": True})]),
-        ("siman_seen", "Siman alertas vistas",
-         [("string", {"key": "tkey", "size": 250, "required": True}),
-          ("float", {"key": "price", "required": True}),
-          ("string", {"key": "date", "size": 10, "required": True})]),
-    ]
-    for t, name, cols in spec:
-        if known is not None and t in known:
-            continue
-        _, code = aw("GET", f"/tablesdb/{AW_DB}/tables/{t}")
-        if code == 200:
-            continue
-        res, code = aw("POST", f"/tablesdb/{AW_DB}/tables", {
-            "tableId": t, "name": name,
-            "permissions": ['create("users")', 'read("users")',
-                            'update("users")', 'delete("users")'],
-            "rowSecurity": True, "enabled": True})
-        if code not in (200, 201, 409):
-            print(f"  ! {t}: HTTP {code} {res.get('message')}")
-            continue
-        for kind, kw in cols:
-            aw("POST", f"/tablesdb/{AW_DB}/tables/{t}/columns/{kind}", kw)
-        for _ in range(20):
-            time.sleep(1)
-            r, _ = aw("GET", f"/tablesdb/{AW_DB}/tables/{t}")
-            st = {c["key"]: c["status"]
-                  for c in r.get("columns", r.get("attributes", []))}
-            if st and all(v == "available" for v in st.values()):
-                break
-        print(f"  + {t} lista")
+    for t in ("siman_watch", "siman_muted", "siman_seen"):
+        ensure_table(t, known)
 
 
 # ---------------- datos ----------------
@@ -260,15 +136,22 @@ def load_events(path, today=True):
 def catalog_state():
     """{sku: {price, saving, in_stock, min, max, med, n_ch, last_ch,
     title}} desde prices.db — espejo del agg del frontend."""
+    if not os.path.exists(DB):
+        return {}, None
     con = sqlite3.connect(DB)
     con.row_factory = sqlite3.Row
-    prods = {r["sku"]: dict(r)
-             for r in con.execute("select sku, title, image from products")}
-    series = {}
-    for r in con.execute("select sku, date, price, saving, in_stock "
-                         "from prices order by sku, date"):
-        series.setdefault(r["sku"], []).append(r)
-    con.close()
+    try:
+        prods = {r["sku"]: dict(r)
+                 for r in con.execute("select sku, title, image "
+                                      "from products")}
+        series = {}
+        for r in con.execute("select sku, date, price, saving, in_stock "
+                             "from prices order by sku, date"):
+            series.setdefault(r["sku"], []).append(r)
+    except sqlite3.OperationalError:
+        return {}, None
+    finally:
+        con.close()
     out = {}
     for sku, rows in series.items():
         prices = [r["price"] for r in rows if r["price"]]
@@ -284,7 +167,7 @@ def catalog_state():
             "saving": last["saving"] or 0, "in_stock": bool(last["in_stock"]),
             "min": min(prices) if prices else None,
             "max": max(prices) if prices else None,
-            "n_ch": len(ch), "last_ch": last["date"] if ch else None,
+            "n_ch": len(ch), "last_ch": ch[-1]["date"] if ch else None,
             "d_ch": (date.fromisoformat(TODAY) - d_last).days
                     if d_last else None,
         }
@@ -396,11 +279,7 @@ def siman_gangas(events, sitems=None):
         sitems = siman_items()
     muted = {r["tkey"] for r in aw_rows("siman_muted")}
     seen = {r["tkey"]: r["price"] for r in aw_rows("siman_seen")}
-    def hdist(a, b):
-        try:
-            return bin(int(a, 16) ^ int(b, 16)).count("1")
-        except (ValueError, TypeError):
-            return 99
+
     def hit(rule, tk, it):
         # paridad con ruleHit del PWA: "pid|tkey|h1,h2,.." matchea por
         # CUALQUIERA — el pid cubre titulos editados, el tkey cubre
@@ -418,7 +297,7 @@ def siman_gangas(events, sitems=None):
         ih = it.get("imghash")
         hs = pt[2] if len(pt) > 2 else ""
         return bool(ih and hs) and any(
-            hdist(h, ih) <= 8 for h in hs.split(","))
+            hamming(h, ih) <= 8 for h in hs.split(","))
     out = []
     for e in events:
         if e["type"] not in ("bajo", "oferta"):
@@ -426,8 +305,8 @@ def siman_gangas(events, sitems=None):
         it = sitems.get(str(e.get("iid"))) or {}
         if it and not it.get("avail"):
             continue   # la variante esta agotada: nada que comprar hoy
-        if it.get("talla") and not _talla_hit(it.get("vname"),
-                                             it["talla"]):
+        if it.get("talla") and not talla_hit(it.get("vname"),
+                                            it["talla"]):
             continue   # bajo otra talla, no la vigilada
         tk = tkey(e.get("title"))
         if any(hit(r, tk, it) for r in muted):

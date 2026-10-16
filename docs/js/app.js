@@ -34,12 +34,12 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   localStorage.setItem("pw-tab", t.dataset.t);
   const lbl = TABS.find(x=>x[0]===t.dataset.t);
   $("#fab-label").textContent = lbl ? lbl[1] : "";
-  if (t.dataset.t==="favs" && favFilter!=="all") {
-    favFilter = "all"; render(); }
+  if (t.dataset.t==="favs" && favFilter!=="all") favFilter = "all";
+  // render perezoso: rellena solo el pane entrante y pinta sus sparks
+  render();
   if (t.dataset.t==="explorar") loadExplorer();
   if (t.dataset.t==="cambios") paintBar("ch-cambios");
   if (t.dataset.t==="ofertas") paintBar("ch-ofertas");
-  sparks();   // los sparks de este pane no se pintaron en el render
 });
 // abre en el ultimo tab usado (o Mi lista)
 const urlTab = new URLSearchParams(location.search).get("tab");
@@ -66,7 +66,7 @@ $("#fab").onclick = () => {
         · datos al ${+_d} ${MESES[+_m-1]}</div>`
       + RESUMEN.map(([t,tab,cf,ff,sk]) =>
         `<div class="navitem res" data-t="${tab}" data-cf="${cf||""}"
-           data-ff="${ff||""}"${sk?` data-sku="${sk}"`:""}><span>${t}</span>
+           data-ff="${ff||""}"${sk?` data-sku="${sk}"`:""}><span>${esc(t)}</span>
            <span class="meta">›</span></div>`).join("")
     : "";
   $("#navitems").innerHTML = `<div class="navsec">Secciones</div>`
@@ -420,7 +420,7 @@ function openProd(sku){
       clubRows.map(([n,c])=>{
         const st = (n===MYCLUB?"color:var(--warn);":"")
                  + (n==="El Salvador"?"border-top:2px solid var(--line)":"");
-        return `<tr${st?` style="${st}"`:""}><td>${n===MYCLUB?"📍 ":""}${n==="El Salvador"?"Total (nacional)":n}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td><td>${typeof qtySpark==="function"?qtySpark(ch[n], cDates):""}</td></tr>`;
+        return `<tr${st?` style="${st}"`:""}><td>${n===MYCLUB?"📍 ":""}${n==="El Salvador"?"Total (nacional)":esc(n)}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td><td>${typeof qtySpark==="function"?qtySpark(ch[n], cDates):""}</td></tr>`;
       }).join("") + "</table>"
     : "<p class='meta' style='margin-top:10px'>Sin dato de stock por club todavía — se consulta solo para ofertas, movimientos y tu lista.</p>";
   // tabla por episodios: una fila por regimen (mismo precio+stock+letrero),
@@ -529,8 +529,17 @@ for (const d of [dlg, lgDlg, dlgNav]) d.addEventListener("click", e => {
   if (e.clientX < r.left || e.clientX > r.right
       || e.clientY < r.top || e.clientY > r.bottom) d.close();
 });
-dlg.addEventListener("close", () =>
-  document.body.classList.remove("detail"));
+dlg.addEventListener("close", () => {
+  document.body.classList.remove("detail");
+  // deep link ?sku= consumido: si quedaba en la URL, una recarga (p.ej.
+  // el banner de "hay datos nuevos") reabria una ficha ya cerrada
+  const q = new URLSearchParams(location.search);
+  if (q.has("sku")) {
+    q.delete("sku");
+    const s = q.toString();
+    history.replaceState(null, "", location.pathname + (s ? "?" + s : ""));
+  }
+});
 // en modo anclado (no modal) Esc no cierra solo
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && dlg.open) dlg.close();
@@ -555,6 +564,12 @@ setInterval(checkVer, 30 * 60 * 1000);
 // La suscripcion vive en Appwrite push_subs; no requiere cuenta porque
 // la "identidad" es el endpoint mismo — unsubscribe() lo mata en origen
 // y el sender lo poda al recibir 404/410.
+// El registro va ANTES del IIFE: serviceWorker.ready solo resuelve una
+// vez que el registro de sw.js arranco — si el .ready corria primero y
+// ningun SW estaba registrado (primer arranque), la promesa podia quedar
+// colgada y el boton de avisos nunca aparecia
+if ("serviceWorker" in navigator)
+  navigator.serviceWorker.register("sw.js", {scope: "./"}).catch(()=>{});
 const VAPID_PUBLIC = "BCe97olK0g7PDhtvuC4BknYtgjzkzSlXv8MJ_Ve-9tMwnagCAU-lQmI1JtSgrSNrQZQE2pBr0O4H-vruxep4H6c";
 const b64u8 = s => Uint8Array.from(
   atob(s.replace(/-/g,"+").replace(/_/g,"/")), c => c.charCodeAt(0));
@@ -578,19 +593,20 @@ const pushBtn = document.getElementById("pushbtn");
       sub = await reg.pushManager.subscribe({userVisibleOnly: true,
         applicationServerKey: b64u8(VAPID_PUBLIC)});
       const j = sub.toJSON();
-      AW.dbs.createRow({databaseId: AW_DB, tableId: "push_subs",
-        rowId: `sub-${h16(j.endpoint)}`,
+      // si la fila no quedo en Appwrite (red caida, no 409 = ya existe)
+      // desactivar la suscripcion: el icono no debe mentir con 🔔
+      // cuando el backend jamas conocio el endpoint
+      const saved = await AW.dbs.createRow({databaseId: AW_DB,
+        tableId: "push_subs", rowId: `sub-${h16(j.endpoint)}`,
         data: {endpoint: j.endpoint, keys: JSON.stringify(j.keys),
-               ua: navigator.userAgent.slice(0, 240)}}).catch(() => {});
+               ua: navigator.userAgent.slice(0, 240)}})
+        .then(() => true).catch(e => e && e.code === 409);
+      if (!saved) { await sub.unsubscribe(); return paint(); }
       paint();
     } catch (e) {}
   };
   paint();
 })();
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js", {scope: "./"}).catch(()=>{});
-}
 
 // sesion previa: al cargar por ultimo, render() y los
 // helpers ya estan definidos (syncAll los necesita).

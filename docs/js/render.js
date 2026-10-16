@@ -95,56 +95,6 @@ function render(){
   const q = $("#q").value.trim();
   const f = e => !q || matchQ(q, e.title, (D.products[e.sku]||{}).title);
   const cfe = cf === "new" && !NEWV.length ? "all" : cf;
-  // "nuevas" muestra TODO lo nuevo (no solo precios): el chip del resumen
-  // cuenta stock y nuevos tambien, el destino debe coincidir
-  const cambios = ev.filter(e=>!deadPrice(e) && (cfe==="new"
-    ? NEWSET.has(e) && f(e)
-    : ["bajo","subio","oferta_termino","rebaja"].includes(e.type)
-      && (cfe==="all" ? true : cfe==="fav" ? FAV.has(e.sku)
-          : cfe==="bajo" ? (e.type==="bajo"||e.type==="rebaja")
-          : e.type===cfe)
-      && f(e)));
-  // bajaron/subieron van por magnitud: el Eufy -48% no se entierra bajo -2%s
-  if (cfe === "bajo" || cfe === "rebaja")
-    cambios.sort((a,b) => (a.pct??0) - (b.pct??0));
-  if (cfe === "subio") cambios.sort((a,b) => (b.pct??0) - (a.pct??0));
-  // confesion: cuantos ajustes de catalogo se ocultaron EN ESTA VISTA
-  // (mismo alcance del chip activo). Clic = auditoria: los muestra
-  // atenuados, claramente marcados — no se mezclan con lo accionable
-  const dead = ev.filter(e => deadPrice(e) && f(e) && (cfe==="new"
-    ? NEWSET.has(e)
-    : ["bajo","subio","oferta_termino","rebaja"].includes(e.type)
-      && (cfe==="all" || (cfe==="fav" ? FAV.has(e.sku)
-          : cfe==="bajo" ? (e.type==="bajo"||e.type==="rebaja")
-          : e.type===cfe))));
-  const nDead = dead.length;
-  const deadHtml = SHOW_DEAD ? "<div class='deadzone'>"
-    + groupClubs(dead).map(g => card(g[0], g)).join("") + "</div>" : "";
-  $("#g-cambios").innerHTML = (groupClubs(cambios)
-    .map(g => card(g[0], g)).join("")
-    || "<p class='meta'>Sin cambios</p>")
-    + deadHtml
-    + (nDead ? `<p class='meta dead-toggle' style='grid-column:1/-1;cursor:pointer'>`
-      + `${nDead} ajuste${nDead>1?"s":""} de precio en artículos sin stock`
-      + ` — ${SHOW_DEAD ? "mostrando" : "ocultos"} ${SHOW_DEAD ? "▲" : "▸ ver"}</p>` : "");
-  $("#cf-new").style.display = NEWV.length ? "" : "none";
-  movChart(cambios);
-  const dealList = DEALS
-    .filter(s => dealOK(s, OF_F)
-             && (!q || matchQ(q, (D.products[s]||{}).title)))
-    .sort((a,b) => dealScore(b) - dealScore(a));
-  $("#g-ofertas").innerHTML = dealList.slice(0, 120)
-    .map(favCard).join("") || "<p class='meta'>Sin gangas hoy</p>";
-  dealChart(dealList);
-  // el feed cuenta solo transiciones del producto a nivel pais
-  // (hay / no hay / existe / no existe). "se agota" es urgencia que
-  // vive en las cards, y lo que pasa en un club puntual es detalle
-  // que vive en la ficha — ninguno de los dos es cambio de estado.
-  const stockEv = ev.filter(e=>["agotado","reaparecio","salio_del_catalogo",
-                                "regreso"].includes(e.type) && f(e));
-  $("#g-stock").innerHTML = stockEv.map(e=>card(e)).join("")
-    || "<p class='meta'>Sin cambios de disponibilidad</p>";
-  $("#g-nuevos").innerHTML = ev.filter(e=>e.type==="nuevo"&&f(e)).map(e=>card(e)).join("") || "<p class='meta'>Sin productos nuevos</p>";
   const favList = [...FAV].sort((x,y)=>verdict(x).rank-verdict(y).rank);
   if (SHOP) favList.sort((x,y)=>(CART.has(x)?1:0)-(CART.has(y)?1:0));
   // alertas accionables: solo ocupan espacio cuando hay algo que hacer
@@ -190,9 +140,11 @@ function render(){
     alerts.unshift([deltaTxt, "cambios", "new"]);
   }
   RESUMEN = alerts;
+  // el texto del alerta puede traer titulos de producto (objetivo 🎯):
+  // va escapado — un < o & rompia el marcado del resumen y del dlg-nav
   $("#alerts").innerHTML = alerts.map(([t,tab,cf2,ff,sk]) =>
     `<span class="alert${cf2==="new"?" new":""}" data-tab="${tab}" data-cf="${cf2||""}"
-       data-ff="${ff||""}"${sk?` data-sku="${sk}"`:""}>${t}</span>`).join("");
+       data-ff="${ff||""}"${sk?` data-sku="${sk}"`:""}>${esc(t)}</span>`).join("");
   // pendientes = articulos unicos de tu lista que piden atencion
   RESUMEN_N = new Set([...favOf, ...resu, ...favOut, ...clubOut, ...favSA]).size;
   const bar = $("#shopbar");
@@ -208,104 +160,181 @@ function render(){
       + (nd ? ` · <span style="color:${diff<0?"var(--down)":"var(--up)"}">`
           + `${diff<0?"−":"+"}$${Math.abs(diff/100).toFixed(2)} vs típico</span>` : "");
   } else bar.style.display = "none";
-  const show = favFilter === "all" ? favList
-             : favList.filter(FAVFF[favFilter] || (()=>true));
-  const ffEl = $("#fav-filter");
-  ffEl.style.display = favFilter === "all" ? "none" : "";
-  if (favFilter !== "all") {
-    const lbl = {oferta:"en oferta", resurtir:"para resurtir",
-      sinstock:"sin stock", clubout:`agotado en ${MYCLUB}`,
-      seagota:"se están agotando"}[favFilter];
-    ffEl.textContent = `viendo: ${lbl} · ${show.length} ✕`;
-  }
-  // cold start: sin lista, sugerir lo mas barato de hoy para empezar
-  const SUGG = show.length || FAV.size ? [] : DEALS
-    .filter(s => atMin(s) && lastOf(s)?.[2])
-    .sort((a,b) => dealScore(b) - dealScore(a)).slice(0, 8);
-  $("#g-favs").innerHTML = show.map(favCard).join("")
-    || (FAV.size === 0 && SUGG.length
-        ? `<p class='meta' style='margin-bottom:8px'>Tu lista está vacía — `
-        + `marca ☆ en lo que compras seguido`
-        + (AW.user ? "" : ` (con "cuenta" se sincroniza entre teléfono y PC)`)
-        + `. Lo más barato hoy para empezar:</p>`
-        + SUGG.map(favCard).join("")
-        : `<p class='meta'>Marca productos con ☆ para seguirlos aquí.`
-        + (AW.user ? "" : ` Con 'cuenta' se sincronizan entre teléfono y PC.`)
-        + `</p>`);
-  // siman: alertas agrupadas por busqueda vigilada (acordeon).
-  // se conserva que grupos tiene abiertos el usuario entre renders
-  const sGroups = {};
-  // en el tab Siman el buscador global filtra estas cards (titulo,
-  // marca o vigilancia) en vez de cubrir el pane con el catalogo
-  simAl.filter(p => !q || matchQ(q, p.t, p.b, p.w)).forEach(p =>
-    (sGroups[(p.w||"otros") + (p.ta ? " · "+p.ta : "")] ??= []).push(p));
-  document.querySelectorAll("#g-siman details.acc").forEach(d =>
-    ACC_OPEN[d.dataset.k] = d.open);
-  const gMin = k => Math.min(...sGroups[k].map(p => p.p ?? Infinity));
-  const gDisc = k => Math.max(...sGroups[k].map(sDisc));
-  const sKeys = Object.keys(sGroups).sort({
-    count: (a,b) => sGroups[b].length - sGroups[a].length
-             || sGroups[b].filter(x=>x.broke).length
-                - sGroups[a].filter(x=>x.broke).length,
-    disc:  (a,b) => gDisc(b) - gDisc(a)
-             || sGroups[b].length - sGroups[a].length,
-    price: (a,b) => gMin(a) - gMin(b)
-             || sGroups[b].length - sGroups[a].length,
-    az:    (a,b) => a.localeCompare(b),
-  }[SSORT]);
-  $("#g-siman").innerHTML = sKeys.map(k => {
-    const items = sGroups[k]
-      .sort((a,b) => (b.broke-a.broke) || sDisc(b)-sDisc(a));
-    const min = gMin(k);
-    const open = k in ACC_OPEN ? ACC_OPEN[k] : items.length <= 3;
-    return `<details class="acc" data-k="${esc(k)}"${open?" open":""}>
-      <summary>${esc(k)}
-        <span class="meta">${items.length}${min<Infinity
-          ? " · desde "+fmt(Math.round(min*100)) : ""}</span></summary>
-      <div class="grid">${items.map(sCard).join("")}</div>
-    </details>`;
-  }).join("")
-    || (q ? `<p class='meta'>Sin coincidencias en Siman</p>`
-        : `<p class='meta'>Sin alertas hoy — ${SIMAN.n_items||0} variantes `
-        + `bajo vigilancia.</p>`);
-  document.querySelectorAll("#siman-sort .chip").forEach(c =>
-    c.classList.toggle("on", c.dataset.ss === SSORT));
-  $("#siman-sum").textContent =
-    `vigilando ${SWATCH.length} artículos · ${nSiman} alertan`;
-  $("#siman-watches").innerHTML = SWATCH.map(w =>
-    `<span class="chip on">${esc(w.q)}${w.talla?` · ${esc(w.talla)}`:""}
-     <a style="cursor:pointer;color:var(--up)"
-        data-wq="${esc(w.q)}|${esc(w.talla||"")}">✕</a></span>`
-  ).join(" ")
-    + (AW.user ? "" :
-       " <span class='meta'>sin sesión: cambios solo locales</span>");
-  // silenciados (👎): restaurables; cada regla "pid|tkey" muestra el titulo
-  $("#siman-muted").innerHTML = SMUTE.size
-    ? `<span class="meta">silenciados:</span> ` + [...SMUTE].map(r =>
-        `<span class="chip">${esc(r.split("|")[1] || r)}
-         <a style="cursor:pointer;color:var(--down)"
-            title="restaurar a las alertas"
-            data-mu="${esc(r)}">↩</a></span>`).join(" ")
-    : "";
   const nChFav = ev.filter(e=>["bajo","subio"].includes(e.type)&&FAV.has(e.sku)).length;
   const favN = document.querySelector('.tab[data-t="favs"] .n');
   if (favN) favN.textContent = FAV.size + (nChFav ? ` ⚡${nChFav}` : "");
-  if (FAV.size) {
-    const vs = favList.map(verdict);
-    const ok = vs.filter(v=>v.rank<=4).length,
-          up = vs.filter(v=>v.rank===6).length,
-          out = vs.filter(v=>v.rank>=8).length;
-    $("#favs-sum").textContent = favFilter === "all"
-      ? `${ok} en buen precio · ${up} subieron · ${out} sin stock — ordenados por conveniencia`
-      : `viendo ${show.length} de ${FAV.size} en tu lista`;
-  } else $("#favs-sum").textContent = "";
-  if (q.length >= 2) {
-    $("#g-buscar").innerHTML = Object.keys(D.products)
-      .filter(s => { const p = D.products[s]||{};
-        return matchQ(q, p.title, p.brand, p.category, s); })
-      .slice(0, 60).map(favCard).join("")
-      || "<p class='meta'>Sin coincidencias en el catálogo</p>";
-  }
+  // panes perezosos: solo el activo se reconstruye — las interacciones
+  // frecuentes (estrella, carrito, buscador) ya no pagan el HTML de los
+  // 7 paneles; al cambiar de tab el handler llama render() y rellena
+  // el entrante
+  const PANES = {
+    "pane-cambios": () => {
+      // "nuevas" muestra TODO lo nuevo (no solo precios): el chip del
+      // resumen cuenta stock y nuevos tambien, el destino debe coincidir
+      const cambios = ev.filter(e=>!deadPrice(e) && (cfe==="new"
+        ? NEWSET.has(e) && f(e)
+        : ["bajo","subio","oferta_termino","rebaja"].includes(e.type)
+          && (cfe==="all" ? true : cfe==="fav" ? FAV.has(e.sku)
+              : cfe==="bajo" ? (e.type==="bajo"||e.type==="rebaja")
+              : e.type===cfe)
+          && f(e)));
+      // bajaron/subieron van por magnitud: el Eufy -48% no se entierra
+      // bajo -2%s
+      if (cfe === "bajo" || cfe === "rebaja")
+        cambios.sort((a,b) => (a.pct??0) - (b.pct??0));
+      if (cfe === "subio") cambios.sort((a,b) => (b.pct??0) - (a.pct??0));
+      // confesion: cuantos ajustes de catalogo se ocultaron EN ESTA
+      // VISTA (mismo alcance del chip activo). Clic = auditoria: los
+      // muestra atenuados, marcados — no se mezclan con lo accionable
+      const dead = ev.filter(e => deadPrice(e) && f(e) && (cfe==="new"
+        ? NEWSET.has(e)
+        : ["bajo","subio","oferta_termino","rebaja"].includes(e.type)
+          && (cfe==="all" || (cfe==="fav" ? FAV.has(e.sku)
+              : cfe==="bajo" ? (e.type==="bajo"||e.type==="rebaja")
+              : e.type===cfe))));
+      const deadHtml = SHOW_DEAD ? "<div class='deadzone'>"
+        + groupClubs(dead).map(g => card(g[0], g)).join("")
+        + "</div>" : "";
+      $("#g-cambios").innerHTML = (groupClubs(cambios)
+        .map(g => card(g[0], g)).join("")
+        || "<p class='meta'>Sin cambios</p>")
+        + deadHtml
+        + (dead.length
+          ? `<p class='meta dead-toggle' style='grid-column:1/-1;cursor:pointer'>`
+          + `${dead.length} ajuste${dead.length>1?"s":""} de precio en artículos sin stock`
+          + ` — ${SHOW_DEAD ? "mostrando" : "ocultos"} ${SHOW_DEAD ? "▲" : "▸ ver"}</p>` : "");
+      $("#cf-new").style.display = NEWV.length ? "" : "none";
+      movChart(cambios);
+    },
+    "pane-ofertas": () => {
+      const dealList = DEALS
+        .filter(s => dealOK(s, OF_F)
+                 && (!q || matchQ(q, (D.products[s]||{}).title)))
+        .sort((a,b) => dealScore(b) - dealScore(a));
+      $("#g-ofertas").innerHTML = dealList.slice(0, 120)
+        .map(favCard).join("") || "<p class='meta'>Sin gangas hoy</p>";
+      dealChart(dealList);
+    },
+    // el feed cuenta solo transiciones del producto a nivel pais
+    // (hay / no hay / existe / no existe). "se agota" es urgencia que
+    // vive en las cards, y lo que pasa en un club puntual es detalle
+    // que vive en la ficha — ninguno de los dos es cambio de estado.
+    "pane-stock": () => {
+      $("#g-stock").innerHTML = ev
+        .filter(e=>["agotado","reaparecio","salio_del_catalogo",
+                    "regreso"].includes(e.type) && f(e))
+        .map(e=>card(e)).join("")
+        || "<p class='meta'>Sin cambios de disponibilidad</p>";
+    },
+    "pane-nuevos": () => {
+      $("#g-nuevos").innerHTML =
+        ev.filter(e=>e.type==="nuevo"&&f(e)).map(e=>card(e)).join("")
+        || "<p class='meta'>Sin productos nuevos</p>";
+    },
+    "pane-favs": () => {
+      const show = favFilter === "all" ? favList
+                 : favList.filter(FAVFF[favFilter] || (()=>true));
+      const ffEl = $("#fav-filter");
+      ffEl.style.display = favFilter === "all" ? "none" : "";
+      if (favFilter !== "all") {
+        const lbl = {oferta:"en oferta", resurtir:"para resurtir",
+          sinstock:"sin stock", clubout:`agotado en ${MYCLUB}`,
+          seagota:"se están agotando"}[favFilter];
+        ffEl.textContent = `viendo: ${lbl} · ${show.length} ✕`;
+      }
+      // cold start: sin lista, sugerir lo mas barato de hoy para empezar
+      const SUGG = show.length || FAV.size ? [] : DEALS
+        .filter(s => atMin(s) && lastOf(s)?.[2])
+        .sort((a,b) => dealScore(b) - dealScore(a)).slice(0, 8);
+      $("#g-favs").innerHTML = show.map(favCard).join("")
+        || (FAV.size === 0 && SUGG.length
+            ? `<p class='meta' style='margin-bottom:8px'>Tu lista está vacía — `
+            + `marca ☆ en lo que compras seguido`
+            + (AW.user ? "" : ` (con "cuenta" se sincroniza entre teléfono y PC)`)
+            + `. Lo más barato hoy para empezar:</p>`
+            + SUGG.map(favCard).join("")
+            : `<p class='meta'>Marca productos con ☆ para seguirlos aquí.`
+            + (AW.user ? "" : ` Con 'cuenta' se sincronizan entre teléfono y PC.`)
+            + `</p>`);
+      if (FAV.size) {
+        const vs = favList.map(verdict);
+        const ok = vs.filter(v=>v.rank<=4).length,
+              up = vs.filter(v=>v.rank===6).length,
+              out = vs.filter(v=>v.rank>=8).length;
+        $("#favs-sum").textContent = favFilter === "all"
+          ? `${ok} en buen precio · ${up} subieron · ${out} sin stock — ordenados por conveniencia`
+          : `viendo ${show.length} de ${FAV.size} en tu lista`;
+      } else $("#favs-sum").textContent = "";
+    },
+    // siman: alertas agrupadas por busqueda vigilada (acordeon).
+    // se conserva que grupos tiene abiertos el usuario entre renders
+    "pane-siman": () => {
+      const sGroups = {};
+      // en el tab Siman el buscador global filtra estas cards (titulo,
+      // marca o vigilancia) en vez de cubrir el pane con el catalogo
+      simAl.filter(p => !q || matchQ(q, p.t, p.b, p.w)).forEach(p =>
+        (sGroups[(p.w||"otros") + (p.ta ? " · "+p.ta : "")] ??= []).push(p));
+      document.querySelectorAll("#g-siman details.acc").forEach(d =>
+        ACC_OPEN[d.dataset.k] = d.open);
+      const gMin = k => Math.min(...sGroups[k].map(p => p.p ?? Infinity));
+      const gDisc = k => Math.max(...sGroups[k].map(sDisc));
+      const sKeys = Object.keys(sGroups).sort({
+        count: (a,b) => sGroups[b].length - sGroups[a].length
+                 || sGroups[b].filter(x=>x.broke).length
+                    - sGroups[a].filter(x=>x.broke).length,
+        disc:  (a,b) => gDisc(b) - gDisc(a)
+                 || sGroups[b].length - sGroups[a].length,
+        price: (a,b) => gMin(a) - gMin(b)
+                 || sGroups[b].length - sGroups[a].length,
+        az:    (a,b) => a.localeCompare(b),
+      }[SSORT]);
+      $("#g-siman").innerHTML = sKeys.map(k => {
+        const items = sGroups[k]
+          .sort((a,b) => (b.broke-a.broke) || sDisc(b)-sDisc(a));
+        const min = gMin(k);
+        const open = k in ACC_OPEN ? ACC_OPEN[k] : items.length <= 3;
+        return `<details class="acc" data-k="${esc(k)}"${open?" open":""}>
+          <summary>${esc(k)}
+            <span class="meta">${items.length}${min<Infinity
+              ? " · desde "+fmt(Math.round(min*100)) : ""}</span></summary>
+          <div class="grid">${items.map(sCard).join("")}</div>
+        </details>`;
+      }).join("")
+        || (q ? `<p class='meta'>Sin coincidencias en Siman</p>`
+            : `<p class='meta'>Sin alertas hoy — ${SIMAN.n_items||0} variantes `
+            + `bajo vigilancia.</p>`);
+      document.querySelectorAll("#siman-sort .chip").forEach(c =>
+        c.classList.toggle("on", c.dataset.ss === SSORT));
+      $("#siman-sum").textContent =
+        `vigilando ${SWATCH.length} artículos · ${nSiman} alertan`;
+      $("#siman-watches").innerHTML = SWATCH.map(w =>
+        `<span class="chip on">${esc(w.q)}${w.talla?` · ${esc(w.talla)}`:""}
+         <a style="cursor:pointer;color:var(--up)"
+            data-wq="${esc(w.q)}|${esc(w.talla||"")}">✕</a></span>`
+      ).join(" ")
+        + (AW.user ? "" :
+           " <span class='meta'>sin sesión: cambios solo locales</span>");
+      // silenciados (👎): restaurables; cada regla "pid|tkey" muestra
+      // el titulo
+      $("#siman-muted").innerHTML = SMUTE.size
+        ? `<span class="meta">silenciados:</span> ` + [...SMUTE].map(r =>
+            `<span class="chip">${esc(r.split("|")[1] || r)}
+             <a style="cursor:pointer;color:var(--down)"
+                title="restaurar a las alertas"
+                data-mu="${esc(r)}">↩</a></span>`).join(" ")
+        : "";
+    },
+    "pane-buscar": () => {
+      if (q.length >= 2)
+        $("#g-buscar").innerHTML = Object.keys(D.products)
+          .filter(s => { const p = D.products[s]||{};
+            return matchQ(q, p.title, p.brand, p.category, s); })
+          .slice(0, 60).map(favCard).join("")
+          || "<p class='meta'>Sin coincidencias en el catálogo</p>";
+    },
+  };
+  const act = document.querySelector(".pane.on");
+  if (act && PANES[act.id]) PANES[act.id]();
   sparks();
 }
 function favCard(sku){
@@ -327,7 +356,7 @@ function favCard(sku){
         ${l&&!l[2]?`<span class="tag agotado">agotado</span>`:""}
         ${l&&l[2]?saTag(sku):""}
         ${SHOP&&MYCLUB&&(D.clubs[sku]||{})[MYCLUB]&&!(D.clubs[sku][MYCLUB].in_stock)
-          ?`<span class="tag agotado">📍 sin stock en ${MYCLUB}</span>`:""}</div>
+          ?`<span class="tag agotado">📍 sin stock en ${esc(MYCLUB)}</span>`:""}</div>
       ${v.tip?`<div class="meta">${v.tip}</div>`:""}
       ${m&&l?`<div class="meta">pagaste $${(+m.paid).toFixed(2)}${m.date?" el "+m.date:""}
         → ${l[1]>=m.paid*100?"+":""}${Math.round((l[1]-m.paid*100)/(m.paid*100)*100)}% hoy

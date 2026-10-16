@@ -17,3 +17,7 @@ data/siman_events.jsonl
 docs/index.html
 docs/data.json
 docs/version.json
+
+# Memoria MCP local (grafo de conocimiento del agente)
+.devin/mcp_config.local.json
+.devin/memory.json

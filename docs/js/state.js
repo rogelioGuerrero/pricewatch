@@ -4,6 +4,10 @@
 
 const $ = s => document.querySelector(s);
 const fmt = c => c == null ? "—" : "$" + (c/100).toFixed(2);
+// fecha de negocio SV (GMT-6): toISOString() es UTC — pasadas las 6pm
+// hora SV "hoy" salia fechado maniana, desalineando compras y vistos
+// respecto a D.generated
+const todaySV = () => new Date(Date.now() - 6 * 3600e3).toISOString().slice(0, 10);
 const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const [_y,_m,_d] = D.generated.split("-");
 document.getElementById("gen").textContent = `${+_d} ${MESES[+_m-1]} ${_y}`;
@@ -92,11 +96,21 @@ let pvDone = false;
 const FAV = new Set(JSON.parse(localStorage.getItem("pw-favs")||"[]"));
 // historial de compras: log append-only en el teléfono {sku, paid, date}
 const COMPRAS = JSON.parse(localStorage.getItem("pw-compras")||"[]");
+// la semilla del repo (mis-compras.json) se migra a COMPRAS una sola
+// vez: sin el flag, borrar una compra semilla era imposible porque
+// D.mis la re-inyectaba en cada render/sync
+if (!localStorage.getItem("pw-mis-seeded")) {
+  for (const m of (D.mis||[]))
+    if (!COMPRAS.some(c => c.sku === String(m.sku)
+                      && c.date === m.date && c.paid === m.paid))
+      COMPRAS.push({sku: String(m.sku), paid: m.paid, date: m.date});
+  localStorage.setItem("pw-mis-seeded", "1");
+  localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
+}
 const PAID = {};
 const rebuildPaid = () => {
   for (const k in PAID) delete PAID[k];
-  (D.mis||[]).forEach(m => PAID[m.sku] = {paid:m.paid, date:m.date});
-  COMPRAS.forEach(m => PAID[m.sku] = m);  // local pisa a la semilla del repo
+  COMPRAS.forEach(m => PAID[m.sku] = m);
 };
 rebuildPaid();
 const delCompra = (i, sku) => {
@@ -112,7 +126,7 @@ const comprar = sku => {
   if (v == null) return false;
   const paid = parseFloat(v);
   if (!(paid > 0)) return false;
-  const r = {sku, paid, date: new Date().toISOString().slice(0,10)};
+  const r = {sku, paid, date: todaySV()};
   COMPRAS.push(r); PAID[sku] = r;
   if (AW.user) compraUp(r)
     .then(d => { r.rid = d.$id;
@@ -153,7 +167,7 @@ const comprarAuto = sku => {
   const l = (D.series[sku]||[]).slice(-1)[0];
   const paid = l ? l[1]/100 : null;
   if (!(paid > 0)) return;
-  const r = {sku, paid, date: new Date().toISOString().slice(0,10)};
+  const r = {sku, paid, date: todaySV()};
   COMPRAS.push(r); PAID[sku] = r;
   if (AW.user) compraUp(r)
     .then(d => { r.rid = d.$id;
@@ -192,7 +206,7 @@ function clubChips(sku){
   keys.sort((a,b)=> a===MYCLUB?-1 : b===MYCLUB?1 : a.localeCompare(b));
   return keys.map(k=>{
     const c = cl[k];
-    return `<span class="tag ${c.in_stock?"bajo":"agotado"}">${k===MYCLUB?"📍":""}${k} ${c.in_stock?"✓":"✗"}</span>`;
+    return `<span class="tag ${c.in_stock?"bajo":"agotado"}">${k===MYCLUB?"📍":""}${esc(k)} ${c.in_stock?"✓":"✗"}</span>`;
   }).join(" ");
 }
 // velocidad de venta: sku -> {club: evento se_agota mas reciente}.

@@ -87,21 +87,6 @@ jobs:
       - name: Rebuild dashboard
         run: python scripts/build_site.py
 
-      - name: Digest email + push alerts (solo si hay novedades)
-        # consolida los 3 sweeps del run; notify.py decide los umbrales.
-        # Va antes del deploy: un fallo de Pages nunca bloquea el digest.
-        env:
-          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
-          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
-          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          RESEND_FROM: PriceWatch <info@agtisa.com>
-          RESEND_TO: ${{ vars.RESEND_TO }}
-          VAPID_PUBLIC: BCe97olK0g7PDhtvuC4BknYtgjzkzSlXv8MJ_Ve-9tMwnagCAU-lQmI1JtSgrSNrQZQE2pBr0O4H-vruxep4H6c
-          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
-          SITE_URL: https://rogelioguerrero.github.io/pricewatch/
-        run: python scripts/notify.py
-
       - name: Check data sana antes de guardar cache
         # si el restore fallo y los scripts abortaron, un save vacio se
         # volveria el cache "mas reciente" y lo restauraria el proximo
@@ -136,3 +121,22 @@ jobs:
       - name: Publicar a GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Digest email + push alerts (solo si hay novedades)
+        # consolida los 3 sweeps del run; notify.py decide los umbrales.
+        # Va DESPUES del deploy: cuando el push llega al telefono el
+        # data.json nuevo ya esta publicado. always() + datacheck: un
+        # fallo de Pages nunca bloquea el digest, pero tampoco corre
+        # sobre data rota
+        if: always() && steps.datacheck.outputs.ok == '1'
+        env:
+          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: PriceWatch <info@agtisa.com>
+          RESEND_TO: ${{ vars.RESEND_TO }}
+          VAPID_PUBLIC: BCe97olK0g7PDhtvuC4BknYtgjzkzSlXv8MJ_Ve-9tMwnagCAU-lQmI1JtSgrSNrQZQE2pBr0O4H-vruxep4H6c
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          SITE_URL: https://rogelioguerrero.github.io/pricewatch/
+        run: python scripts/notify.py

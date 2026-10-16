@@ -1,6 +1,7 @@
 """Tests de normalizacion, tallas y diff de sweep_siman.py (Siman/VTEX)."""
 
 import json
+import sqlite3
 from datetime import datetime, timedelta, timezone
 
 import sweep_siman as sm
@@ -110,3 +111,75 @@ def test_prune_log_recorta(tmp_path, monkeypatch):
     sm.prune_log()
     lines = log.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1 and json.loads(lines[0])["iid"] == "A"
+
+
+# ---------- record_history: recodificado, watch/talla, poda ----------
+
+def _ritem(iid, price=100.0, talla=None, watch="busqueda"):
+    return {"iid": iid, "pid": "P" + iid, "title": "Producto " + iid,
+            "brand": "Marca", "link": "https://x/" + iid,
+            "image": "https://img/" + iid, "vname": "U",
+            "watch": watch, "talla": talla,
+            "price": price, "list": None, "qty": 1, "avail": True}
+
+
+def _rows(db, q):
+    con = sqlite3.connect(db)
+    out = con.execute(q).fetchall()
+    con.close()
+    return out
+
+
+def test_recodificado_enlaza_historia(tmp_path, monkeypatch):
+    """El listing muere y otro lo reemplaza: la serie historica del
+    itemId viejo se copia al nuevo y hereda su first_seen — antes la
+    historia moria con el id efimero a los 14 dias."""
+    db = str(tmp_path / "siman.db")
+    monkeypatch.setattr(sm, "DB_PATH", db)
+    sm.record_history({"1": _ritem("1")}, "2026-10-10")
+    sm.record_history({"1": _ritem("1")}, "2026-10-13")
+    sm.record_history({"2": _ritem("2", price=90.0)}, "2026-10-14",
+                      [{"type": "recodificado", "iid": "2",
+                        "old_iid": "1"}])
+    dias = [d for (d,) in _rows(
+        db, "select date from prices where itemId='2' order by date")]
+    assert dias == ["2026-10-10", "2026-10-13", "2026-10-14"]
+    fs = _rows(db, "select first_seen from items where itemId='2'")
+    assert fs == [("2026-10-10",)]
+
+
+def test_recodificado_repite_sweep_no_duplica(tmp_path, monkeypatch):
+    """INSERT OR IGNORE: si el mismo recodificado se procesa dos veces
+    (p.ej. rerun del dia) no se duplican filas."""
+    db = str(tmp_path / "siman.db")
+    monkeypatch.setattr(sm, "DB_PATH", db)
+    sm.record_history({"1": _ritem("1")}, "2026-10-13")
+    ev = [{"type": "recodificado", "iid": "2", "old_iid": "1"}]
+    sm.record_history({"2": _ritem("2")}, "2026-10-14", ev)
+    sm.record_history({"2": _ritem("2")}, "2026-10-14", ev)
+    n = _rows(db, "select count(*) from prices where itemId='2'")
+    assert n == [(2,)]
+
+
+def test_record_history_actualiza_watch_y_talla(tmp_path, monkeypatch):
+    """Cambiar la talla de un watch existente debe reflejarse: antes el
+    ON CONFLICT omitia watch/talla y quedaba la talla vieja (o NULL)."""
+    db = str(tmp_path / "siman.db")
+    monkeypatch.setattr(sm, "DB_PATH", db)
+    sm.record_history({"1": _ritem("1", talla="10")}, "2026-10-13")
+    sm.record_history({"1": _ritem("1", talla="42", watch="otra")},
+                      "2026-10-14")
+    row = _rows(db, "select watch, talla, first_seen, last_seen "
+                   "from items where itemId='1'")[0]
+    assert row == ("otra", "42", "2026-10-13", "2026-10-14")
+
+
+def test_record_history_poda_items_muertos(tmp_path, monkeypatch):
+    """La poda retiene 120d: items viejos salen junto a su historia."""
+    db = str(tmp_path / "siman.db")
+    monkeypatch.setattr(sm, "DB_PATH", db)
+    sm.record_history({"1": _ritem("1")}, "2026-06-01")
+    sm.record_history({"2": _ritem("2")}, "2026-10-14")
+    assert _rows(db, "select itemId from items") == [("2",)]
+    assert _rows(db, "select * from prices") == [("2", "2026-10-14",
+                                                 100.0, None, 1, 1, 0)]

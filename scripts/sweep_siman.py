@@ -17,15 +17,15 @@ Uso:
 
 import json
 import os
-import re
 import sqlite3
 import sys
 import time
-import unicodedata
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from urllib.parse import quote
 
 import requests
+from common import aw_env, aw_rows, hamming, norm, prune_jsonl, tkey, today_sv
+from common import talla_hit as talla_hit  # re-export: tests la importan
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "data")
@@ -43,21 +43,6 @@ ROWS = 50          # por pagina
 MAX_PAGES = 3      # cap: 150 productos por busqueda
 SLEEP = 0.4        # educado
 MIN_MOVE_PCT = 1.0
-
-TOKEN_RE = re.compile(r"[a-z0-9]+")
-
-
-def norm(s):
-    """minisculas, sin tildes, solo alfanumerico."""
-    s = unicodedata.normalize("NFD", (s or "").lower())
-    s = "".join(c for c in s if unicodedata.category(c) != "Mn")
-    return " ".join(TOKEN_RE.findall(s))
-
-
-def tkey(title):
-    """Identidad del producto que sobrevive recodificados."""
-    return norm(title)
-
 
 def img_hash(url):
     """aHash 8x8 del contenido de la foto. Siman re-sube el asset con un
@@ -78,11 +63,6 @@ def img_hash(url):
                       "016x")
     except Exception:
         return None
-
-
-def hamming(a, b):
-    """Distancia entre dos aHash hex de 64 bits."""
-    return bin(int(a, 16) ^ int(b, 16)).count("1")
 
 
 def attach_hashes(items):
@@ -110,18 +90,6 @@ def attach_hashes(items):
     conn.close()
     print(f"Imagenes hasheadas: {len(todo)} nuevas, "
           f"{len(cached)} en cache")
-
-
-def talla_hit(vname, talla):
-    """La variante corresponde a la talla pedida? '36X32'->36, 'BLUE:38'->38,
-    'NAVY:L'->L. Solo matching de token exacto para no confundir 11 con 110."""
-    if not talla:
-        return True
-    v = (vname or "").upper()
-    v = re.sub(r"(?<=\d)[Xx](?=\d)", " ", v)   # 36X32 -> 36 32
-    v = re.sub(r"[:/\-_,]", " ", v)
-    t = str(talla).upper()
-    return re.search(rf"(?<![0-9A-Z]){re.escape(t)}(?![0-9A-Z])", v) is not None
 
 
 def fetch_search(q):
@@ -175,22 +143,11 @@ def fetch_search(q):
 
 def watches_remote():
     """Watches del usuario en Appwrite (si hay API key); [] si no."""
-    ep, pid, key = (os.environ.get("APPWRITE_ENDPOINT"),
-                    os.environ.get("APPWRITE_PROJECT_ID"),
-                    os.environ.get("APPWRITE_API_KEY"))
-    if not (ep and pid and key):
+    if not all(aw_env()):
         return []
     try:
-        q = quote('{"method":"limit","values":[500]}')
-        r = SESSION.get(
-            f"{ep}/tablesdb/pricewatch/tables/siman_watch/rows"
-            f"?queries%5B%5D={q}",
-            headers={"X-Appwrite-Project": pid, "X-Appwrite-Key": key},
-            timeout=15)
-        r.raise_for_status()   # requests no lanza en 4xx/5xx
-        rows = r.json().get("rows", [])
         out = []
-        for r in rows:
+        for r in aw_rows("siman_watch"):
             w = {"q": r.get("q")}
             if r.get("talla"):
                 w["talla"] = r["talla"]
@@ -260,7 +217,26 @@ def history_index():
     return known, last, last_in
 
 
-def record_history(items, date):
+def link_recoded_history(conn, events):
+    """'recodificado': el listing murio y otro lo reemplazo — copiar la
+    serie historica del itemId viejo al nuevo y heredar su first_seen,
+    para que el precio minimo historico no muera con el id efimero."""
+    for e in events or []:
+        if e.get("type") != "recodificado" or not e.get("old_iid"):
+            continue
+        conn.execute(
+            "INSERT OR IGNORE INTO prices "
+            "(itemId, date, price, list, qty, avail, card) "
+            "SELECT ?, date, price, list, qty, avail, card "
+            "FROM prices WHERE itemId = ?",
+            (e["iid"], e["old_iid"]))
+        conn.execute(
+            "UPDATE items SET first_seen = (SELECT MIN(first_seen) "
+            "FROM items WHERE itemId IN (?, ?)) WHERE itemId = ?",
+            (e["iid"], e["old_iid"], e["iid"]))
+
+
+def record_history(items, date, events=None):
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""CREATE TABLE IF NOT EXISTS items (
         itemId TEXT PRIMARY KEY, pid TEXT, title TEXT, brand TEXT,
@@ -272,6 +248,8 @@ def record_history(items, date):
     conn.execute("""CREATE TABLE IF NOT EXISTS prices (
         itemId TEXT, date TEXT, price REAL, list REAL, qty INT,
         avail INT, card INT, PRIMARY KEY (itemId, date))""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS imgcache (
+        url TEXT PRIMARY KEY, h TEXT)""")
     conn.executemany(
         """INSERT INTO items (itemId, pid, title, brand, link, image,
            vname, watch, talla, first_seen, last_seen, imghash)
@@ -279,7 +257,8 @@ def record_history(items, date):
            ON CONFLICT(itemId) DO UPDATE SET
            pid=excluded.pid, title=excluded.title,
            link=excluded.link, image=excluded.image,
-           vname=excluded.vname, last_seen=excluded.last_seen,
+           vname=excluded.vname, watch=excluded.watch,
+           talla=excluded.talla, last_seen=excluded.last_seen,
            imghash=excluded.imghash""",
         [(iid, p["pid"], p["title"], p["brand"], p["link"],
           p["image"], p["vname"], p.get("watch"), p.get("talla"),
@@ -289,6 +268,16 @@ def record_history(items, date):
         [(iid, date, p.get("price"), p.get("list"), p.get("qty"),
           int(p["avail"]), int(p.get("card") or 0))
          for iid, p in items.items()])
+    link_recoded_history(conn, events)
+    # poda de mantenimiento: sin esto items/prices/imgcache de listings
+    # muertos (Siman recodifica a diario) crecen sin tope en el cache
+    cutoff = (datetime.strptime(date, "%Y-%m-%d").date()
+              - timedelta(days=120)).isoformat()
+    conn.execute("DELETE FROM items WHERE last_seen < ?", (cutoff,))
+    conn.execute("DELETE FROM prices WHERE itemId NOT IN "
+                 "(SELECT itemId FROM items)")
+    conn.execute("DELETE FROM imgcache WHERE url NOT IN "
+                 "(SELECT image FROM items WHERE image IS NOT NULL)")
     conn.commit()
     conn.close()
 
@@ -398,35 +387,14 @@ def append_events(events, today):
 def prune_log(keep_days=45):
     """Recorta el log a los ultimos `keep_days` dias: el sitio solo
     muestra los ultimos 200 y el digest solo lee hoy; la historia
-    vive en siman.db. Sin esto el archivo crece sin tope (y viaja
-    en git a diario)."""
-    if not os.path.exists(EVENTS_LOG):
-        return
-    cutoff = (datetime.now(timezone(timedelta(hours=-6))).date()
-              - timedelta(days=keep_days)).isoformat()
-    with open(EVENTS_LOG, encoding="utf-8") as f:
-        lines = f.readlines()
-    keep = []
-    for line in lines:
-        try:
-            if json.loads(line).get("date", "") >= cutoff:
-                keep.append(line)
-        except Exception:
-            continue  # linea corrupta: fuera
-    if len(keep) == len(lines):
-        return
-    tmp = EVENTS_LOG + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.writelines(keep)
-    os.replace(tmp, EVENTS_LOG)
-    print(f"log podado: -{len(lines) - len(keep)} eventos "
-          f"anteriores a {cutoff}")
+    vive en siman.db."""
+    prune_jsonl(EVENTS_LOG, keep_days)
 
 
 def main():
     os.makedirs(SNAP_DIR, exist_ok=True)
     # Fecha SV (GMT-6), consistente con notify.py
-    today = datetime.now(timezone(timedelta(hours=-6))).strftime("%Y-%m-%d")
+    today = today_sv()
     prev_name, prev = load_snapshots()
 
     if "--dry" in sys.argv:
@@ -459,7 +427,7 @@ def main():
             # primera observacion (o perdida del cache): no reportar
             # miles de 'nuevo' por un arranque en frio
             events = []
-        record_history(cur, today)
+        record_history(cur, today, events)
         print(f"Historia actualizada en {DB_PATH}")
         prune_snapshots()
 

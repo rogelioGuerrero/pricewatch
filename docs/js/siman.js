@@ -57,6 +57,9 @@ const seenAt = p => {
       best = SSEEN[r];
   return best;
 };
+// reglas viejas reemplazadas por la migracion de abajo: syncAll() las
+// borra de la nube para no acumular filas obsoletas en siman_muted/seen
+const SUPG_MUTE = [], SUPG_SEEN = [];
 // migra reglas viejas (tkey plano) a la llave completa sKey() cuando el
 // producto sigue en la data — quedan blindadas contra edicion de titulo
 // y recodificado con renombre (via foto)
@@ -72,11 +75,13 @@ const seenAt = p => {
   let dirty = false;
   for (const r of [...SMUTE]) {
     const u = upg(r);
-    if (u !== r) { SMUTE.delete(r); SMUTE.add(u); dirty = true; }
+    if (u !== r) { SMUTE.delete(r); SMUTE.add(u);
+      SUPG_MUTE.push(r); dirty = true; }
   }
   for (const r of Object.keys(SSEEN)) {
     const u = upg(r);
-    if (u !== r) { SSEEN[u] = SSEEN[r]; delete SSEEN[r]; dirty = true; }
+    if (u !== r) { SSEEN[u] = SSEEN[r]; delete SSEEN[r];
+      SUPG_SEEN.push(r); dirty = true; }
   }
   if (dirty) { saveSMute(); saveSSeen(); }
 }
@@ -85,22 +90,30 @@ const h16 = s => { let h=5381;
   return h.toString(36); };
 const muteUp = t => AW.dbs.createRow({databaseId:AW_DB,tableId:"siman_muted",
   rowId:`${AW.user.$id}-${h16(t)}`, data:{tkey:t},
-  permissions:docPerms(AW.user.$id)}).catch(()=>{});
+  permissions:docPerms(AW.user.$id)})
+  .then(() => true).catch(() => false);
 const muteDown = t => AW.dbs.deleteRow({databaseId:AW_DB,
   tableId:"siman_muted",
   rowId:`${AW.user.$id}-${h16(t)}`}).catch(()=>{});
 const seenUp = (t,p) => {
   const rid = `${AW.user.$id}-${h16(t)}`;
-  const data = {price:p, date:new Date().toISOString().slice(0,10)};
-  AW.dbs.updateRow({databaseId:AW_DB, tableId:"siman_seen", rowId:rid, data})
-    .catch(()=>AW.dbs.createRow({databaseId:AW_DB, tableId:"siman_seen",
+  const data = {price:p, date:todaySV()};
+  return AW.dbs.updateRow({databaseId:AW_DB, tableId:"siman_seen",
+    rowId:rid, data})
+    .then(() => true)
+    .catch(() => AW.dbs.createRow({databaseId:AW_DB, tableId:"siman_seen",
       rowId:rid, data:{tkey:t,...data},
-      permissions:docPerms(AW.user.$id)}).catch(()=>{}));
+      permissions:docPerms(AW.user.$id)})
+      .then(() => true).catch(() => false));
 };
+const seenDown = t => AW.dbs.deleteRow({databaseId:AW_DB,
+  tableId:"siman_seen",
+  rowId:`${AW.user.$id}-${h16(t)}`}).catch(()=>{});
 const watchUp = w => AW.dbs.createRow({databaseId:AW_DB,tableId:"siman_watch",
   rowId:`${AW.user.$id}-${h16(w.q+"|"+(w.talla||""))}`,
   data:{q:w.q, talla:w.talla||"", filtro:(w.solo||[]).join(",")},
-  permissions:docPerms(AW.user.$id)}).catch(()=>{});
+  permissions:docPerms(AW.user.$id)})
+  .then(() => true).catch(() => false);
 const watchDown = (q,t) => AW.dbs.deleteRow({databaseId:AW_DB,
   tableId:"siman_watch",
   rowId:`${AW.user.$id}-${h16(q+"|"+(t||""))}`}).catch(()=>{});
@@ -149,7 +162,7 @@ const STERM = (() => {
 // descuento declarado como fraccion (0 si no hay o lp no supera al precio)
 const sDisc = p => (p.lp && p.p && p.lp > p.p) ? 1 - p.p/p.lp : 0;
 function sCard(p){
-  const tk = tkeyJS(p.t), tags = [];
+  const tags = [];
   if (p.broke) tags.push(`<span class="tag real">mín histórico</span>`);
   // el descuento declarado ya lo dice el precio tachado; -N% lo cuantifica
   const disc = Math.round(sDisc(p)*100);
@@ -168,11 +181,21 @@ function sCard(p){
       <div class="meta">${p.b?esc(p.b)+" · ":""}vigilado por "${esc(p.w||"")}"${p.n>1?` · ${p.n} obs`:""}</div>
       <div class="sact">
         <a class="sic" title="ya lo vi — reavisa si baja más"
-           onclick="event.stopPropagation();yaLoVi('${p.pid}|${tk}|${(p.ihs||[]).join(",")}',${p.p||0})">👁</a>
+           data-sv="seen" data-rule="${esc(sKey(p))}"
+           data-price="${p.p||0}">👁</a>
         <a class="sic neg" title="no me gusta — no volver a mostrar (restaurable en ▸)"
-           onclick="event.stopPropagation();noMeGusta('${p.pid}|${tk}|${(p.ihs||[]).join(",")}')">👎</a>
+           data-sv="mute" data-rule="${esc(sKey(p))}">👎</a>
       </div></div></div>`;
 }
+// acciones de las cards Siman por delegacion (fase capture: llega antes
+// que el onclick del .card padre que abriria el link del producto)
+$("#g-siman").addEventListener("click", e => {
+  const a = e.target.closest("a[data-sv]");
+  if (!a) return;
+  e.stopPropagation();
+  if (a.dataset.sv === "seen") yaLoVi(a.dataset.rule, +a.dataset.price);
+  else noMeGusta(a.dataset.rule);
+}, true);
 
 // ---- handlers del panel Siman ----
 // siman: alta/baja de busquedas vigiladas (si hay sesion, sube a la nube
@@ -221,6 +244,14 @@ $("#sw-sug").onclick = e => {
   $("#sw-q").value = s.dataset.q;
   $("#sw-sug").style.display = "none";
 };
+// Enter en busqueda o talla = clic en "+ vigilar"
+for (const el of ["#sw-q", "#sw-t"])
+  $(el).addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      $("#sw-sug").style.display = "none";
+      $("#sw-add").click();
+    }
+  });
 document.addEventListener("click", e => {
   if (!e.target.closest("#sw-sug") && e.target.id !== "sw-q")
     $("#sw-sug").style.display = "none";

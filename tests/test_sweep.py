@@ -228,3 +228,48 @@ def test_club_stock_diff_sin_dia_previo(tmp_path, monkeypatch):
 def test_club_stock_diff_sin_db(tmp_path, monkeypatch):
     monkeypatch.setattr(sweep, "DB_PATH", str(tmp_path / "nada.db"))
     assert sweep.club_stock_diff("2026-10-14", {"A"}, {}) == []
+
+
+# ---------- stock_candidates ----------
+
+def test_stock_candidates_prioriza_ofertas_y_favs(tmp_path, monkeypatch):
+    """Con >400 eventos recientes, ofertas activas y favoritos nunca
+    quedan fuera del cap."""
+    log = tmp_path / "events.jsonl"
+    log.write_text(
+        "\n".join(json.dumps({"date": "2026-10-10", "sku": f"E{i:04d}",
+                              "type": "bajo"})
+                  for i in range(500)),
+        encoding="utf-8")
+    monkeypatch.setattr(sweep, "EVENTS_LOG", str(log))
+    products = {"OF1": prod(1000, saving=2.0), "X1": prod(500)}
+    cands = sweep.stock_candidates("2026-10-14", products, favs={"FV1"})
+    assert "OF1" in cands and "FV1" in cands
+    assert len(cands - {"OF1", "FV1"}) <= 400
+
+
+def test_stock_candidates_ignora_eventos_viejos(tmp_path, monkeypatch):
+    log = tmp_path / "events.jsonl"
+    log.write_text(json.dumps({"date": "2026-01-01", "sku": "OLD",
+                               "type": "bajo"}),
+                   encoding="utf-8")
+    monkeypatch.setattr(sweep, "EVENTS_LOG", str(log))
+    cands = sweep.stock_candidates("2026-10-14", {}, favs=set())
+    assert "OLD" not in cands
+
+
+# ---------- record_history: skip de categorias heredadas ----------
+
+def test_record_history_respeta_skip_inherited(tmp_path, monkeypatch):
+    """SKUs en 'skip' (categorias caidas heredadas del snapshot
+    anterior) no fabrican filas falsas en prices.db."""
+    db = tmp_path / "prices.db"
+    monkeypatch.setattr(sweep, "DB_PATH", str(db))
+    sweep.record_history({"A": prod(1000), "B": prod(500)},
+                         "2026-10-14", skip={"B"})
+    import sqlite3
+    con = sqlite3.connect(str(db))
+    skus = {r[0] for r in con.execute("select sku from prices")}
+    prods = {r[0] for r in con.execute("select sku from products")}
+    con.close()
+    assert skus == {"A"} and prods == {"A"}

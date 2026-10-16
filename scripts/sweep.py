@@ -15,10 +15,10 @@ import os
 import sqlite3
 import sys
 import time
-from datetime import datetime, timedelta, timezone
-from urllib.parse import quote
+from datetime import datetime, timedelta
 
 import requests
+from common import aw_env, aw_rows, prune_jsonl, today_sv
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "data")
@@ -444,23 +444,10 @@ def record_history(products, date, skip=None):
 def favs_remote():
     """SKUs de la lista del usuario en Appwrite (si hay API key en env).
     La tabla es del proyecto personal: una sola usuaria, pocos rows."""
-    ep, pid, key = (os.environ.get("APPWRITE_ENDPOINT"),
-                    os.environ.get("APPWRITE_PROJECT_ID"),
-                    os.environ.get("APPWRITE_API_KEY"))
-    if not (ep and pid and key):
+    if not all(aw_env()):
         return set()
     try:
-        q = quote('{"method":"limit","values":[500]}')
-        r = SESSION.get(
-            f"{ep}/tablesdb/pricewatch/tables/favs/rows"
-            f"?queries%5B%5D={q}",
-            headers={"X-Appwrite-Project": pid, "X-Appwrite-Key": key},
-            timeout=15)
-        # requests no lanza en 4xx/5xx: sin esto un error JSON devolvia
-        # rows=[] en silencio (con urlopen saltaba HTTPError al except)
-        r.raise_for_status()
-        rows = r.json().get("rows", [])
-        return {str(x.get("sku")) for x in rows if x.get("sku")}
+        return {str(x.get("sku")) for x in aw_rows("favs") if x.get("sku")}
     except Exception as e:
         print(f"  (favs remotos no disponibles: {e})")
         return set()
@@ -524,36 +511,15 @@ def append_events(events, today):
 def prune_log(keep_days=45):
     """Recorta el log a los ultimos `keep_days` dias: el sitio solo
     muestra los ultimos 200 eventos y el digest solo lee hoy; la
-    historia longitudinal vive en prices.db. Sin esto el archivo
-    crece sin tope (y viaja en git a diario)."""
-    if not os.path.exists(EVENTS_LOG):
-        return
-    cutoff = (datetime.now(timezone(timedelta(hours=-6))).date()
-              - timedelta(days=keep_days)).isoformat()
-    with open(EVENTS_LOG, encoding="utf-8") as f:
-        lines = f.readlines()
-    keep = []
-    for line in lines:
-        try:
-            if json.loads(line).get("date", "") >= cutoff:
-                keep.append(line)
-        except Exception:
-            continue  # linea corrupta: fuera
-    if len(keep) == len(lines):
-        return
-    tmp = EVENTS_LOG + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.writelines(keep)
-    os.replace(tmp, EVENTS_LOG)
-    print(f"log podado: -{len(lines) - len(keep)} eventos "
-          f"anteriores a {cutoff}")
+    historia longitudinal vive en prices.db."""
+    prune_jsonl(EVENTS_LOG, keep_days)
 
 
 def main():
     os.makedirs(SNAP_DIR, exist_ok=True)
     # Fecha SV (GMT-6): alineada con notify.py — con UTC puro un run
     # tardio (>6pm UTC) quedaba fechado "maniana" y el digest lo perdia
-    today = datetime.now(timezone(timedelta(hours=-6))).strftime("%Y-%m-%d")
+    today = today_sv()
 
     if "--stock-check" in sys.argv:
         # Chequeo diario ligero: solo stock por club de candidatos,

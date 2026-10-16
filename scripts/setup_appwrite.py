@@ -3,9 +3,8 @@ setup_appwrite.py - Provisiona Appwrite Cloud (API tablesdb) para el sync del PW
 
 Crea (idempotente):
   - database "pricewatch" (tipo tablesdb)
-  - tabla "favs"    {sku}              — row id = <userId>-<sku>
-  - tabla "compras" {sku, paid, date}  — row id unico
-  - seguridad a nivel fila (cada row solo la ve su dueno)
+  - las tablas declaradas en common.APPWRITE_TABLES (favs, compras,
+    targets, siman_*, push_subs) con row-level security
   - platforms web para CORS: localhost + GitHub Pages
   - auth email/password habilitado
 
@@ -16,41 +15,19 @@ Uso:
     python scripts/setup_appwrite.py
 """
 
-import json
 import os
 import sys
 import time
-from urllib.error import HTTPError
-from urllib.request import Request, urlopen
+
+from common import APPWRITE_TABLES, AW_DB, aw_request
 
 ENDPOINT = os.environ["APPWRITE_ENDPOINT"].rstrip("/")
 PROJECT = os.environ["APPWRITE_PROJECT_ID"]
 KEY = os.environ["APPWRITE_API_KEY"]
 
-DB = "pricewatch"
-PERMS_USERS = ['create("users")', 'read("users")',
-               'update("users")', 'delete("users")']
-
-
-def api(method, path, body=None):
-    req = Request(f"{ENDPOINT}{path}", method=method,
-                  data=json.dumps(body).encode() if body is not None else None,
-                  headers={"content-type": "application/json",
-                           "X-Appwrite-Project": PROJECT,
-                           "X-Appwrite-Key": KEY})
-    try:
-        with urlopen(req, timeout=30) as r:
-            return json.loads(r.read() or b"{}"), r.status
-    except HTTPError as e:
-        raw = e.read() or b"{}"
-        try:
-            return json.loads(raw), e.code
-        except json.JSONDecodeError:
-            return {"message": raw[:300].decode("utf-8", "replace")}, e.code
-
 
 def ensure(method, path, body, what):
-    res, code = api(method, path, body)
+    res, code = aw_request(method, path, body)
     if code in (200, 201):
         print(f"  + {what}: creado")
     elif code == 409:
@@ -60,103 +37,79 @@ def ensure(method, path, body, what):
         sys.exit(1)
 
 
-print("Database:")
-_, code = api("GET", f"/tablesdb/{DB}")
-if code == 200:
-    print("  = pricewatch (tablesdb): ya existe")
-else:
-    # si existe una DB legacy (documentsdb) con el mismo id, hay que
-    # liberar el slot: el plan free permite 1 sola database
-    legacy, code = api("GET", f"/databases/{DB}")
-    if code == 200 and legacy.get("type") != "tablesdb":
-        api("DELETE", f"/databases/{DB}")
-        print("  - documentsdb 'pricewatch' eliminada (vacia, legado)")
-    ensure("POST", "/tablesdb",
-           {"databaseId": DB, "name": "PriceWatch", "enabled": True},
-           "pricewatch (tablesdb)")
-
-print("Tablas:")
-for t, name in [("favs", "Favoritos"), ("compras", "Compras"),
-                ("targets", "Precios objetivo"),
-                ("siman_watch", "Siman busquedas vigiladas"),
-                ("siman_muted", "Siman productos muteados"),
-                ("siman_seen", "Siman alertas vistas")]:
-    _, code = api("GET", f"/tablesdb/{DB}/tables/{t}")
+def main():
+    print("Database:")
+    _, code = aw_request("GET", f"/tablesdb/{AW_DB}")
     if code == 200:
-        print(f"  = {t}: ya existe")
+        print("  = pricewatch (tablesdb): ya existe")
     else:
-        ensure("POST", f"/tablesdb/{DB}/tables",
-               {"tableId": t, "name": name, "permissions": PERMS_USERS,
-                "rowSecurity": True, "enabled": True}, t)
+        # si existe una DB legacy (documentsdb) con el mismo id, hay que
+        # liberar el slot: el plan free permite 1 sola database
+        legacy, code = aw_request("GET", f"/databases/{AW_DB}")
+        if code == 200 and legacy.get("type") != "tablesdb":
+            aw_request("DELETE", f"/databases/{AW_DB}")
+            print("  - documentsdb 'pricewatch' eliminada (vacia, legado)")
+        ensure("POST", "/tablesdb",
+               {"databaseId": AW_DB, "name": "PriceWatch", "enabled": True},
+               "pricewatch (tablesdb)")
 
-# push_subs: suscripciones web push. create("any") porque suscribirse
-# no requiere cuenta — la identidad es el endpoint; unsubscribe lo mata
-# en origen y notify.py poda las filas que devuelven 404/410.
-_, code = api("GET", f"/tablesdb/{DB}/tables/push_subs")
-if code == 200:
-    print("  = push_subs: ya existe")
-else:
-    ensure("POST", f"/tablesdb/{DB}/tables",
-           {"tableId": "push_subs", "name": "Suscripciones push",
-            "permissions": ['create("any")'],
-            "rowSecurity": True, "enabled": True}, "push_subs")
+    print("Tablas:")
+    for t, (name, perms, _cols) in APPWRITE_TABLES.items():
+        _, code = aw_request("GET", f"/tablesdb/{AW_DB}/tables/{t}")
+        if code == 200:
+            print(f"  = {t}: ya existe")
+        else:
+            ensure("POST", f"/tablesdb/{AW_DB}/tables",
+                   {"tableId": t, "name": name, "permissions": perms,
+                    "rowSecurity": True, "enabled": True}, t)
 
-print("Columnas:")
-def col(table, kind, key, **kw):
-    path = f"/tablesdb/{DB}/tables/{table}/columns/{kind}"
-    res, code = api("POST", path, {"key": key, **kw})
-    if code in (200, 201, 202):  # 202 = aceptada, se crea async
-        print(f"  + {table}.{key}: creada")
-    elif code == 409:
-        print(f"  = {table}.{key}: ya existe")
-    else:
-        print(f"  ! {table}.{key}: HTTP {code} {res.get('message')}")
-        sys.exit(1)
+    print("Columnas:")
+    for t, (_name, _perms, cols) in APPWRITE_TABLES.items():
+        for kind, kw in cols:
+            path = f"/tablesdb/{AW_DB}/tables/{t}/columns/{kind}"
+            res, code = aw_request("POST", path, kw)
+            if code in (200, 201, 202):  # 202 = aceptada, se crea async
+                print(f"  + {t}.{kw['key']}: creada")
+            elif code == 409:
+                print(f"  = {t}.{kw['key']}: ya existe")
+            else:
+                print(f"  ! {t}.{kw['key']}: HTTP {code} "
+                      f"{res.get('message')}")
+                sys.exit(1)
 
-col("favs", "string", "sku", size=36, required=True)
-col("compras", "string", "sku", size=36, required=True)
-col("compras", "float", "paid", required=True)
-col("compras", "string", "date", size=10, required=True)
-col("siman_watch", "string", "q", size=120, required=True)
-col("siman_watch", "string", "talla", size=12, required=False)
-col("siman_watch", "string", "filtro", size=200, required=False)
-col("targets", "string", "sku", size=36, required=True)
-col("targets", "integer", "target", required=True)
-col("siman_muted", "string", "tkey", size=250, required=True)
-col("siman_seen", "string", "tkey", size=250, required=True)
-col("siman_seen", "float", "price", required=True)
-col("siman_seen", "string", "date", size=10, required=True)
-col("push_subs", "string", "endpoint", size=500, required=True)
-col("push_subs", "string", "keys", size=500, required=True)
-col("push_subs", "string", "ua", size=250, required=False)
+    # las columnas se crean async; esperar a que queden available
+    st = {}
+    for _ in range(30):
+        time.sleep(1)
+        r, _ = aw_request("GET", f"/tablesdb/{AW_DB}/tables/compras")
+        st = {a["key"]: a["status"]
+              for a in r.get("columns", r.get("attributes", []))}
+        if st and all(v == "available" for v in st.values()):
+            break
+    print("  columnas:", st)
 
-# las columnas se crean async; esperar a que queden available
-st = {}
-for _ in range(30):
-    time.sleep(1)
-    r, _ = api("GET", f"/tablesdb/{DB}/tables/compras")
-    st = {a["key"]: a["status"]
-          for a in r.get("columns", r.get("attributes", []))}
-    if st and all(v == "available" for v in st.values()):
-        break
-print("  columnas:", st)
+    print("Auth email/password:")
+    res, code = aw_request("PATCH", f"/projects/{PROJECT}/auth/email-password",
+                           {"enabled": True})
+    print("  + habilitado" if code in (200, 201)
+          else f"  ! HTTP {code} {res.get('message')} "
+               "(habilitalo a mano en consola)")
 
-print("Auth email/password:")
-res, code = api("PATCH", f"/projects/{PROJECT}/auth/email-password",
-                {"enabled": True})
-print("  + habilitado" if code in (200, 201)
-      else f"  ! HTTP {code} {res.get('message')} (habilitalo a mano en consola)")
+    print("Platforms web (CORS):")
+    res, _ = aw_request("GET", f"/projects/{PROJECT}/platforms")
+    existing = {p.get("hostname") for p in res.get("platforms", [])}
+    for host, name in [("localhost", "dev"),
+                       ("rogelioguerrero.github.io", "GitHub Pages")]:
+        if host in existing:
+            print(f"  = {host}: ya existe")
+        else:
+            ensure("POST", f"/projects/{PROJECT}/platforms",
+                   {"type": "web", "name": name, "key": host,
+                    "hostname": host,
+                    "platformId": f"pw-{host.split('.')[0]}"}, host)
 
-print("Platforms web (CORS):")
-res, _ = api("GET", f"/projects/{PROJECT}/platforms")
-existing = {p.get("hostname") for p in res.get("platforms", [])}
-for host, name in [("localhost", "dev"),
-                   ("rogelioguerrero.github.io", "GitHub Pages")]:
-    if host in existing:
-        print(f"  = {host}: ya existe")
-    else:
-        ensure("POST", f"/projects/{PROJECT}/platforms",
-               {"type": "web", "name": name, "key": host, "hostname": host,
-                "platformId": f"pw-{host.split('.')[0]}"}, host)
+    print("\nListo. Sync del PWA contra:", ENDPOINT)
 
-print("\nListo. Sync del PWA contra:", ENDPOINT)
+
+if __name__ == "__main__":
+    main()
