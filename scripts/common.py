@@ -12,7 +12,7 @@ import os
 import re
 import time
 import unicodedata
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from urllib.parse import quote
 
 import requests
@@ -67,6 +67,30 @@ def hamming(a, b):
         return 99
 
 
+def read_events(path):
+    """Lee JSONL sin dejar que una linea truncada invalide todo el build."""
+    out = []
+    if not os.path.exists(path):
+        return out
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            try:
+                e = json.loads(line)
+                if (not isinstance(e, dict)
+                        or not isinstance(e.get("type"), str)
+                        or not e["type"]
+                        or not any(isinstance(e.get(k), str) and e[k]
+                                   for k in ("sku", "iid"))
+                        or not isinstance(e.get("date"), str)
+                        or date.fromisoformat(e["date"]).isoformat()
+                        != e["date"]):
+                    continue
+            except (ValueError, TypeError):
+                continue
+            out.append(e)
+    return out
+
+
 def prune_jsonl(path, keep_days=45):
     """Recorta un log JSONL a los ultimos `keep_days` dias (fecha SV):
     el sitio solo muestra los ultimos 200 eventos y el digest solo lee
@@ -98,8 +122,11 @@ def prune_jsonl(path, keep_days=45):
 # ---------------- Appwrite (REST server-side, API key) ----------------
 
 AW_DB = "pricewatch"
-AW_PERMS_USERS = ['create("users")', 'read("users")',
-                  'update("users")', 'delete("users")']
+# Solo create a nivel tabla: con rowSecurity las filas las protegen los
+# docPerms por documento (el cliente da read/update/delete al creador).
+# Dar read/update/delete("users") a nivel TABLA bypassa rowSecurity —
+# cualquier usuario autenticado veria/editaria los datos de todos.
+AW_PERMS_USERS = ['create("users")']
 # suscribirse a push no requiere cuenta: la "identidad" es el endpoint;
 # unsubscribe lo mata en origen y el sender poda filas que devuelven 404/410
 AW_PERMS_PUSH = ['create("any")']

@@ -129,8 +129,14 @@ const noMeGusta = rule => {
 };
 // frescura ~14d: un item no visto es un listing muerto congelado con
 // su ultimo avail — no alertar aunque dijera disponible+oferta
-const SCUT = (() => { const d = new Date(D.generated);
-  d.setDate(d.getDate() - 14); return d.toISOString().slice(0, 10); })();
+// build sin DB puede venir con generated vacio: caer a hoy SV en vez
+// de Invalid Date (toISOString ahi lanzaba y tumbaba la app entera)
+const SCUT = (() => {
+  let d = new Date((D.generated || "") + "T00:00:00Z");
+  if (isNaN(d)) d = new Date(todaySV() + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() - 14);
+  return d.toISOString().slice(0, 10);
+})();
 const simanAlerts = () => SIMAN.items.filter(p => {
   if (!p.last || p.last < SCUT) return false;
   if (!p.avail || !(p.broke || p.decl) || (p.ta && !p.ok)) return false;
@@ -169,10 +175,13 @@ function sCard(p){
   if (disc) tags.push(`<span class="tag oferta">-${disc}%</span>`);
   if (p.crd) tags.push(`<span class="tag oferta">con CrediSiman</span>`);
   if (p.ta) tags.push(`<span class="tag ${p.ok?"nuevo":"agotado"}">talla ${esc(p.ta)} ${p.ok?"✓":"✗"}</span>`);
-  return `<div class="card" ${p.l?`data-l="${esc(p.l)}"
+  // el link externo solo si es http(s) de verdad: el payload es de
+  // terceros y un javascript:/data: ejecutaria codigo al hacer click
+  const link = safeHttpURL(p.l || "");
+  return `<div class="card" ${link?`data-l="${esc(link)}"
     onclick="window.open(this.dataset.l,'_blank','noopener')"`:''}>
-    ${p.l?`<span class="slink">↗</span>`:""}
-    ${p.img?`<img src="${p.img}" loading="lazy" onerror="this.remove()">`:""}
+    ${link?`<span class="slink">↗</span>`:""}
+    ${p.img?`<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
       <div class="t">${esc(p.t)}</div>
       <div><span class="pr">${p.p!=null?fmt(Math.round(p.p*100)):"—"}</span>

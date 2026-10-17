@@ -10,12 +10,22 @@ const fmt = c => c == null ? "—" : "$" + (c/100).toFixed(2);
 const todaySV = () => new Date(Date.now() - 6 * 3600e3).toISOString().slice(0, 10);
 const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const [_y,_m,_d] = D.generated.split("-");
-document.getElementById("gen").textContent = `${+_d} ${MESES[+_m-1]} ${_y}`;
+document.getElementById("gen").textContent = D.generated
+  ? `${+_d} ${MESES[+_m-1]} ${_y}` : "sin datos";
 if (D.demo) document.getElementById("demo-banner").style.display = "";
 const img = sku => (D.products[sku]||{}).image || "";
 const ev = D.events.slice().reverse();
 const esc = s => String(s||"").replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+// http(s) solamente: un link del payload podria ser javascript:/data: —
+// para href/click nunca vale otro esquema. "" si es invalido o peligroso
+const safeHttpURL = u => {
+  if (!u) return "";
+  try {
+    const x = new URL(String(u), location.href || location.origin);
+    return x.protocol === "http:" || x.protocol === "https:" ? x.href : "";
+  } catch (_) { return ""; }
+};
 const byType = t => ev.filter(e=>e.type===t);
 const lastOf = s => (D.series[s]||[]).slice(-1)[0];
 // stock observado en una fecha: ultima lectura <= date (series van

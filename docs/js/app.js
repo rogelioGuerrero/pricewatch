@@ -2,8 +2,8 @@
 // Perspective, ficha de producto, push e init. Va ultimo:
 // al evaluarse ya existen todos los modulos.
 
-// declaradas arriba: el auto-click del ultimo tab (linea ~33) puede
-// llamar paintBar() durante el eval, antes de cualquier let mas abajo
+// instancias echarts compartidas: la ficha reusa el chart entre
+// aperturas y los acordeones guardan su config en BARS
 let chart, chCal;
 const BARS = {};
 const TABS = [
@@ -25,11 +25,24 @@ const TABS = [
 if (matchMedia("(max-width:700px)").matches)
   TABS.splice(TABS.findIndex(t => t[0] === "explorar"), 1);
 $("#tabs").innerHTML = TABS.map(([id,n,nr]) =>
-  `<div class="tab" data-t="${id}">${n}<span class="n">${nr}</span></div>`).join("");
+  `<button type="button" class="tab" id="tab-${id}" data-t="${id}" role="tab"
+    tabindex="-1" aria-selected="false" aria-controls="pane-${id}">${n}<span class="n">${nr}</span></button>`).join("");
+// el tab pedido por URL/localStorage se compara por dataset contra los
+// nodos reales — nunca interpolado en un selector: un valor con "]" o
+// "[" rompia querySelector y un tab inexistente dejaba la app sin pane
+const tabEl = id => [...document.querySelectorAll(".tab")]
+  .find(t => t.dataset.t === id);
 document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
-  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+  // roving tabindex: solo el tab activo entra al orden de Tab
+  document.querySelectorAll(".tab").forEach(x => {
+    x.classList.remove("on");
+    x.setAttribute("aria-selected", "false");
+    x.tabIndex = -1;
+  });
   document.querySelectorAll(".pane").forEach(x=>x.classList.remove("on"));
   t.classList.add("on");
+  t.setAttribute("aria-selected", "true");
+  t.tabIndex = 0;
   document.getElementById("pane-"+t.dataset.t).classList.add("on");
   localStorage.setItem("pw-tab", t.dataset.t);
   const lbl = TABS.find(x=>x[0]===t.dataset.t);
@@ -41,12 +54,21 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   if (t.dataset.t==="cambios") paintBar("ch-cambios");
   if (t.dataset.t==="ofertas") paintBar("ch-ofertas");
 });
-// abre en el ultimo tab usado (o Mi lista)
-const urlTab = new URLSearchParams(location.search).get("tab");
-(document.querySelector(`.tab[data-t="${urlTab || localStorage.getItem("pw-tab") || "favs"}"]`)
-  || document.querySelector('.tab[data-t="favs"]'))?.click();
-
-const goTab = id => document.querySelector(`.tab[data-t="${id}"]`)?.click();
+// flechas/Home/End mueven foco Y activan (patron tabs); Enter/Espacio
+// ya disparan click solos por ser <button>
+$("#tabs").addEventListener("keydown", e => {
+  if (!e.target.classList || !e.target.classList.contains("tab")) return;
+  const ts = [...document.querySelectorAll(".tab")];
+  const i = ts.indexOf(e.target);
+  const j = e.key === "ArrowRight" ? (i + 1) % ts.length
+        : e.key === "ArrowLeft"  ? (i - 1 + ts.length) % ts.length
+        : e.key === "Home" ? 0
+        : e.key === "End"  ? ts.length - 1 : -1;
+  if (j < 0 || j === i) return;
+  e.preventDefault();
+  ts[j].focus(); ts[j].click();
+});
+const goTab = id => tabEl(id)?.click();
 let cf = "all", OF_F = "all", PV_PRE = "all", pvRefresh = null;
 const setCf = v => { cf = v;
   document.querySelectorAll("#f-cambios .chip")
@@ -63,17 +85,17 @@ const dlgNav = document.getElementById("dlg-nav");
 $("#fab").onclick = () => {
   $("#navres").innerHTML = RESUMEN.length
     ? `<div class="navsec">Resumen${RESUMEN_N ? " "+RESUMEN_N : ""}
-        · datos al ${+_d} ${MESES[+_m-1]}</div>`
+        · ${D.generated ? `datos al ${+_d} ${MESES[+_m-1]}` : "sin datos"}</div>`
       + RESUMEN.map(([t,tab,cf,ff,sk]) =>
-        `<div class="navitem res" data-t="${tab}" data-cf="${cf||""}"
+        `<button type="button" class="navitem res" data-t="${tab}" data-cf="${cf||""}"
            data-ff="${ff||""}"${sk?` data-sku="${sk}"`:""}><span>${esc(t)}</span>
-           <span class="meta">›</span></div>`).join("")
+           <span class="meta">›</span></button>`).join("")
     : "";
   $("#navitems").innerHTML = `<div class="navsec">Secciones</div>`
     + TABS.map(([id,n,nr]) =>
-      `<div class="navitem${document.querySelector(`.tab[data-t="${id}"]`).classList.contains("on")?" on":""}"
+      `<button type="button" class="navitem${tabEl(id).classList.contains("on")?" on":""}"
         data-t="${id}"><span>${n}</span>
-        <span class="meta">${nr}</span></div>`).join("");
+        <span class="meta">${nr}</span></button>`).join("");
   dlgNav.showModal();
 };
 $("#dlg-nav").onclick = e => {
@@ -254,6 +276,9 @@ const dlg = document.getElementById("dlg");
 // por signo o de un color; ★ = tu lista, ● = nuevo desde tu ultima
 // visita; clic abre la ficha del producto
 function paintBar(id){
+  // sin echarts (CDN caido o bloqueado) los acordeones quedan vacios
+  // pero el resto de la app sigue funcionando
+  if (typeof echarts === "undefined") return;
   const b = BARS[id]; if (!b || !b.opt) return;
   const el = document.getElementById(id);
   // details cerrado conserva su tamaño (content-visibility) — offsetWidth
@@ -447,7 +472,11 @@ function openProd(sku){
   const wide = matchMedia("(min-width:900px)").matches;
   if (!dlg.open) wide ? dlg.show() : dlg.showModal();
   document.body.classList.toggle("detail", wide);
-  if (s.length >= 2){
+  // sin echarts (CDN caido/bloqueado) la ficha sigue completa — tabla,
+  // clubes y compras — y el aviso explica el hueco de la grafica
+  const hayChart = typeof echarts !== "undefined";
+  $("#dnograph").style.display = !hayChart && s.length >= 2 ? "" : "none";
+  if (s.length >= 2 && hayChart){
     $("#chart").style.display="block";
     // bandas azules = dias con letrero de oferta
     const ofRuns=[]; let orun=null;
@@ -499,7 +528,7 @@ function openProd(sku){
   // calendario del periodo visible: verde = ahorro del dia (mas intenso
   // = mas $), rojo tenue = agotado, vacio = sin chequeo ese dia
   const calEl = document.getElementById("dcal");
-  if (s.length >= 3){
+  if (s.length >= 3 && hayChart){
     calEl.style.display = "block";
     const mxsv = Math.max(...s.map(p=>p[3]||0));
     chCal = chCal || echarts.init(calEl, null, {renderer:"svg"});
@@ -544,7 +573,13 @@ dlg.addEventListener("close", () => {
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && dlg.open) dlg.close();
 });
-render();
+// primer render: activa el ultimo tab usado (o ?tab=), cayendo a
+// Mi lista si el valor guardado/pedido no existe. Va al final del
+// script porque el click dispara render(), que lee cf/OF_F y todo lo
+// cableado arriba — aqui abajo ya no hace falta un render() aparte
+const reqTab = new URLSearchParams(location.search).get("tab")
+  || localStorage.getItem("pw-tab") || "favs";
+(tabEl(reqTab) || tabEl("favs"))?.click();
 // deep link compartible: ?sku=498227 abre la ficha directo
 const qs = new URLSearchParams(location.search).get("sku");
 if (qs && D.products[qs]) openProd(qs);

@@ -8,6 +8,7 @@ SQLite en cache + GitHub Pages + Appwrite (solo datos de usuario).
 ```powershell
 python scripts/build_site.py          # regenera docs/index.html + docs/data.json
 python -m pytest tests                # tests (lógica de diff, logs, notify)
+node --test tests/frontend/*.test.js  # tests JS del front (arranque, sync)
 python -m ruff check scripts tests    # lint (config en ruff.toml)
 python -m http.server -d docs 8080    # preview local del PWA
 ```
@@ -15,10 +16,11 @@ python -m http.server -d docs 8080    # preview local del PWA
 ## Layout
 
 - `scripts/` — sweeps, notify, build_site (todo stdlib excepto pywebpush/Pillow)
-- `docs/` — PWA: `template.html` es la fuente de `index.html` (generado);
-  `js/` es fuente directa. `data.json` se genera en el build.
+- `docs/` — PWA: `scripts/template.html` es la fuente de `index.html`
+  (generado); `js/` es fuente directa. `data.json` se genera en el build.
 - `data/` — runtime: dbs/snapshots/jsonl viven en Actions cache, no en git
-- `tests/` — pytest; `conftest.py` pone `scripts/` en sys.path
+- `tests/` — pytest + `frontend/` (node:test); `conftest.py` pone
+  `scripts/` en sys.path
 
 ## Convenciones
 

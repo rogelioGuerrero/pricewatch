@@ -80,18 +80,32 @@ def fetch_category(cat_key):
             "domain_key": "pricesmart_bloomreach_io_es",
             "fl": FL, "view_id": "SV",
         }]
-        try:
-            resp = SESSION.post(API, json=body, headers=PS_HEADERS,
-                                timeout=30).json()["response"]
-        except Exception:
-            time.sleep(3)
-            resp = SESSION.post(API, json=body, headers=PS_HEADERS,
-                                timeout=30).json()["response"]  # 1 reintento
+        for attempt in range(2):
+            try:
+                response = SESSION.post(API, json=body, headers=PS_HEADERS,
+                                        timeout=30)
+                response.raise_for_status()
+                resp = response.json()["response"]
+                count, page = resp["numFound"], resp["docs"]
+                if (type(count) is not int or count < 0
+                        or not isinstance(page, list)
+                        or any(not isinstance(d, dict)
+                               or not (d.get("master_sku") or d.get("pid"))
+                               for d in page)):
+                    raise ValueError("respuesta de catalogo invalida")
+                if not page and start < (num_found if num_found is not None
+                                         else count):
+                    raise ValueError("categoria incompleta: pagina vacia")
+                break
+            except Exception:
+                if attempt:
+                    raise
+                time.sleep(3)
         if num_found is None:
-            num_found = resp["numFound"]
-        docs.extend(resp["docs"])
-        start += len(resp["docs"])
-        if start >= num_found or not resp["docs"]:
+            num_found = count
+        docs.extend(page)
+        start += len(page)
+        if start >= num_found:
             break
         time.sleep(SLEEP)
     return docs, num_found

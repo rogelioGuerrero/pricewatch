@@ -34,6 +34,19 @@ Riesgo aceptado: `push_subs` en Appwrite permite `create("any")` —
 cualquiera con el endpoint puede registrar una suscripción basura; el
 impacto es solo recibir mis pushes, no leer datos.
 
+AVISO - Permisos de tablas existentes: las tablas de usuario en
+Appwrite ahora se crean solo con `create("users")` a nivel tabla +
+`rowSecurity` (los permisos por fila los da el cliente al creador del
+documento). **Las tablas ya provisionadas conservan sus permisos de
+tabla viejos**: el código nuevo no los remedia por sí solo y
+`setup_appwrite.py` nunca actualiza los PERMISOS de una tabla que ya
+existe (aunque sí puede agregarle columnas faltantes). Corregirlas
+requiere una migración manual aprobada por separado: auditar
+propiedad/permisos a nivel fila, hacer backup, y actualizar los
+permisos de la tabla EN EL LUGAR (sin recrear ni borrar nada). Si
+existe una database legacy (documentsdb) el script aborta con aviso en
+vez de borrarla: nunca la elimina automáticamente.
+
 ## Uso local
 
 ```powershell
@@ -41,10 +54,11 @@ python scripts/sweep.py        # sweep + diff + eventos + historia
 python scripts/sweep.py --dry  # solo diff entre los 2 últimos snapshots
 python scripts/build_site.py   # regenera el dashboard
 python -m pytest tests         # tests de la lógica de diff/eventos
+node --test tests/frontend/*.test.js  # tests JS: arranque del front + sync
 python -m ruff check scripts tests   # lint (misma config que CI)
 ```
 
-CI corre ruff + pytest en cada push (`ci.yml`). Dependencias fijadas en
+CI corre ruff + pytest + tests JS en cada push (`ci.yml`). Dependencias fijadas en
 `requirements.txt`; `requirements-dev.txt` agrega pytest y ruff.
 
 Ver `API-NOTES.md` para los endpoints descubiertos (no documentados).

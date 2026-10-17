@@ -39,6 +39,7 @@ from common import (
     aw_tables,
     ensure_table,
     hamming,
+    read_events,
     talla_hit,
     tkey,
     today_sv,
@@ -112,17 +113,7 @@ def ensure_siman_tables(known=None):
 # ---------------- datos ----------------
 
 def load_events(path, today=True):
-    out = []
-    if not os.path.exists(path):
-        return out
-    with open(path, encoding="utf-8") as f:
-        for line in f:
-            try:
-                e = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if not today or e.get("date") == TODAY:
-                out.append(e)
+    out = [e for e in read_events(path) if not today or e["date"] == TODAY]
     # un mismo (sku,type) puede repetirse entre sweep y stock-check:
     # quedarse con el ultimo. El club entra en la llave — un producto
     # agotado en 3 tiendas son 3 eventos que el digest luego agrupa

@@ -13,7 +13,7 @@ import statistics
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 
-from common import SV_TZ, talla_hit
+from common import SV_TZ, read_events, talla_hit
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -150,10 +150,8 @@ def build_siman_payload(siman_db, siman_events, watchlist, gen_date):
         except sqlite3.OperationalError:
             sitems, sser = {}, defaultdict(list)  # tablas aun no existen
         sc.close()
-        if os.path.exists(siman_events):
-            with open(siman_events, encoding="utf-8") as f:
-                siman["events"] = [json.loads(x) for x in f
-                                   if x.strip()][-200:]
+        siman["events"] = [e for e in read_events(siman_events)
+                           if e.get("iid")][-200:]
         prod = {}
         for iid, it in sitems.items():
             s = sser.get(iid, [])
@@ -261,13 +259,7 @@ def build_site(root_dir=ROOT):
             pass  # tabla aun no existe
         conn.close()
 
-    events = []
-    if os.path.exists(events_path):
-        for line in open(events_path, encoding="utf-8"):
-            line = line.strip()
-            if line:
-                events.append(json.loads(line))
-    events = events[-200:]
+    events = [e for e in read_events(events_path) if e.get("sku")][-200:]
     n_dead = sum(1 for e in events if e["type"] in PRICE_TYPES
                  and e.get("date")
                  and _stock_on(series, e.get("sku"), e["date"]) == 0)
@@ -280,7 +272,7 @@ def build_site(root_dir=ROOT):
         for m in json.load(open(mis_path, encoding="utf-8")):
             sku = str(m["sku"])
             cur = latest.get(sku)
-            hist = [p[1] for p in series.get(sku, [])]
+            hist = [p[1] for p in series.get(sku, []) if p[1] is not None]
             mis.append({
                 "sku": sku, "paid": m["paid"], "date": m.get("date"),
                 "title": products.get(sku, {}).get("title", sku),

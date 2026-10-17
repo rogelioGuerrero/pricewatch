@@ -31,53 +31,56 @@
 <body>
 <div class="wrap">
   <header>
-    <select id="clubsel" class="chip" style="float:right;margin-top:6px;margin-left:8px"></select>
-    <span id="acct" class="chip" style="float:right;margin-top:6px;display:none">cuenta</span>
-    <span id="pushbtn" class="chip" title="avisos" style="float:right;margin:6px 6px 0 0;display:none">🔕</span>
+    <div class="header-actions">
+      <select id="clubsel" class="chip" aria-label="tu club"></select>
+      <button type="button" id="acct" class="chip" style="display:none">cuenta</button>
+      <button type="button" id="pushbtn" class="chip" title="avisos" style="display:none">🔕</button>
+    </div>
     <h1>PriceWatch SV</h1>
     <p>PriceSmart El Salvador · datos al <b id="gen"></b></p>
     <span class="demo" id="demo-banner" style="display:none">DEMO — el historial es sintético hasta acumular corridas reales (mar/jue)</span>
   </header>
-  <div class="tabs" id="tabs"></div>
+  <div class="tabs" id="tabs" role="tablist"></div>
   <p class="meta" id="boot" style="display:none;padding:12px">Cargando datos…</p>
   <div id="alerts"></div>
-  <div class="filters"><input id="q" type="search" autocomplete="off" name="pw-search" inputmode="search" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" placeholder="Buscar en todo el catálogo (nombre, marca, SKU)…"></div>
-  <div class="pane" id="pane-buscar"><div class="grid" id="g-buscar"></div></div>
-  <div class="pane" id="pane-cambios">
+  <div class="filters"><input id="q" type="search" autocomplete="off" name="pw-search" inputmode="search" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" aria-label="buscar en todo el catálogo" placeholder="Buscar en todo el catálogo (nombre, marca, SKU)…"></div>
+  <div class="pane" id="pane-buscar" role="tabpanel"><div class="grid" id="g-buscar"></div></div>
+  <div class="pane" id="pane-cambios" role="tabpanel" aria-labelledby="tab-cambios">
     <div class="filters" id="f-cambios">
-      <span class="chip" data-cf="new" id="cf-new" style="display:none">✨ nuevas</span>
-      <span class="chip on" data-cf="all">todas</span>
-      <span class="chip" data-cf="bajo">bajaron</span>
-      <span class="chip" data-cf="subio">subieron</span>
-      <span class="chip" data-cf="oferta_termino">fin de oferta</span>
-      <span class="chip" data-cf="fav">★ mi lista</span>
+      <button type="button" class="chip" data-cf="new" id="cf-new" style="display:none">✨ nuevas</button>
+      <button type="button" class="chip on" data-cf="all">todas</button>
+      <button type="button" class="chip" data-cf="bajo">bajaron</button>
+      <button type="button" class="chip" data-cf="subio">subieron</button>
+      <button type="button" class="chip" data-cf="oferta_termino">fin de oferta</button>
+      <button type="button" class="chip" data-cf="fav">★ mi lista</button>
     </div>
     <details class="acc" id="chmov-wrap"><summary>mayores movimientos<span class="meta" id="chmov-n"></span></summary><div id="ch-cambios" class="accbody"></div></details>
     <div class="grid" id="g-cambios"></div>
   </div>
-  <div class="pane" id="pane-ofertas">
+  <div class="pane" id="pane-ofertas" role="tabpanel" aria-labelledby="tab-ofertas">
     <div class="filters" id="f-ofertas">
-      <span class="chip on" data-of="all">todas</span>
-      <span class="chip" data-of="letrero">con letrero</span>
-      <span class="chip" data-of="silenciosa">silenciosas</span>
-      <span class="chip" data-of="real">ofertas reales</span>
-      <span class="chip" data-of="min">al mínimo</span>
-      <span class="chip" data-of="bajo">bajo lo habitual</span>
+      <button type="button" class="chip on" data-of="all">todas</button>
+      <button type="button" class="chip" data-of="letrero">con letrero</button>
+      <button type="button" class="chip" data-of="silenciosa">silenciosas</button>
+      <button type="button" class="chip" data-of="real">ofertas reales</button>
+      <button type="button" class="chip" data-of="min">al mínimo</button>
+      <button type="button" class="chip" data-of="bajo">bajo lo habitual</button>
     </div>
     <details class="acc" id="chofe-wrap"><summary>mejores gangas<span class="meta" id="chofe-n"></span></summary><div id="ch-ofertas" class="accbody"></div></details>
     <div class="grid" id="g-ofertas"></div>
   </div>
-  <div class="pane" id="pane-stock"><div class="grid" id="g-stock"></div></div>
-  <div class="pane" id="pane-nuevos"><div class="grid" id="g-nuevos"></div></div>
-  <div class="pane on" id="pane-favs">
+  <div class="pane" id="pane-stock" role="tabpanel" aria-labelledby="tab-stock"><div class="grid" id="g-stock"></div></div>
+  <div class="pane" id="pane-nuevos" role="tabpanel" aria-labelledby="tab-nuevos"><div class="grid" id="g-nuevos"></div></div>
+  <div class="pane on" id="pane-favs" role="tabpanel" aria-labelledby="tab-favs">
     <p class="meta" id="favs-sum" style="margin-bottom:10px"></p>
-    <span class="chip" id="shopmode">🛒 comprando</span>
-    <span class="chip on" id="fav-filter" style="display:none"></span>
+    <button type="button" class="chip" id="shopmode">🛒 comprando</button>
+    <button type="button" class="chip on" id="fav-filter" style="display:none"></button>
     <div class="grid" id="g-favs"></div>
   </div>
-  <div class="pane" id="pane-siman">
-    <p class="meta" style="margin-bottom:8px"><a id="siman-tog"
-      style="cursor:pointer">▸</a> <span id="siman-sum"></span></p>
+  <div class="pane" id="pane-siman" role="tabpanel" aria-labelledby="tab-siman">
+    <p class="meta" style="margin-bottom:8px"><button type="button" id="siman-tog"
+      style="cursor:pointer;background:none;border:0;color:inherit;padding:0"
+      aria-label="mostrar vigilancias y silenciados">▸</button> <span id="siman-sum"></span></p>
     <div id="siman-panel" style="margin-bottom:8px;display:none">
       <div id="siman-watches" style="margin-bottom:6px"></div>
       <div id="siman-muted"></div>
@@ -87,26 +90,27 @@
         <input id="sw-q" type="search" autocomplete="off"
           inputmode="search" data-lpignore="true" data-1p-ignore="true"
           data-bwignore="true" data-form-type="other"
+          aria-label="marca o artículo a vigilar"
           placeholder="vigilar: marca o artículo" style="width:100%">
         <div id="sw-sug"></div>
       </div>
       <input id="sw-t" type="text" autocomplete="off"
         data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
-        data-form-type="other"
+        data-form-type="other" aria-label="talla"
         placeholder="talla" style="width:76px;flex:none">
-      <span class="chip on" id="sw-add"
-        style="cursor:pointer;flex:none">+ vigilar</span>
+      <button type="button" class="chip on" id="sw-add"
+        style="flex:none">+ vigilar</button>
     </div>
     <div class="meta" id="siman-sort" style="margin:8px 0">
       ordenar:
-      <span class="chip" data-ss="count" style="cursor:pointer">más alertas</span>
-      <span class="chip" data-ss="disc" style="cursor:pointer">mayor descuento</span>
-      <span class="chip" data-ss="price" style="cursor:pointer">menor precio</span>
-      <span class="chip" data-ss="az" style="cursor:pointer">A-Z</span>
+      <button type="button" class="chip" data-ss="count">más alertas</button>
+      <button type="button" class="chip" data-ss="disc">mayor descuento</button>
+      <button type="button" class="chip" data-ss="price">menor precio</button>
+      <button type="button" class="chip" data-ss="az">A-Z</button>
     </div>
     <div class="grid" id="g-siman"></div>
   </div>
-  <div class="pane" id="pane-explorar">
+  <div class="pane" id="pane-explorar" role="tabpanel" aria-labelledby="tab-explorar">
     <div class="filters">Agrupar:
       <select id="grp1" style="background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 10px;font-size:13px">
         <option value="">sin agrupar</option>
@@ -119,18 +123,18 @@
       <label style="font-size:13px;color:var(--mut);display:flex;align-items:center;gap:5px;cursor:pointer">
         <input type="checkbox" id="adv" style="width:auto"> avanzado
       </label>
-      <span class="chip" data-pp="real">ofertas reales</span>
-      <span class="chip" data-pp="silenciosa">silenciosas</span>
-      <span class="chip" data-pp="min">al mínimo</span>
-      <span class="chip" data-pp="up">subieron</span>
-      <span class="chip" data-pp="clubout">agotado en mi club</span>
-      <span class="chip" data-pp="agotados">sin stock hoy</span>
+      <button type="button" class="chip" data-pp="real">ofertas reales</button>
+      <button type="button" class="chip" data-pp="silenciosa">silenciosas</button>
+      <button type="button" class="chip" data-pp="min">al mínimo</button>
+      <button type="button" class="chip" data-pp="up">subieron</button>
+      <button type="button" class="chip" data-pp="clubout">agotado en mi club</button>
+      <button type="button" class="chip" data-pp="agotados">sin stock hoy</button>
     </div>
     <perspective-viewer id="pv"></perspective-viewer>
   </div>
 </div>
-<dialog id="dlg">
-  <span class="close" onclick="dlg.close()">✕</span>
+<dialog id="dlg" aria-labelledby="dtitle">
+  <button type="button" class="close" onclick="dlg.close()" aria-label="cerrar">✕</button>
   <div style="display:flex;gap:12px;align-items:start">
     <img id="dimg" style="width:80px;height:80px;object-fit:contain;background:#fff;border-radius:8px">
     <div style="flex:1"><h2 id="dtitle"></h2><div class="meta" id="dmeta"></div><div class="bigprice" id="dprice"></div><div class="meta" id="dvs"></div></div>
@@ -138,6 +142,7 @@
   </div>
   <div id="chart"></div>
   <div id="dcal"></div>
+  <p class="meta" id="dnograph" style="display:none">historial disponible — gráficas no cargadas (sin acceso al CDN de echarts)</p>
   <div id="dclubs"></div>
   <a id="dlink" class="plink" target="_blank" rel="noopener">Ver en pricesmart.com ↗</a>
   <label class="sw" style="margin-left:14px"><input type="checkbox" id="dbuy"><i></i>lo compré</label>
@@ -152,26 +157,26 @@
   <table id="dtable"></table>
 </dialog>
 <button class="fab" id="fab" aria-label="secciones"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg><span id="fab-label"></span></button>
-<dialog id="dlg-nav" class="sheet"><div id="navres"></div><div id="navitems"></div></dialog>
+<dialog id="dlg-nav" class="sheet" aria-label="secciones"><div id="navres"></div><div id="navitems"></div></dialog>
 <div id="upd">Hay datos nuevos — <b>actualizar</b></div>
 <div id="shopbar"><span id="shop-tot"></span>
-  <span><span class="chip" id="cart-clear">vaciar</span>
-  <span class="chip on" id="done-btn">terminé — pagué ✓</span></span></div>
-<dialog id="dlg-login">
-  <span class="close" onclick="lgDlg.close()">✕</span>
-  <h2>Cuenta</h2>
+  <span><button type="button" class="chip" id="cart-clear">vaciar</button>
+  <button type="button" class="chip on" id="done-btn">terminé — pagué ✓</button></span></div>
+<dialog id="dlg-login" aria-labelledby="lg-title">
+  <button type="button" class="close" onclick="lgDlg.close()" aria-label="cerrar">✕</button>
+  <h2 id="lg-title">Cuenta</h2>
   <p class="meta">Tu lista y tus compras se sincronizan entre teléfono y PC.</p>
   <div id="lg-form">
-    <input id="lg-email" type="email" autocomplete="email" placeholder="correo" style="width:100%;margin-top:10px" disabled>
-    <input id="lg-pass" type="password" autocomplete="current-password" placeholder="contraseña" style="width:100%;margin-top:8px" disabled>
+    <input id="lg-email" type="email" autocomplete="email" aria-label="correo" placeholder="correo" style="width:100%;margin-top:10px" disabled>
+    <input id="lg-pass" type="password" autocomplete="current-password" aria-label="contraseña" placeholder="contraseña" style="width:100%;margin-top:8px" disabled>
     <div style="margin-top:12px;display:flex;gap:10px">
-      <span class="chip on" id="lg-in">Entrar</span>
-      <span class="chip" id="lg-up">Crear cuenta</span>
+      <button type="button" class="chip on" id="lg-in">Entrar</button>
+      <button type="button" class="chip" id="lg-up">Crear cuenta</button>
     </div>
   </div>
   <div id="lg-out" style="display:none;margin-top:12px">
     <p id="lg-who"></p>
-    <span class="chip" id="lg-off">Salir</span>
+    <button type="button" class="chip" id="lg-off">Salir</button>
   </div>
   <p class="meta" id="lg-msg" style="margin-top:10px"></p>
 </dialog>
@@ -183,6 +188,15 @@
 (async () => {
   const boot = document.getElementById("boot");
   boot.style.display = "";
+  // Los CDN (echarts, appwrite) entran con defer: ejecutan despues del
+  // parseo pero antes de DOMContentLoaded. Si los modulos se agregaran
+  // antes, AW.ok quedaria false para siempre aunque el SDK llegara unos
+  // ms tarde. Se espera el evento SIN frenar data.json (corre en
+  // paralelo desde ya).
+  const ready = document.readyState === "loading"
+    ? new Promise(ok => document.addEventListener(
+        "DOMContentLoaded", ok, { once: true }))
+    : Promise.resolve();
   try {
     const MODS = ["js/state.js", "js/siman.js", "js/sync.js",
                   "js/render.js", "js/app.js"];
@@ -193,6 +207,7 @@
       if (!r.ok) throw new Error("HTTP " + r.status);
       return r.json();
     });
+    await ready;
     for (const src of MODS)
       await new Promise((ok, bad) => {
         const s = document.createElement("script");

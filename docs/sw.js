@@ -1,6 +1,6 @@
 // PriceWatch SV — navegación network-first (abrir la app trae la
 // versión fresca); sin señal cae al último snapshot cacheado.
-const CACHE = "pricewatch-v24";
+const CACHE = "pricewatch-v25";
 // shell completa precacheada: si el SW se actualiza y el usuario abre
 // offline antes de navegar online, los js/css ya estan en el cache
 // nuevo (antes solo sobrevivian si ya se habian pedido)
@@ -20,9 +20,14 @@ self.addEventListener("install", e => {
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      // solo caches de esta app: GitHub Pages comparte CacheStorage
+      // entre todos los proyectos del mismo user origin — borrar lo
+      // demas romperia apps ajenas
+      Promise.all(keys
+        .filter(k => k.startsWith("pricewatch-") && k !== CACHE)
+        .map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", e => {

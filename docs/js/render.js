@@ -85,10 +85,10 @@ function card(e, clubs){
     : "")) || "";
   return `<div class="card" onclick="openProd('${e.sku}')">
     ${star(e.sku)}
-    ${img(e.sku)?`<img src="${img(e.sku)}" loading="lazy" onerror="this.remove()">`:""}
+    ${img(e.sku)?`<img src="${esc(img(e.sku))}" alt="" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
       <div class="t">${esc(e.title||p.title||e.sku)}</div><div>${price}${vtag}${rtag}</div>
-      <div class="meta">${e.date||""}${dias}${odur}${ocd} · ${p.category||""}${ea.temp?" · de temporada":""}</div>
+      <div class="meta">${e.date||""}${dias}${odur}${ocd} · ${esc(p.category||"")}${ea.temp?" · de temporada":""}</div>
       <div class="spark" data-sku="${e.sku}"></div></div></div>`;
 }
 function render(){
@@ -143,8 +143,8 @@ function render(){
   // el texto del alerta puede traer titulos de producto (objetivo 🎯):
   // va escapado — un < o & rompia el marcado del resumen y del dlg-nav
   $("#alerts").innerHTML = alerts.map(([t,tab,cf2,ff,sk]) =>
-    `<span class="alert${cf2==="new"?" new":""}" data-tab="${tab}" data-cf="${cf2||""}"
-       data-ff="${ff||""}"${sk?` data-sku="${sk}"`:""}>${esc(t)}</span>`).join("");
+    `<button type="button" class="alert${cf2==="new"?" new":""}" data-tab="${tab}" data-cf="${cf2||""}"
+       data-ff="${ff||""}"${sk?` data-sku="${sk}"`:""}>${esc(t)}</button>`).join("");
   // pendientes = articulos unicos de tu lista que piden atencion
   RESUMEN_N = new Set([...favOf, ...resu, ...favOut, ...clubOut, ...favSA]).size;
   const bar = $("#shopbar");
@@ -345,7 +345,7 @@ function favCard(sku){
   return `<div class="card${SHOP&&inCart?" incart":""}" onclick="openProd('${sku}')">
     ${SHOP?`<input type="checkbox" class="cartcheck" ${inCart?"checked":""}
       onclick="event.stopPropagation();cartToggle('${sku}',this.checked)">`:star(sku)}
-    ${img(sku)?`<img src="${img(sku)}" loading="lazy" onerror="this.remove()">`:""}
+    ${img(sku)?`<img src="${esc(img(sku))}" alt="" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
       <div class="t">${esc(p.title||sku)}</div>
       <div><span class="pr">${l?fmt(l[1]):"—"}</span>

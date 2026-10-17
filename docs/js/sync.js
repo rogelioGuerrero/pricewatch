@@ -15,10 +15,28 @@ const AW_DB = "pricewatch", COL_F = "favs", COL_C = "compras";
 const docPerms = uid => ["read","update","delete"]
   .map(p => Appwrite.Permission[p](Appwrite.Role.user(uid)));
 const favId = sku => `${AW.user.$id}-${sku}`;
-const listAll = tableId => AW.dbs
-  .listRows({databaseId: AW_DB, tableId,
-             queries: [Appwrite.Query.limit(500)]})
-  .then(r => r.rows);
+// Appwrite corta en 500 filas por request: paginar por cursor sobre el
+// orden estable de $id hasta una pagina corta. Si el cursor no avanza
+// la API esta ignorando cursorAfter — lanzar en vez de devolver una
+// lista muda: el merge la leeria como "borrado remoto" y vaciaria local
+const listAll = async tableId => {
+  const rows = [];
+  let cursor = null;
+  for (;;) {
+    const queries = [Appwrite.Query.limit(500),
+                     Appwrite.Query.orderAsc("$id")];
+    if (cursor) queries.push(Appwrite.Query.cursorAfter(cursor));
+    const page = (await AW.dbs.listRows({databaseId: AW_DB, tableId,
+                                         queries})).rows;
+    if (!page.length) return rows;
+    const last = page[page.length - 1].$id;
+    if (!last || last === cursor)
+      throw new Error("listAll: cursor sin avance en " + tableId);
+    rows.push(...page);
+    if (page.length < 500) return rows;
+    cursor = last;
+  }
+};
 const favUp = sku => AW.dbs.createRow({databaseId: AW_DB, tableId: COL_F,
   rowId: favId(sku), data: {sku}, permissions: docPerms(AW.user.$id)})
   .then(() => true).catch(() => false);

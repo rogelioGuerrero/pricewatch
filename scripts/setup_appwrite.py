@@ -15,15 +15,10 @@ Uso:
     python scripts/setup_appwrite.py
 """
 
-import os
 import sys
 import time
 
-from common import APPWRITE_TABLES, AW_DB, aw_request
-
-ENDPOINT = os.environ["APPWRITE_ENDPOINT"].rstrip("/")
-PROJECT = os.environ["APPWRITE_PROJECT_ID"]
-KEY = os.environ["APPWRITE_API_KEY"]
+from common import APPWRITE_TABLES, AW_DB, aw_env, aw_request
 
 
 def ensure(method, path, body, what):
@@ -38,30 +33,52 @@ def ensure(method, path, body, what):
 
 
 def main():
+    ep, project, key = aw_env()
+    if not (ep and project and key):
+        print("faltan credenciales: definir APPWRITE_ENDPOINT, "
+              "APPWRITE_PROJECT_ID y APPWRITE_API_KEY")
+        sys.exit(1)
+
     print("Database:")
     _, code = aw_request("GET", f"/tablesdb/{AW_DB}")
     if code == 200:
         print("  = pricewatch (tablesdb): ya existe")
-    else:
-        # si existe una DB legacy (documentsdb) con el mismo id, hay que
-        # liberar el slot: el plan free permite 1 sola database
-        legacy, code = aw_request("GET", f"/databases/{AW_DB}")
-        if code == 200 and legacy.get("type") != "tablesdb":
-            aw_request("DELETE", f"/databases/{AW_DB}")
-            print("  - documentsdb 'pricewatch' eliminada (vacia, legado)")
+    elif code == 404:
+        # puede quedar una DB legacy (documentsdb) ocupando el slot —
+        # NUNCA se borra sola: sus datos requieren backup + migracion
+        # manual aprobada por el owner antes de recrear nada
+        legacy, lcode = aw_request("GET", f"/databases/{AW_DB}")
+        if lcode == 200:
+            print(f"  ! existe database legacy '{AW_DB}' "
+                  f"(type={legacy.get('type')})")
+            print("    requiere backup + migracion manual aprobada; "
+                  "este script no la borra ni crea la tablesdb encima")
+            sys.exit(1)
+        if lcode != 404:
+            print(f"  ! GET /databases/{AW_DB}: HTTP {lcode} "
+                  "— abortando antes de escribir")
+            sys.exit(1)
         ensure("POST", "/tablesdb",
                {"databaseId": AW_DB, "name": "PriceWatch", "enabled": True},
                "pricewatch (tablesdb)")
+    else:
+        print(f"  ! GET /tablesdb/{AW_DB}: HTTP {code} "
+              "— abortando antes de escribir")
+        sys.exit(1)
 
     print("Tablas:")
     for t, (name, perms, _cols) in APPWRITE_TABLES.items():
         _, code = aw_request("GET", f"/tablesdb/{AW_DB}/tables/{t}")
         if code == 200:
             print(f"  = {t}: ya existe")
-        else:
+        elif code == 404:
             ensure("POST", f"/tablesdb/{AW_DB}/tables",
                    {"tableId": t, "name": name, "permissions": perms,
                     "rowSecurity": True, "enabled": True}, t)
+        else:
+            print(f"  ! GET tabla {t}: HTTP {code} "
+                  "— abortando antes de escribir")
+            sys.exit(1)
 
     print("Columnas:")
     for t, (_name, _perms, cols) in APPWRITE_TABLES.items():
@@ -89,26 +106,26 @@ def main():
     print("  columnas:", st)
 
     print("Auth email/password:")
-    res, code = aw_request("PATCH", f"/projects/{PROJECT}/auth/email-password",
+    res, code = aw_request("PATCH", f"/projects/{project}/auth/email-password",
                            {"enabled": True})
     print("  + habilitado" if code in (200, 201)
           else f"  ! HTTP {code} {res.get('message')} "
                "(habilitalo a mano en consola)")
 
     print("Platforms web (CORS):")
-    res, _ = aw_request("GET", f"/projects/{PROJECT}/platforms")
+    res, _ = aw_request("GET", f"/projects/{project}/platforms")
     existing = {p.get("hostname") for p in res.get("platforms", [])}
     for host, name in [("localhost", "dev"),
                        ("rogelioguerrero.github.io", "GitHub Pages")]:
         if host in existing:
             print(f"  = {host}: ya existe")
         else:
-            ensure("POST", f"/projects/{PROJECT}/platforms",
+            ensure("POST", f"/projects/{project}/platforms",
                    {"type": "web", "name": name, "key": host,
                     "hostname": host,
                     "platformId": f"pw-{host.split('.')[0]}"}, host)
 
-    print("\nListo. Sync del PWA contra:", ENDPOINT)
+    print("\nListo. Sync del PWA contra:", ep)
 
 
 if __name__ == "__main__":

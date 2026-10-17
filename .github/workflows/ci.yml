@@ -29,3 +29,11 @@ jobs:
 
       - name: Pytest
         run: python -m pytest tests -q
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Frontend tests (node:test)
+        run: node --test tests/frontend/*.test.js

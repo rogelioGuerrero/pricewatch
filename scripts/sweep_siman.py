@@ -98,12 +98,18 @@ def fetch_search(q):
     for page in range(MAX_PAGES):
         url = (f"{API}?ft={quote(q)}&_from={page*ROWS}"
                f"&_to={page*ROWS + ROWS - 1}")
-        try:
-            res = SESSION.get(url, headers=HEADERS, timeout=30).json()
-        except Exception:
-            time.sleep(3)
-            res = SESSION.get(url, headers=HEADERS,
-                              timeout=30).json()   # un reintento por pagina
+        for attempt in range(2):
+            try:
+                response = SESSION.get(url, headers=HEADERS, timeout=30)
+                response.raise_for_status()
+                res = response.json()
+                if not isinstance(res, list):
+                    raise ValueError("respuesta de busqueda invalida")
+                break
+            except Exception:
+                if attempt:
+                    raise
+                time.sleep(3)
         if not res:
             break
         for p in res:
@@ -180,8 +186,9 @@ def sweep(watches):
         try:
             found = fetch_search(q)
         except Exception as e:
-            print(f"  ! '{q}': fallo ({e})")
-            continue
+            # No reemplazar el snapshot con un barrido parcial: los items
+            # omitidos parecerian salidos y luego nuevos/recodificados.
+            raise RuntimeError(f"busqueda '{q}' incompleta: {e}") from e
         solo = [norm(x) for x in (w.get("solo") or [])]
         n = 0
         for it in found:
