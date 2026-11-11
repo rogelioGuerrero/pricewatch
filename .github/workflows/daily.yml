@@ -114,7 +114,9 @@ jobs:
           key: pwdata-${{ github.run_id }}
 
       - name: Empaquetar sitio (artefacto)
-        uses: actions/upload-pages-artifact@v5
+        # v5 usa upload-artifact@v7, no visible para deploy-pages@v4 en este run.
+        # Mantener el uploader compatible con el consumidor de Pages.
+        uses: actions/upload-pages-artifact@v4
         with:
           path: docs
 
