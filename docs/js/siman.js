@@ -12,24 +12,32 @@
 const SIMAN = D.siman || {items:[], events:[], watches:[]};
 const tkeyJS = s => (s||"").toLowerCase().normalize("NFD")
   .replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g," ").trim();
-const SMUTE = new Set(JSON.parse(localStorage.getItem("pw-siman-mute")||"[]"));
-const SSEEN = JSON.parse(localStorage.getItem("pw-siman-seen")||"{}");
-let SWATCH = JSON.parse(localStorage.getItem("pw-siman-watch")||"null")
-  || SIMAN.watches || [];
-const saveSMute = () =>
-  localStorage.setItem("pw-siman-mute", JSON.stringify([...SMUTE]));
-const saveSSeen = () =>
-  localStorage.setItem("pw-siman-seen", JSON.stringify(SSEEN));
-const saveSWatch = () =>
-  localStorage.setItem("pw-siman-watch", JSON.stringify(SWATCH));
+const SMUTE = new Set(
+  PWStore.read("pw-siman-mute", [], PWStore.valid.strList));
+const SSEEN = PWStore.read("pw-siman-seen", {}, PWStore.valid.numMap);
+// watches = estado del namespace (guest o cuenta): el dataset publico
+// (D.siman.watches) jamas siembra estado — solo se migra el valor
+// legacy local via PWStore. Sembrar subia queries del dataset a una
+// cuenta nueva como si fueran suyas
+let SWATCH = PWStore.read("pw-siman-watch", [], PWStore.valid.watch);
+const saveSMute = () => PWStore.write("pw-siman-mute", [...SMUTE]);
+const saveSSeen = () => PWStore.write("pw-siman-seen", SSEEN);
+const saveSWatch = () => PWStore.write("pw-siman-watch", SWATCH);
 const sKey = p =>
   `${p.pid}|${tkeyJS(p.t)}|${(p.ihs||[]).join(",")}`;
 // distancia hamming entre aHash hex de 64 bits — la misma foto re-subida
 // difiere ~2 bits (re-encoding); fotos distintas andan >>10
 const hDist = (a, b) => {
-  let x = BigInt("0x" + a) ^ BigInt("0x" + b), n = 0;
-  while (x) { n += Number(x & 1n); x >>= 1n; }
-  return n;
+  // hash corrupto (regla editada, data rara) nunca llega a BigInt:
+  // 99 = "no parecido" en vez de un throw que tumba isMuted/seenAt
+  try {
+    a = String(a || ""); b = String(b || "");
+    if (!/^[0-9a-f]{16}$/i.test(a) || !/^[0-9a-f]{16}$/i.test(b))
+      return 99;
+    let x = BigInt("0x" + a) ^ BigInt("0x" + b), n = 0;
+    while (x) { n += Number(x & 1n); x >>= 1n; }
+    return n;
+  } catch (_) { return 99; }
 };
 // regla "pid|tkey|h1,h2,..": matchea por CUALQUIERA de las tres —
 // el pid cubre ediciones de titulo, el tkey cubre recodificados, y la
@@ -62,8 +70,10 @@ const seenAt = p => {
 const SUPG_MUTE = [], SUPG_SEEN = [];
 // migra reglas viejas (tkey plano) a la llave completa sKey() cuando el
 // producto sigue en la data — quedan blindadas contra edicion de titulo
-// y recodificado con renombre (via foto)
-{
+// y recodificado con renombre (via foto). Corre al eval y al rehidratar
+// otro namespace: las colas SUPG siempre pertenecen al usuario activo
+const upgradeSimanRules = () => {
+  SUPG_MUTE.length = 0; SUPG_SEEN.length = 0;
   const upg = r => {
     const pt = r.split("|");
     if (pt.length >= 3) return r;
@@ -84,68 +94,92 @@ const SUPG_MUTE = [], SUPG_SEEN = [];
       SUPG_SEEN.push(r); dirty = true; }
   }
   if (dirty) { saveSMute(); saveSSeen(); }
-}
+};
+upgradeSimanRules();
 const h16 = s => { let h=5381;
   for (const c of s) h = (h*33 ^ c.charCodeAt(0)) >>> 0;
   return h.toString(36); };
-const muteUp = t => AW.dbs.createRow({databaseId:AW_DB,tableId:"siman_muted",
-  rowId:`${AW.user.$id}-${h16(t)}`, data:{tkey:t},
-  permissions:docPerms(AW.user.$id)})
-  .then(() => true).catch(() => false);
-const muteDown = t => AW.dbs.deleteRow({databaseId:AW_DB,
-  tableId:"siman_muted",
-  rowId:`${AW.user.$id}-${h16(t)}`}).catch(()=>{});
-const seenUp = (t,p) => {
-  const rid = `${AW.user.$id}-${h16(t)}`;
-  const data = {price:p, date:todaySV()};
-  return AW.dbs.updateRow({databaseId:AW_DB, tableId:"siman_seen",
-    rowId:rid, data})
-    .then(() => true)
-    .catch(() => AW.dbs.createRow({databaseId:AW_DB, tableId:"siman_seen",
-      rowId:rid, data:{tkey:t,...data},
-      permissions:docPerms(AW.user.$id)})
-      .then(() => true).catch(() => false));
+// las ops de nube pasan por el outbox durable de sync.js: intencion
+// persistida antes del request, coalesce por fila, reintento con el
+// mismo op.id. Resuelven true solo si el cambio quedo confirmado
+const muteUp = t => {
+  if (!boundUid()) return Promise.resolve(false);
+  const op = opEnqueue({ tableId: "siman_muted",
+    rowId: `${boundUid()}-${h16(t)}`, kind: "create", key: t,
+    data: { tkey: t } });
+  return opFlush().then(() => _opDone(op)).catch(() => false);
 };
-const seenDown = t => AW.dbs.deleteRow({databaseId:AW_DB,
-  tableId:"siman_seen",
-  rowId:`${AW.user.$id}-${h16(t)}`}).catch(()=>{});
-const watchUp = w => AW.dbs.createRow({databaseId:AW_DB,tableId:"siman_watch",
-  rowId:`${AW.user.$id}-${h16(w.q+"|"+(w.talla||""))}`,
-  data:{q:w.q, talla:w.talla||"", filtro:(w.solo||[]).join(",")},
-  permissions:docPerms(AW.user.$id)})
-  .then(() => true).catch(() => false);
-const watchDown = (q,t) => AW.dbs.deleteRow({databaseId:AW_DB,
-  tableId:"siman_watch",
-  rowId:`${AW.user.$id}-${h16(q+"|"+(t||""))}`}).catch(()=>{});
+const muteDown = t => {
+  if (!boundUid()) return Promise.resolve(false);
+  const op = opEnqueue({ tableId: "siman_muted",
+    rowId: `${boundUid()}-${h16(t)}`, kind: "delete", key: t });
+  return opFlush().then(() => _opDone(op)).catch(() => false);
+};
+const seenUp = (t, p) => {
+  if (!boundUid()) return Promise.resolve(false);
+  const op = opEnqueue({ tableId: "siman_seen",
+    rowId: `${boundUid()}-${h16(t)}`, kind: "upsert", key: t,
+    data: { tkey: t, price: p, date: todaySV() } });
+  return opFlush().then(() => _opDone(op)).catch(() => false);
+};
+const seenDown = t => {
+  if (!boundUid()) return Promise.resolve(false);
+  const op = opEnqueue({ tableId: "siman_seen",
+    rowId: `${boundUid()}-${h16(t)}`, kind: "delete", key: t });
+  return opFlush().then(() => _opDone(op)).catch(() => false);
+};
+// upsert (no create): la fila es singleton por q|talla — un 409 o una
+// fila previa del otro dispositivo lleva el filtro local deseado con
+// update en vez de confirmar a ciegas
+const watchUp = w => {
+  if (!boundUid()) return Promise.resolve(false);
+  const op = opEnqueue({ tableId: "siman_watch",
+    rowId: `${boundUid()}-${h16(w.q + "|" + (w.talla || ""))}`,
+    kind: "upsert", key: w.q + "|" + (w.talla || ""),
+    data: { q: w.q, talla: w.talla || "",
+            filtro: (w.solo || []).join(",") } });
+  return opFlush().then(() => _opDone(op)).catch(() => false);
+};
+const watchDown = (q, t) => {
+  if (!boundUid()) return Promise.resolve(false);
+  const op = opEnqueue({ tableId: "siman_watch",
+    rowId: `${boundUid()}-${h16(q + "|" + (t || ""))}`,
+    kind: "delete", key: q + "|" + (t || "") });
+  return opFlush().then(() => _opDone(op)).catch(() => false);
+};
 const yaLoVi = (rule,p) => {
   SSEEN[rule] = p; saveSSeen();
-  if (AW.user) seenUp(rule, p);
+  if (PWStore.currentUser()) seenUp(rule, p);
   render();
 };
 const noMeGusta = rule => {
   SMUTE.add(rule); saveSMute();
-  if (AW.user) muteUp(rule);
+  if (PWStore.currentUser()) muteUp(rule);
   render();
+  // deshacer: restaura la regla (el delete coalesca contra el create
+  // pendiente si aun no salia el request)
+  undoToast("alerta silenciada", () => {
+    SMUTE.delete(rule); saveSMute();
+    if (PWStore.currentUser()) muteDown(rule);
+    render();
+  });
 };
-// frescura ~14d: un item no visto es un listing muerto congelado con
-// su ultimo avail — no alertar aunque dijera disponible+oferta
-// build sin DB puede venir con generated vacio: caer a hoy SV en vez
-// de Invalid Date (toISOString ahi lanzaba y tumbaba la app entera)
-const SCUT = (() => {
-  let d = new Date((D.generated || "") + "T00:00:00Z");
-  if (isNaN(d)) d = new Date(todaySV() + "T00:00:00Z");
-  d.setUTCDate(d.getUTCDate() - 14);
-  return d.toISOString().slice(0, 10);
-})();
+// alertas: solo variantes verificadas vigentes (PWData.siman compara
+// la observacion contra la fecha fuente del barrido — una lectura
+// vieja nunca proclama ganga). rompe-minimo o declara-descuento,
+// disponible (o talla pedida disponible), no silenciado, y por
+// debajo del ultimo precio reconocido
 const simanAlerts = () => SIMAN.items.filter(p => {
-  if (!p.last || p.last < SCUT) return false;
-  if (!p.avail || !(p.broke || p.decl) || (p.ta && !p.ok)) return false;
+  const observation = PWData.siman(p);
+  if (observation.state !== "available" || observation.priceCents == null)
+    return false;
+  if (!(p.broke || p.decl)) return false;
   if (isMuted(p)) return false;
   const sp = seenAt(p);
   return !(sp != null && p.p != null && p.p >= sp);
 });
 // orden de los grupos del acordeon (persiste) y cuales estan abiertos
-let SSORT = localStorage.getItem("pw-siman-sort") || "count";
+let SSORT = PWStore.get("pw-siman-sort") || "count";
 const ACC_OPEN = {};
 // sugerencias del buscador: terminos reales de los titulos vigilados
 const SSTOP = new Set(("para del la el con sin en un una por color hombre "
@@ -176,35 +210,38 @@ function sCard(p){
   if (p.crd) tags.push(`<span class="tag oferta">con CrediSiman</span>`);
   if (p.ta) tags.push(`<span class="tag ${p.ok?"nuevo":"agotado"}">talla ${esc(p.ta)} ${p.ok?"✓":"✗"}</span>`);
   // el link externo solo si es http(s) de verdad: el payload es de
-  // terceros y un javascript:/data: ejecutaria codigo al hacer click
+  // terceros y un javascript:/data: ejecutaria codigo al hacer click.
+  // Va como anchor normal (nada de onclick sobre la card entera) y
+  // las acciones son botones nativos etiquetados
   const link = safeHttpURL(p.l || "");
-  return `<div class="card" ${link?`data-l="${esc(link)}"
-    onclick="window.open(this.dataset.l,'_blank','noopener')"`:''}>
-    ${link?`<span class="slink">↗</span>`:""}
+  return `<article class="card">
+    ${link?`<a class="slink" href="${esc(link)}" target="_blank"
+      rel="noopener" aria-label="ver ${esc(p.t)} en Siman">↗</a>`:""}
     ${p.img?`<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
-      <div class="t">${esc(p.t)}</div>
+      <h3 class="t">${link
+        ?`<a href="${esc(link)}" target="_blank" rel="noopener"
+            style="color:inherit;text-decoration:none">${esc(p.t)}</a>`
+        :esc(p.t)}</h3>
       <div><span class="pr">${p.p!=null?fmt(Math.round(p.p*100)):"—"}</span>
         ${p.lp&&p.p&&p.lp>p.p?` <span class="old">${fmt(Math.round(p.lp*100))}</span>`:""}
         ${tags.join("")}</div>
-      <div class="meta">${p.b?esc(p.b)+" · ":""}vigilado por "${esc(p.w||"")}"${p.n>1?` · ${p.n} obs`:""}</div>
+      <div class="meta">${p.b?esc(p.b)+" · ":""}vigilado por "${esc(p.w||"")}"${p.n>1?` · ${p.n} obs`:""}${p.last?` · ${p.last}`:""}</div>
       <div class="sact">
-        <a class="sic" title="ya lo vi — reavisa si baja más"
+        <button type="button" class="sbtn"
            data-sv="seen" data-rule="${esc(sKey(p))}"
-           data-price="${p.p||0}">👁</a>
-        <a class="sic neg" title="no me gusta — no volver a mostrar (restaurable en ▸)"
-           data-sv="mute" data-rule="${esc(sKey(p))}">👎</a>
-      </div></div></div>`;
+           data-price="${p.p||0}">👁 ya lo vi — reavisa si baja</button>
+        <button type="button" class="sbtn neg"
+           data-sv="mute" data-rule="${esc(sKey(p))}">👎 no me gusta</button>
+      </div></div></article>`;
 }
-// acciones de las cards Siman por delegacion (fase capture: llega antes
-// que el onclick del .card padre que abriria el link del producto)
+// acciones de las cards Siman por delegacion
 $("#g-siman").addEventListener("click", e => {
-  const a = e.target.closest("a[data-sv]");
+  const a = e.target.closest("[data-sv]");
   if (!a) return;
-  e.stopPropagation();
   if (a.dataset.sv === "seen") yaLoVi(a.dataset.rule, +a.dataset.price);
   else noMeGusta(a.dataset.rule);
-}, true);
+});
 
 // ---- handlers del panel Siman ----
 // siman: alta/baja de busquedas vigiladas (si hay sesion, sube a la nube
@@ -218,19 +255,19 @@ $("#sw-add").onclick = () => {
   if (SWATCH.some(x => x.q === w.q && (x.talla||"") === (w.talla||""))) {
     $("#sw-q").value = ""; $("#sw-t").value = ""; return; }
   SWATCH.push(w); saveSWatch();
-  if (AW.user) watchUp(w);
+  if (PWStore.currentUser()) watchUp(w);
   $("#sw-q").value = ""; $("#sw-t").value = "";
   render();
 };
 $("#siman-watches").onclick = e => {
-  const a = e.target.closest("a[data-wq]");
+  const a = e.target.closest("[data-wq]");
   if (!a) return;
   // split por el ULTIMO "|": la busqueda del usuario puede traer "|"
   const i = a.dataset.wq.lastIndexOf("|");
   const q = a.dataset.wq.slice(0, i), t = a.dataset.wq.slice(i + 1);
   SWATCH = SWATCH.filter(w => !(w.q === q && (w.talla||"") === (t||"")));
   saveSWatch();
-  if (AW.user) watchDown(q, t);
+  if (PWStore.currentUser()) watchDown(q, t);
   render();
 };
 // sugerencias del buscador de vigilancia: solo terminos que existen en
@@ -272,10 +309,10 @@ $("#siman-tog").onclick = () => {
 };
 // restaurar un silenciado: sale de SMUTE y baja el doc de la nube
 $("#siman-muted").onclick = e => {
-  const a = e.target.closest("a[data-mu]");
+  const a = e.target.closest("[data-mu]");
   if (!a) return;
   SMUTE.delete(a.dataset.mu); saveSMute();
-  if (AW.user) muteDown(a.dataset.mu);
+  if (PWStore.currentUser()) muteDown(a.dataset.mu);
   render();
 };
 // orden de los acordeones de Siman
@@ -283,6 +320,6 @@ $("#siman-sort").onclick = e => {
   const c = e.target.closest("[data-ss]");
   if (!c) return;
   SSORT = c.dataset.ss;
-  localStorage.setItem("pw-siman-sort", SSORT);
+  PWStore.set("pw-siman-sort", SSORT);
   render();
 };

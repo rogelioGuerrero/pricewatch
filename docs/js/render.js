@@ -57,8 +57,13 @@ function card(e, clubs){
       ${["reaparecio","regreso","oferta_termino","rebaja"].includes(e.type)?`<span class="tag ${e.type}">${LABEL[e.type]}</span>`:""}`;
   else if (e.type==="oferta"){
     const a = D.agg[e.sku]||{}, hist = (D.series[e.sku]||[]).length>=3;
-    price = `<span class="pr">${fmt(e.price)}</span> <span class="tag oferta">ahorra $${(+e.saving).toFixed(2)}</span>`
-      + (hist && a.pct_min<=0 ? `<span class="tag real">oferta real</span>` : "");
+    // el ahorro declarado es historico: solo "ahorra" si el precio es
+    // comprable HOY; si no, se confiesa como observado — y "oferta
+    // real" exige comprable + historia + piso, nunca solo el letrero
+    const can = PWData.buyable(e.sku);
+    price = `<span class="pr">${fmt(e.price)}</span> <span class="tag oferta">${can?"ahorra":"ahorro observado"} $${(+e.saving).toFixed(2)}</span>`
+      + (can && hist && a.pct_min != null && a.pct_min <= 0
+         ? `<span class="tag real">oferta real</span>` : "");
   }
   else {
     const cl = clubs ? clubsLine(clubs) : (e.club||"");
@@ -72,7 +77,11 @@ function card(e, clubs){
   // contexto actual: "subio +12%" junto a "mínimo histórico" = no pasa
   // nada; y si el articulo quedo sin stock, la card lo admite
   const vd = verdict(e.sku);
-  const vtag = e.type !== "oferta" && (vd.rank <= 3 || vd.rank === 8)
+  // los veredictos negativos (sin stock / sin verificacion / sin
+  // precio) se declaran SIEMPRE, incluso en cards de oferta — el
+  // letrero no puede tapar que la lectura no es vigente. Lo positivo
+  // sigue evitando duplicar la tag de ahorro en cards de oferta.
+  const vtag = (vd.rank >= 8 || (e.type !== "oferta" && vd.rank <= 3))
     ? ` <span class="tag ${vd.cls}">${vd.label}</span>` : "";
   // el movimiento ya se reverto por completo (promo titilando): la card
   // admite que el evento quedo obsoleto en vez de contradecir el spark
@@ -83,14 +92,36 @@ function card(e, clubs){
     : (e.type==="bajo"||e.type==="rebaja") && lp>=e.from
       ? ` <span class="tag salio_del_catalogo">↩ ya volvió a subir</span>`
     : "")) || "";
-  return `<div class="card" onclick="openProd('${e.sku}')">
+  return `<article class="card">
     ${star(e.sku)}
     ${img(e.sku)?`<img src="${esc(img(e.sku))}" alt="" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
-      <div class="t">${esc(e.title||p.title||e.sku)}</div><div>${price}${vtag}${rtag}</div>
+      <h3 class="t">${esc(e.title||p.title||e.sku)}</h3><div>${price}${vtag}${rtag}</div>
       <div class="meta">${e.date||""}${dias}${odur}${ocd} · ${esc(p.category||"")}${ea.temp?" · de temporada":""}</div>
-      <div class="spark" data-sku="${e.sku}"></div></div></div>`;
+      <button type="button" class="det"
+        onclick="openProd(${jsArg(e.sku)})">detalle ›</button>
+      <div class="spark" data-sku="${e.sku}"></div></div></article>`;
 }
+// paginado progresivo: los feeds largos (busqueda, gangas) muestran
+// de a 24 con conteo visible — nada de corte silencioso en 60/120
+const PAGE_STEP = 24;
+const PAGE = { buscar: PAGE_STEP, ofertas: PAGE_STEP, cambios: PAGE_STEP,
+               stock: PAGE_STEP, nuevos: PAGE_STEP, favs: PAGE_STEP };
+const moreBtn = (id, shown, total) => {
+  const el = document.getElementById("more-" + id);
+  if (!el) return;
+  el.innerHTML = shown < total
+    ? `<span class="meta">${shown} de ${total}</span>
+       <button type="button" class="chip" data-more="${id}">Mostrar ${PAGE_STEP} más</button>`
+    : total > PAGE_STEP
+      ? `<span class="meta">${total} de ${total}</span>` : "";
+};
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-more]");
+  if (!b || !PAGE[b.dataset.more]) return;
+  PAGE[b.dataset.more] += PAGE_STEP;
+  render();
+});
 function render(){
   const q = $("#q").value.trim();
   const f = e => !q || matchQ(q, e.title, (D.products[e.sku]||{}).title);
@@ -118,7 +149,9 @@ function render(){
   if (nSiman) alerts.push([`${nSiman} ganga${nSiman>1?"s":""} en Siman`,"siman"]);
   for (const s in TARGETS) {
     const l = lastOf(s);
-    if (l && l[2] && l[1] <= TARGETS[s])
+    // objetivo cruzado solo se alerta con lectura vigente: un precio
+    // viejo bajo el objetivo no significa que HOY este a ese precio
+    if (l && PWData.buyable(s) && l[1] <= TARGETS[s])
       alerts.push([`🎯 ${(D.products[s]||{}).title||s} a ${fmt(l[1])} (objetivo ${fmt(TARGETS[s])})`, "", "", "", s]);
   }
   let deltaTxt = "";
@@ -149,25 +182,99 @@ function render(){
   RESUMEN_N = new Set([...favOf, ...resu, ...favOut, ...clubOut, ...favSA]).size;
   const bar = $("#shopbar");
   if (SHOP) {
-    let tot = 0, diff = 0, nd = 0;
+    let tot = 0, diff = 0, nd = 0, units = 0;
     for (const s of CART) {
-      const l = lastOf(s), a = D.agg[s];
-      if (l) tot += l[1];
-      if (l && a && a.med != null) { diff += l[1] - a.med; nd++; }
+      const l = lastOf(s), a = D.agg[s], ln = CART_LINES[s];
+      const q = ln && ln.quantity || 1;
+      units += q;
+      // precio editado por linea gana sobre el estimado del catalogo
+      const unit = ln && ln.unitCents != null ? ln.unitCents
+                                              : (l ? l[1] : 0);
+      tot += unit * q;
+      if (l && a && a.med != null) { diff += unit - a.med; nd++; }
     }
     bar.style.display = "flex";
-    $("#shop-tot").innerHTML = `🛒 ${CART.size} · $${(tot/100).toFixed(2)}`
+    $("#shop-tot").innerHTML = `🛒 ${CART.size} artículo${CART.size>1?"s":""}`
+      + (units > CART.size ? ` (${units} uds)` : "")
+      + ` · $${(tot/100).toFixed(2)} estimado`
       + (nd ? ` · <span style="color:${diff<0?"var(--down)":"var(--up)"}">`
           + `${diff<0?"−":"+"}$${Math.abs(diff/100).toFixed(2)} vs típico</span>` : "");
   } else bar.style.display = "none";
+  // entrada al carrito desde Mi lista — existe aunque el sku no sea
+  // favorito (el carrito no se limita a la lista)
+  const cv = document.getElementById("cart-view");
+  if (cv) {
+    cv.style.display = CART.size ? "" : "none";
+    cv.textContent = `🛒 ver carrito (${CART.size})`;
+  }
   const nChFav = ev.filter(e=>["bajo","subio"].includes(e.type)&&FAV.has(e.sku)).length;
   const favN = document.querySelector('.tab[data-t="favs"] .n');
   if (favN) favN.textContent = FAV.size + (nChFav ? ` ⚡${nChFav}` : "");
+  // franja de estado fuera del dialogo de cuenta: edad del dataset,
+  // sync, proximo barrido y avisos de corrupcion/cache — siempre
+  // visible, nunca se auto-oculta al entrar una sesion
+  const dsTxt = document.getElementById("ds-text");
+  if (dsTxt) {
+    const parts = [];
+    if (window.DATA_FROM_CACHE) parts.push("copia guardada");
+    if (typeof navigator !== "undefined"
+        && navigator.onLine === false) parts.push("sin conexión");
+    parts.push(`datos al ${D.generated || "?"}`);
+    const nxt = Date.parse(PWData.nextSweep());
+    if (Number.isFinite(nxt)) {
+      const sv = new Date(nxt - 6 * 3600e3);
+      parts.push(`próx. barrido ${
+        sv.toISOString().slice(0, 10) === todaySV()
+          ? "hoy" : "mañana"} ${sv.toISOString().slice(11, 16)}`);
+    }
+    if (typeof syncLine === "function") parts.push(syncLine());
+    dsTxt.innerHTML = parts.map(esc).join(" · ")
+      + (PWStore.corruptBlocking()
+         ? ` <span class="warn">⚠ datos locales dañados —`
+           + ` sincronización congelada</span>` : "");
+    const rt = document.getElementById("ds-retry");
+    if (rt) rt.style.display =
+      (typeof SYNC !== "undefined" && AW && AW.user
+       && (SYNC.state === "error" || SYNC.err)) ? "" : "none";
+    const fx = document.getElementById("ds-fix");
+    if (fx) fx.style.display = PWStore.corruptBlocking() ? "" : "none";
+  }
   // panes perezosos: solo el activo se reconstruye — las interacciones
   // frecuentes (estrella, carrito, buscador) ya no pagan el HTML de los
   // 7 paneles; al cambiar de tab el handler llama render() y rellena
   // el entrante
+  // el limite visible se reinicia cuando cambia la consulta/filtro —
+  // la lista ya mostrada se conserva al pedir mas (append, no reset)
+  // cualquier cambio de consulta/filtro reinicia TODAS las ventanas —
+  // mostrar "24 mas" de una lista filtrada distinta seria confuso
+  const sig = q + "|" + OF_F + "|" + cf + "|" + favFilter
+            + "|" + (SHOP ? 1 : 0);
+  if (sig !== PAGE._sig) {
+    PAGE._sig = sig;
+    for (const k in PAGE)
+      if (typeof PAGE[k] === "number") PAGE[k] = PAGE_STEP;
+  }
   const PANES = {
+    // Inicio: resumen accionable + hasta 3 gangas recien verificadas
+    // + hasta 3 de tu lista. Sin hero: lo que pide atencion primero
+    "pane-inicio": () => {
+      $("#ini-alerts").innerHTML = alerts.length
+        ? alerts.map(([t,tab,cf2,ff,sk]) =>
+          `<button type="button" class="alert${cf2==="new"?" new":""}"
+             data-tab="${tab}" data-cf="${cf2||""}" data-ff="${ff||""}"
+             ${sk?` data-sku="${sk}"`:""}>${esc(t)}</button>`).join("")
+        : "<p class='meta'>Todo al día — nada pide atención.</p>";
+      // DEALS se armo al evaluar el modulo: si desde entonces vencio
+      // el corte de frescura, dealOK lo vuelve a filtrar al pintar
+      const deals3 = DEALS.filter(s => dealOK(s, "all"))
+        .sort((a,b)=>dealScore(b)-dealScore(a)).slice(0,3);
+      $("#g-ini-deals").innerHTML = deals3.map(favCard).join("")
+        || "<p class='meta'>Sin gangas verificadas hoy.</p>";
+      $("#g-ini-favs").innerHTML = favList.slice(0,3)
+        .map(favCard).join("")
+        || "<p class='meta'>Marca productos con ☆ para seguirlos"
+         + " — aparecen aquí con su veredicto.</p>";
+    },
     "pane-cambios": () => {
       // "nuevas" muestra TODO lo nuevo (no solo precios): el chip del
       // resumen cuenta stock y nuevos tambien, el destino debe coincidir
@@ -195,7 +302,8 @@ function render(){
       const deadHtml = SHOW_DEAD ? "<div class='deadzone'>"
         + groupClubs(dead).map(g => card(g[0], g)).join("")
         + "</div>" : "";
-      $("#g-cambios").innerHTML = (groupClubs(cambios)
+      const cGroups = groupClubs(cambios);
+      $("#g-cambios").innerHTML = (cGroups.slice(0, PAGE.cambios)
         .map(g => card(g[0], g)).join("")
         || "<p class='meta'>Sin cambios</p>")
         + deadHtml
@@ -203,6 +311,8 @@ function render(){
           ? `<p class='meta dead-toggle' style='grid-column:1/-1;cursor:pointer'>`
           + `${dead.length} ajuste${dead.length>1?"s":""} de precio en artículos sin stock`
           + ` — ${SHOW_DEAD ? "mostrando" : "ocultos"} ${SHOW_DEAD ? "▲" : "▸ ver"}</p>` : "");
+      moreBtn("cambios", Math.min(PAGE.cambios, cGroups.length),
+              cGroups.length);
       $("#cf-new").style.display = NEWV.length ? "" : "none";
       movChart(cambios);
     },
@@ -211,8 +321,10 @@ function render(){
         .filter(s => dealOK(s, OF_F)
                  && (!q || matchQ(q, (D.products[s]||{}).title)))
         .sort((a,b) => dealScore(b) - dealScore(a));
-      $("#g-ofertas").innerHTML = dealList.slice(0, 120)
+      $("#g-ofertas").innerHTML = dealList.slice(0, PAGE.ofertas)
         .map(favCard).join("") || "<p class='meta'>Sin gangas hoy</p>";
+      moreBtn("ofertas", Math.min(PAGE.ofertas, dealList.length),
+              dealList.length);
       dealChart(dealList);
     },
     // el feed cuenta solo transiciones del producto a nivel pais
@@ -220,16 +332,20 @@ function render(){
     // vive en las cards, y lo que pasa en un club puntual es detalle
     // que vive en la ficha — ninguno de los dos es cambio de estado.
     "pane-stock": () => {
-      $("#g-stock").innerHTML = ev
+      const st = ev
         .filter(e=>["agotado","reaparecio","salio_del_catalogo",
-                    "regreso"].includes(e.type) && f(e))
+                    "regreso"].includes(e.type) && f(e));
+      $("#g-stock").innerHTML = st.slice(0, PAGE.stock)
         .map(e=>card(e)).join("")
         || "<p class='meta'>Sin cambios de disponibilidad</p>";
+      moreBtn("stock", Math.min(PAGE.stock, st.length), st.length);
     },
     "pane-nuevos": () => {
+      const nv = ev.filter(e=>e.type==="nuevo"&&f(e));
       $("#g-nuevos").innerHTML =
-        ev.filter(e=>e.type==="nuevo"&&f(e)).map(e=>card(e)).join("")
+        nv.slice(0, PAGE.nuevos).map(e=>card(e)).join("")
         || "<p class='meta'>Sin productos nuevos</p>";
+      moreBtn("nuevos", Math.min(PAGE.nuevos, nv.length), nv.length);
     },
     "pane-favs": () => {
       const show = favFilter === "all" ? favList
@@ -244,9 +360,10 @@ function render(){
       }
       // cold start: sin lista, sugerir lo mas barato de hoy para empezar
       const SUGG = show.length || FAV.size ? [] : DEALS
-        .filter(s => atMin(s) && lastOf(s)?.[2])
+        .filter(atMin)
         .sort((a,b) => dealScore(b) - dealScore(a)).slice(0, 8);
-      $("#g-favs").innerHTML = show.map(favCard).join("")
+      $("#g-favs").innerHTML = show.slice(0, PAGE.favs)
+        .map(favCard).join("")
         || (FAV.size === 0 && SUGG.length
             ? `<p class='meta' style='margin-bottom:8px'>Tu lista está vacía — `
             + `marca ☆ en lo que compras seguido`
@@ -256,13 +373,19 @@ function render(){
             : `<p class='meta'>Marca productos con ☆ para seguirlos aquí.`
             + (AW.user ? "" : ` Con 'cuenta' se sincronizan entre teléfono y PC.`)
             + `</p>`);
+      moreBtn("favs", Math.min(PAGE.favs, show.length), show.length);
       if (FAV.size) {
         const vs = favList.map(verdict);
         const ok = vs.filter(v=>v.rank<=4).length,
               up = vs.filter(v=>v.rank===6).length,
-              out = vs.filter(v=>v.rank>=8).length;
+              out = vs.filter(v=>v.rank===8).length,
+              nv = vs.filter(v=>v.rank===9).length;
+        // "sin verificar" no es "sin stock": el desglose lo separa —
+        // un dato vencido no confirma quiebre
         $("#favs-sum").textContent = favFilter === "all"
-          ? `${ok} en buen precio · ${up} subieron · ${out} sin stock — ordenados por conveniencia`
+          ? `${ok} en buen precio · ${up} subieron · ${out} sin stock`
+            + (nv ? ` · ${nv} sin verificar` : "")
+            + ` — ordenados por conveniencia`
           : `viendo ${show.length} de ${FAV.size} en tu lista`;
       } else $("#favs-sum").textContent = "";
     },
@@ -307,10 +430,22 @@ function render(){
         c.classList.toggle("on", c.dataset.ss === SSORT));
       $("#siman-sum").textContent =
         `vigilando ${SWATCH.length} artículos · ${nSiman} alertan`;
+      // procedencia honesta: de cuando es la ultima lectura Siman y si
+      // ya hay items cuya observacion caduco (excluidos de las alertas)
+      const sfEl = document.getElementById("siman-fresh");
+      if (sfEl) {
+        const sd = PWData.sourceDate("siman");
+        const nOld = SIMAN.items
+          .filter(p => PWData.siman(p).state !== "available").length;
+        sfEl.textContent = sd
+          ? `lectura ${sd}${nOld ? ` · ${nOld} ya no vigente${nOld>1?"s":""}` : ""}`
+          : "";
+      }
       $("#siman-watches").innerHTML = SWATCH.map(w =>
         `<span class="chip on">${esc(w.q)}${w.talla?` · ${esc(w.talla)}`:""}
-         <a style="cursor:pointer;color:var(--up)"
-            data-wq="${esc(w.q)}|${esc(w.talla||"")}">✕</a></span>`
+         <button type="button" class="chip" style="padding:0 6px;color:var(--up)"
+            aria-label="dejar de vigilar ${esc(w.q)}"
+            data-wq="${esc(w.q)}|${esc(w.talla||"")}">✕</button></span>`
       ).join(" ")
         + (AW.user ? "" :
            " <span class='meta'>sin sesión: cambios solo locales</span>");
@@ -319,53 +454,66 @@ function render(){
       $("#siman-muted").innerHTML = SMUTE.size
         ? `<span class="meta">silenciados:</span> ` + [...SMUTE].map(r =>
             `<span class="chip">${esc(r.split("|")[1] || r)}
-             <a style="cursor:pointer;color:var(--down)"
-                title="restaurar a las alertas"
-                data-mu="${esc(r)}">↩</a></span>`).join(" ")
+             <button type="button" class="chip" style="padding:0 6px;color:var(--down)"
+                aria-label="restaurar ${esc(r.split("|")[1] || r)} a las alertas"
+                data-mu="${esc(r)}">↩</button></span>`).join(" ")
         : "";
     },
     "pane-buscar": () => {
-      if (q.length >= 2)
-        $("#g-buscar").innerHTML = Object.keys(D.products)
+      if (q.length >= 2) {
+        const hits = Object.keys(D.products)
           .filter(s => { const p = D.products[s]||{};
-            return matchQ(q, p.title, p.brand, p.category, s); })
-          .slice(0, 60).map(favCard).join("")
+            return matchQ(q, p.title, p.brand, p.category, s); });
+        $("#g-buscar").innerHTML = hits.slice(0, PAGE.buscar)
+          .map(favCard).join("")
           || "<p class='meta'>Sin coincidencias en el catálogo</p>";
+        moreBtn("buscar", Math.min(PAGE.buscar, hits.length),
+                hits.length);
+      } else { $("#g-buscar").innerHTML = ""; moreBtn("buscar", 0, 0); }
     },
   };
   const act = document.querySelector(".pane.on");
   if (act && PANES[act.id]) PANES[act.id]();
   sparks();
 }
+// card compacta: titulo, precio, un veredicto, estado de tu club con
+// fecha, fecha de la observacion, carrito (modo compra), estrella y
+// boton de detalle. Sparks, comparativas, todos los clubes, objetivos
+// y compras viven en la ficha — la card no repite la ficha
 function favCard(sku){
   const p = D.products[sku]||{}, l = (D.series[sku]||[]).slice(-1)[0],
-        a = D.agg[sku]||{}, v = verdict(sku), m = PAID[sku],
-        nBuys = COMPRAS.filter(c=>c.sku===sku).length,
-        inCart = CART.has(sku);
-  return `<div class="card${SHOP&&inCart?" incart":""}" onclick="openProd('${sku}')">
+        v = verdict(sku), inCart = CART.has(sku), pf = PWData.product(sku);
+  const mc = MYCLUB ? (D.clubs[sku]||{})[MYCLUB] : null;
+  const mcs = mc ? PWData.product(sku, MYCLUB) : null;
+  // el club va con su fecha de observacion — "agotado" solo se afirma
+  // de una lectura vigente
+  // el simbolo sale SOLO del estado de la observacion (available ✓ /
+  // unavailable ✗ / otra cosa = "sin verificar") — jamas de
+  // mc.in_stock crudo: un club sin lectura vigente no dice ni si ni no
+  const clubTag = mc
+    ? `<span class="tag ${mcs.state === "available" ? "bajo"
+        : mcs.state === "unavailable" ? "agotado"
+        : "salio_del_catalogo"}">📍 ${esc(MYCLUB)} ${
+        mcs.state === "available" ? "✓"
+        : mcs.state === "unavailable" ? "✗" : "sin verificar"}${
+        mcs.observedAt ? " "+esc(mcs.observedAt.slice(5)) : ""}</span>`
+    : "";
+  return `<article class="card${SHOP&&inCart?" incart":""}">
     ${SHOP?`<input type="checkbox" class="cartcheck" ${inCart?"checked":""}
-      onclick="event.stopPropagation();cartToggle('${sku}',this.checked)">`:star(sku)}
+      aria-label="agregar ${esc(p.title||sku)} al carrito"
+      onclick="cartToggle(${jsArg(sku)},this.checked,${PWStore.currentEpoch()})">`:star(sku)}
     ${img(sku)?`<img src="${esc(img(sku))}" alt="" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
-      <div class="t">${esc(p.title||sku)}</div>
+      <h3 class="t">${esc(p.title||sku)}</h3>
       <div><span class="pr">${l?fmt(l[1]):"—"}</span>
         <span class="tag ${v.cls}">${v.label}</span>
-        ${TARGETS[sku]!=null?`<span class="tag ${l&&l[1]<=TARGETS[sku]?"real":"oferta"}">🎯 ${fmt(TARGETS[sku])}</span>`:""}
-        ${rotTag(sku)}
-        ${l&&l[3]>0?`<span class="tag oferta">-$${(+l[3]).toFixed(2)}</span>`:""}
-        ${l&&!l[2]?`<span class="tag agotado">agotado</span>`:""}
-        ${l&&l[2]?saTag(sku):""}
-        ${SHOP&&MYCLUB&&(D.clubs[sku]||{})[MYCLUB]&&!(D.clubs[sku][MYCLUB].in_stock)
-          ?`<span class="tag agotado">📍 sin stock en ${esc(MYCLUB)}</span>`:""}</div>
-      ${v.tip?`<div class="meta">${v.tip}</div>`:""}
-      ${m&&l?`<div class="meta">pagaste $${(+m.paid).toFixed(2)}${m.date?" el "+m.date:""}
-        → ${l[1]>=m.paid*100?"+":""}${Math.round((l[1]-m.paid*100)/(m.paid*100)*100)}% hoy
-        ${nBuys>1?`· ${nBuys} compras`:""}</div>`:""}
-      <div class="meta" style="margin-top:4px">${buySwitch(sku,nBuys>0)}
-        ${nBuys>0?`<a class="plink" style="margin:0 0 0 10px;cursor:pointer"
-        onclick="event.stopPropagation();comprar('${sku}')">+ otra</a>`:""}</div>
-      <div style="margin-top:5px">${clubChips(sku)}</div>
-      <div class="spark" data-sku="${sku}"></div></div></div>`;
+        ${l&&l[3]>0&&PWData.buyable(sku)
+          ?`<span class="tag oferta">-$${(+l[3]).toFixed(2)}</span>`:""}
+        ${clubTag}</div>
+      <div class="meta">${v.tip?v.tip+" · ":""}lectura ${pf.observedAt||"sin fecha"}</div>
+      <button type="button" class="det"
+        onclick="openProd(${jsArg(sku)})">detalle ›</button>
+    </div></article>`;
 }
 function sparks(){
   // solo el panel visible: render() reconstruye los 7 panes en cada

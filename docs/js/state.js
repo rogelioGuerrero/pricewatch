@@ -4,10 +4,9 @@
 
 const $ = s => document.querySelector(s);
 const fmt = c => c == null ? "—" : "$" + (c/100).toFixed(2);
-// fecha de negocio SV (GMT-6): toISOString() es UTC — pasadas las 6pm
-// hora SV "hoy" salia fechado maniana, desalineando compras y vistos
-// respecto a D.generated
-const todaySV = () => new Date(Date.now() - 6 * 3600e3).toISOString().slice(0, 10);
+// fecha de negocio SV (GMT-6): politica unica en PWData.today —
+// toISOString() es UTC y pasadas las 6pm "hoy" salia fechado maniana
+const todaySV = PWData.today;
 const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const [_y,_m,_d] = D.generated.split("-");
 document.getElementById("gen").textContent = D.generated
@@ -17,6 +16,11 @@ const img = sku => (D.products[sku]||{}).image || "";
 const ev = D.events.slice().reverse();
 const esc = s => String(s||"").replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+// argumento JS dentro de un handler inline (onclick/onchange):
+// JSON.stringify produce el literal con comillas dobles y esc lo
+// deja seguro como valor de atributo — una sku almacenada con ',
+// ", \ o & no puede romper ni el atributo ni el literal
+const jsArg = s => esc(JSON.stringify(String(s)));
 // http(s) solamente: un link del payload podria ser javascript:/data: —
 // para href/click nunca vale otro esquema. "" si es invalido o peligroso
 const safeHttpURL = u => {
@@ -38,17 +42,18 @@ const stockOn = (sku, date) => {
   return st;
 };
 // "desde tu ultima visita": eventos posteriores al ultimo build que viste
-const LASTSEEN = localStorage.getItem("pw-lastseen") || "";
+const LASTSEEN = PWStore.get("pw-lastseen") || "";
 const NEWEV = LASTSEEN && LASTSEEN < D.generated
   ? ev.filter(e => e.date > LASTSEEN) : [];
 const NEWSET = new Set(NEWEV);
-localStorage.setItem("pw-lastseen", D.generated);
+PWStore.set("pw-lastseen", D.generated);
 // Ofertas+Mejores unidos: letrero de la tienda O stats que dicen "barato hoy"
 // "en su minimo" solo informa si el precio se movio alguna vez: un producto
 // que nunca cambio esta trivialmente en su min (ruido con historia corta).
 // Y vence a los 30d sin moverse (~ciclo de pasaporte): pasado eso el precio
 // bajo ya ES su precio habitual, no una ganga vigente
 const atMin = s => {
+  if (!PWData.buyable(s)) return false;
   const a = D.agg[s]||{};
   const fresh = a.last_ch
     && (Date.parse(D.generated) - Date.parse(a.last_ch)) / 864e5 <= 30;
@@ -57,17 +62,21 @@ const atMin = s => {
 };
 const DEALS = (() => {
   const m = new Set(D.ofertas.map(o => o.sku));
+  // comprable Y verificado: una observacion vencida o una fuente
+  // fallida no puede proclamar ganga de hoy
+  const okNow = s => PWData.buyable(s);
   Object.keys(D.agg).forEach(s => {
-    const l = lastOf(s);
-    if (!l || !l[2]) return;
+    if (!okNow(s)) return;
     const a = D.agg[s];
     if (atMin(s) || (a.vs_med != null && a.vs_med < 0)) m.add(s);
   });
-  // ganga sin stock no es ganga: el letrero de ahorro puede venir de
-  // un sku agotado — solo lo comprable entra a la lista
-  return [...m].filter(s => lastOf(s)?.[2]);
+  // ganga sin stock o sin lectura vigente no es ganga: el letrero
+  // de ahorro puede venir de un sku agotado o de un dato viejo —
+  // solo lo comprable y verificado entra a la lista
+  return [...m].filter(okNow);
 })();
 const dealOK = (s, f) => {
+  if (!PWData.buyable(s)) return false;
   const a = D.agg[s]||{}, l = lastOf(s), sv = l?.[3]||0;
   if (f === "letrero")    return sv > 0;
   if (f === "silenciosa") return atMin(s) && sv <= 0;
@@ -76,25 +85,24 @@ const dealOK = (s, f) => {
   if (f === "bajo")       return a.vs_med != null && a.vs_med < 0;
   return true;
 };
-// fuerza del deal: la mejor cifra entre % de ahorro declarado, % bajo el
-// habitual y % bajo su propio maximo — "cuanto mas barato que antes" es
-// la referencia intuitiva del comprador (Eufy 249->130 = -48% del techo)
-const dealScore = s => {
-  const a = D.agg[s]||{}, l = lastOf(s);
-  const sp = l && l[1] ? (l[3]||0) / (l[1]/100) : 0;
-  const bajoMax = a.max && l && l[1] ? (a.max - l[1]) / a.max : 0;
-  return Math.max(sp, bajoMax, -((a.vs_med||0)/100));
-};
+// fuerza del deal: ranking comparativo en PWData.score — % de ahorro
+// declarado sobre el precio original, % bajo el maximo y % bajo el
+// habitual. No es un % anunciado de tienda: solo ordena la lista
+const dealScore = s => PWData.score(s);
 // objetivo de precio por sku (centavos): alerta cuando el precio lo cruza
-const TARGETS = JSON.parse(localStorage.getItem("pw-targets") || "{}");
+const TARGETS = PWStore.read("pw-targets", {}, PWStore.valid.numMap);
 // Mi lista filtrada: cada alerta del Resumen abre un subconjunto de favs
 let favFilter = "all";
 const FAVFF = {
-  oferta:   s => (lastOf(s)?.[3]||0) > 0,
+  // "en oferta" exige lectura vigente: un letrero viejo no es oferta
+  oferta:   s => (lastOf(s)?.[3]||0) > 0
+              && PWData.buyable(s),
   resurtir: s => verdict(s).label === "resurtir",
-  sinstock: s => { const l = lastOf(s); return l && !l[2]; },
-  clubout:  s => { const c = (D.clubs[s]||{})[MYCLUB];
-                   return c && !c.in_stock; },
+  // "sin stock" solo se afirma de una observacion fresca que dice
+  // agotado — un dato viejo o ausente no confirma quiebre
+  sinstock: s => PWData.product(s).state === "unavailable",
+  clubout:  s => !!(MYCLUB
+                && PWData.product(s, MYCLUB).state === "unavailable"),
   seagota:  s => !!drena(s),
 };
 // lo que muestra la hoja del FAB (se llena en render)
@@ -103,95 +111,183 @@ let RESUMEN = [], RESUMEN_N = 0;
 // durante el eval inicial, antes de que se defina mas abajo
 let pvDone = false;
 
-const FAV = new Set(JSON.parse(localStorage.getItem("pw-favs")||"[]"));
+const FAV = new Set(PWStore.read("pw-favs", [], PWStore.valid.strList));
 // historial de compras: log append-only en el teléfono {sku, paid, date}
-const COMPRAS = JSON.parse(localStorage.getItem("pw-compras")||"[]");
-// la semilla del repo (mis-compras.json) se migra a COMPRAS una sola
-// vez: sin el flag, borrar una compra semilla era imposible porque
-// D.mis la re-inyectaba en cada render/sync
-if (!localStorage.getItem("pw-mis-seeded")) {
-  for (const m of (D.mis||[]))
-    if (!COMPRAS.some(c => c.sku === String(m.sku)
-                      && c.date === m.date && c.paid === m.paid))
-      COMPRAS.push({sku: String(m.sku), paid: m.paid, date: m.date});
-  localStorage.setItem("pw-mis-seeded", "1");
-  localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
-}
+const COMPRAS = PWStore.read("pw-compras", [], PWStore.valid.compras);
+// la semilla D.mis ya NO se inyecta: un visitante anonimo no debe
+// arrancar con compras personales ajenas — lo ya guardado localmente
+// se conserva tal cual (la publicacion de mis se retira en el build)
+const saveFavs = () => PWStore.write("pw-favs", [...FAV]);
+const saveCompras = () => PWStore.write("pw-compras", COMPRAS);
+const saveTargets = () => PWStore.write("pw-targets", TARGETS);
 const PAID = {};
 const rebuildPaid = () => {
   for (const k in PAID) delete PAID[k];
   COMPRAS.forEach(m => PAID[m.sku] = m);
 };
 rebuildPaid();
+// toast con deshacer: accion reversible para borrados. El guard de
+// namespace+epoch evita restaurar data de una cuenta en otra si el
+// usuario cambia de sesion con el toast abierto
+let toastT = null;
+const undoToast = (msg, undo) => {
+  const t = document.getElementById("toast");
+  if (!t) return;
+  const uid = PWStore.currentUser(), ep = PWStore.currentEpoch();
+  t.innerHTML = esc(msg) + (undo
+    ? ` <button type="button" id="toast-undo">deshacer</button>` : "");
+  t.classList.add("show");
+  if (!undo) {   // aviso sin accion: solo se auto-oculta
+    clearTimeout(toastT);
+    toastT = setTimeout(() => t.classList.remove("show"), 7000);
+    return;
+  }
+  document.getElementById("toast-undo").onclick = () => {
+    t.classList.remove("show");
+    if (PWStore.currentUser() !== uid
+        || PWStore.currentEpoch() !== ep) return;
+    undo();
+  };
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove("show"), 7000);
+};
 const delCompra = (i, sku) => {
   const c = COMPRAS[i];
+  if (!c) return;
   COMPRAS.splice(i, 1);
-  if (AW.user && c && c.rid) compraDown(c.rid);
-  localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
-  rebuildPaid(); render(); openProd(sku);
+  if (PWStore.currentUser() && c.rid) compraDown(c.rid);
+  saveCompras();
+  rebuildPaid(); render(); if (dlg.open) openProd(sku);
+  // deshacer restaura la MISMA fila (mismo rid): la upsert coalesca
+  // contra el delete pendiente — nunca crea una fila nueva
+  undoToast(`compra de $${(+c.paid).toFixed(2)} eliminada`, () => {
+    COMPRAS.splice(Math.min(i, COMPRAS.length), 0, c);
+    if (PWStore.currentUser() && c.rid) compraUp(c);
+    saveCompras(); rebuildPaid(); render();
+    if (dlg.open) openProd(sku);
+  });
 };
-const comprar = sku => {
-  const l = (D.series[sku]||[]).slice(-1)[0];
-  const v = prompt("¿A cuánto lo pagaste?", l ? (l[1]/100).toFixed(2) : "");
-  if (v == null) return false;
-  const paid = parseFloat(v);
-  if (!(paid > 0)) return false;
-  const r = {sku, paid, date: todaySV()};
-  COMPRAS.push(r); PAID[sku] = r;
-  if (AW.user) compraUp(r)
-    .then(d => { r.rid = d.$id;
-      localStorage.setItem("pw-compras", JSON.stringify(COMPRAS)); })
-    .catch(()=>{});
-  localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
-  render();
-  return true;
+// dueno de un formulario: {uid, epoch} capturado AL ABRIRLO. Un
+// dialogo abierto sobrevive al cambio de cuenta — su owner estampado
+// es la unica verdad de a que namespace pertenecen sus callbacks
+// (mismo uid re-logueado = otra epoch = otro dueno)
+const formOwner = () => ({
+  uid: PWStore.currentUser(), epoch: PWStore.currentEpoch(),
+});
+const formOwnerLive = o => !!o && o.uid === PWStore.currentUser()
+  && o.epoch === PWStore.currentEpoch();
+const stampFormOwner = d => (d._pwOwner = formOwner());
+// un dialogo abierto con owner vencido se cierra al hidratar otro
+// namespace: su draft es de la cuenta anterior, no de esta. No toca
+// storage — solo la superficie editable. Mismo uid+epoch conserva
+// formularios y drafts abiertos
+const closeStaleForms = () => {
+  let n = 0;
+  for (const id of ["dlg", "dlg-purchase", "dlg-checkout",
+                    "dlg-recover", "dlg-nav"]) {
+    const d = document.getElementById(id);
+    if (d && d.open && !formOwnerLive(d._pwOwner)) { d.close(); n++; }
+  }
+  return n;
+};
+// la compra pasa por el dialogo con validacion (precio unitario,
+// cantidad 1-99, fecha no futura) — nada se muta si se cancela
+let PU_SKU = null;
+const openPurchase = sku => {
+  PU_SKU = sku;
+  lastFocus = document.activeElement;
+  const l = lastOf(sku);
+  document.getElementById("pu-title").textContent =
+    (D.products[sku]||{}).title || sku;
+  document.getElementById("pu-price").value =
+    l && l[1] ? (l[1]/100).toFixed(2) : "";
+  document.getElementById("pu-qty").value = "1";
+  const dp = document.getElementById("pu-date");
+  dp.value = todaySV(); dp.max = todaySV();
+  document.getElementById("pu-err").textContent = "";
+  stampFormOwner(document.getElementById("dlg-purchase"));
+  document.getElementById("dlg-purchase").showModal();
+};
+const comprar = sku => { openPurchase(sku); return true; };
+// confirma lineas {sku, quantity, unitCents} como compras unitarias:
+// PWData.purchaseRows emite UNA fila por unidad (preserva el esquema
+// remoto sin mutarlo) y compraUp asigna el rid estable a CADA fila
+// ANTES de persistir/encolar — el rid es la identidad primaria
+const commitPurchases = (lines, date) => {
+  const rows = PWData.purchaseRows(lines, date);   // lanza si invalido
+  for (const r of rows) compraUp(r);   // rid + op si hay cuenta ligada
+  COMPRAS.push(...rows);
+  const ok = saveCompras();
+  rebuildPaid();
+  return { n: rows.length, ok };
 };
 const descomprar = sku => {  // quita la compra mas reciente de ese sku
   for (let i = COMPRAS.length - 1; i >= 0; i--)
-    if (COMPRAS[i].sku === sku) {
-      const c = COMPRAS.splice(i, 1)[0];
-      if (AW.user && c && c.rid) compraDown(c.rid);
-      break;
-    }
-  localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
-  rebuildPaid(); render();
+    if (COMPRAS[i].sku === sku) { delCompra(i, sku); return; }
   if (dlg.open) openProd(sku);
 };
-const buyToggled = (sku, el) => {
+const buyToggled = (sku, el, ep = PWStore.currentEpoch()) => {
+  // una card de otro dueno no muta este espacio: la epoch capturada
+  // al pintarla tiene que ser la vigente
+  if (ep !== PWStore.currentEpoch()) return;
   if (el.checked) {
-    if (!comprar(sku)) { el.checked = false; return; }
-    if (dlg.open) openProd(sku);
-  } else descomprar(sku);
+    // el switch es solo el atajo: la compra se confirma en el dialogo
+    // (cancelar no deja la marca puesta ni toca COMPRAS)
+    el.checked = COMPRAS.some(c => c.sku === sku);
+    openPurchase(sku);
+    return;
+  }
+  descomprar(sku);
 };
 const buySwitch = (sku, bought) =>
   `<label class="sw" onclick="event.stopPropagation()"><input type="checkbox"
-   ${bought?"checked":""} onchange="buyToggled('${sku}',this)"><i></i>lo compré</label>`;
+   ${bought?"checked":""} onchange="buyToggled(${jsArg(sku)},this,${PWStore.currentEpoch()})"><i></i>lo compré</label>`;
 // modo compra: la lista es el carrito; checkout registra todo como compras
-const CART = new Set(JSON.parse(localStorage.getItem("pw-cart")||"[]"));
+const CART = new Set(PWStore.read("pw-cart", [], PWStore.valid.strList));
+// lineas detalladas del carrito {sku:{quantity,unitCents}} — aisladas
+// por namespace como el resto del dominio; unitCents null = el
+// checkout propone el precio de catalogo como estimado (nunca como
+// "lo que pagaste")
+const CART_LINES = PWStore.read("pw-cart-lines", {},
+                              PWStore.valid.cartLines);
 let SHOP = false;
-const saveCart = () =>
-  localStorage.setItem("pw-cart", JSON.stringify([...CART]));
-const cartToggle = (sku, on) => {
-  on ? CART.add(sku) : CART.delete(sku); saveCart(); render(); };
-const comprarAuto = sku => {
-  const l = (D.series[sku]||[]).slice(-1)[0];
-  const paid = l ? l[1]/100 : null;
-  if (!(paid > 0)) return;
-  const r = {sku, paid, date: todaySV()};
-  COMPRAS.push(r); PAID[sku] = r;
-  if (AW.user) compraUp(r)
-    .then(d => { r.rid = d.$id;
-      localStorage.setItem("pw-compras", JSON.stringify(COMPRAS)); })
-    .catch(()=>{});
-  localStorage.setItem("pw-compras", JSON.stringify(COMPRAS));
+const saveCart = () => PWStore.write("pw-cart", [...CART]);
+const saveCartLines = () => PWStore.write("pw-cart-lines", CART_LINES);
+const cartToggle = (sku, on, ep = PWStore.currentEpoch()) => {
+  if (ep !== PWStore.currentEpoch()) return;
+  if (on) {
+    CART.add(sku);
+    if (!CART_LINES[sku]) CART_LINES[sku] = {quantity:1, unitCents:null};
+  } else {
+    CART.delete(sku); delete CART_LINES[sku];
+  }
+  saveCart(); saveCartLines(); render();
 };
-const toggleFav = (sku,e)=>{e.stopPropagation();
+const cartSetLine = (sku, patch) => {
+  if (!CART.has(sku)) return;
+  if (!CART_LINES[sku]) CART_LINES[sku] = {quantity:1, unitCents:null};
+  Object.assign(CART_LINES[sku], patch); saveCartLines();
+};
+const toggleFav = (sku, e, ep = PWStore.currentEpoch()) => {
+  e.stopPropagation();
+  if (ep !== PWStore.currentEpoch()) return;
   const on = !FAV.has(sku);
   on ? FAV.add(sku) : FAV.delete(sku);
-  if (AW.user) on ? favUp(sku) : favDown(sku);
-  localStorage.setItem("pw-favs",JSON.stringify([...FAV]));render();};
+  if (PWStore.currentUser()) on ? favUp(sku) : favDown(sku);
+  saveFavs();render();
+  // quitar de la lista es reversible: el re-add coalesca contra el
+  // delete pendiente si el request aun no salia
+  if (!on) undoToast("quitado de tu lista", () => {
+    FAV.add(sku);
+    if (PWStore.currentUser()) favUp(sku);
+    saveFavs(); render();
+  });
+};
 const star = sku =>
-  `<span class="star ${FAV.has(sku)?"on":""}" onclick="toggleFav('${sku}',event)">${FAV.has(sku)?"★":"☆"}</span>`;
+  `<button type="button" class="star ${FAV.has(sku)?"on":""}"
+   aria-pressed="${FAV.has(sku)}"
+   aria-label="seguir ${esc((D.products[sku]||{}).title||sku)}"
+   onclick="toggleFav(${jsArg(sku)},event,${PWStore.currentEpoch()})">${FAV.has(sku)?"★":"☆"}</button>`;
 
 // busqueda: sin tildes, todas las palabras deben aparecer (cualquier orden)
 const norm = s => (s||"").toLowerCase().normalize("NFD")
@@ -202,12 +298,12 @@ const matchQ = (q, ...fields) => {
 };
 // clubes: el tuyo primero con marca; el resto ordenado
 const CLUBS = ["Santa Elena","Santa Ana","Los Héroes","San Miguel"];
-let MYCLUB = localStorage.getItem("pw-club") || "";
+let MYCLUB = PWStore.get("pw-club") || "";
 const clubSel = $("#clubsel");
 clubSel.innerHTML = `<option value="">club…</option>`
   + CLUBS.map(c=>`<option${c===MYCLUB?" selected":""}>${c}</option>`).join("");
 clubSel.onchange = () => { MYCLUB = clubSel.value;
-  localStorage.setItem("pw-club", MYCLUB); render(); pvRefresh?.(); };
+  PWStore.set("pw-club", MYCLUB); render(); pvRefresh?.(); };
 function clubChips(sku){
   const cl = D.clubs[sku]||{};
   const keys = Object.keys(cl).filter(n=>n!=="El Salvador");
@@ -261,7 +357,9 @@ const drena = sku => {
   if (!g) return null;
   const ns = Object.keys(g).filter(n => {
     const c = (D.clubs[sku] || {})[n];
-    return c && c.in_stock
+    // estado por club via PWData (lectura vigente + in_stock): una
+    // observacion vieja no puede afirmar que "sigue escurriendo hoy"
+    return c && PWData.product(sku, n).state === "available"
         && (c.qty == null || c.qty <= (g[n].qty_to ?? Infinity));
   });
   return ns.length ? ns : null;
@@ -273,14 +371,27 @@ const ofTip = a =>
   : a.of_last ? ` · última oferta hace ${a.of_last}d` : "";
 function verdict(sku){
   const a = D.agg[sku]||{}, s = D.series[sku]||[], l = s.slice(-1)[0];
-  if (!l) return {rank:9, cls:"agotado", label:"sin datos", tip:""};
+  // frescura primero: una observacion vencida o ausente no puede
+  // afirmar nada sobre el precio/stock de hoy — y nunca se le llama
+  // "hoy" a un dato viejo; siempre va su fecha
+  const pf = PWData.product(sku);
+  if (pf.state === "unknown")
+    return {rank:9, cls:"agotado", label:"sin dato verificado",
+            tip:"la fuente no confirmó una lectura vigente"};
+  if (pf.state === "stale")
+    return {rank:9, cls:"agotado", label:"sin verificación reciente",
+            tip:`última lectura ${pf.observedAt || "sin fecha"}`};
+  if (pf.state === "unavailable")
+    return {rank:8, cls:"agotado", label:"sin stock",
+            tip:(a.d_out||0) >= s.length
+              ? `agotado desde que lo seguimos (${s.length}d)`
+              : `lleva ${a.d_out||1}d agotado`};
+  if (pf.priceCents == null)
+    return {rank:9, cls:"agotado", label:"sin precio verificado",
+            tip:"la lectura no incluye un precio positivo válido"};
   const save = l[3]||0, prev = s.length>=2 ? s[s.length-2][1] : null;
   const chg = prev!=null && prev ? Math.round((l[1]-prev)/prev*1000)/10 : 0;
-  if (!l[2]) return {rank:8, cls:"agotado", label:"sin stock",
-                     tip:(a.d_out||0) >= s.length
-                       ? `agotado desde que lo seguimos (${s.length}d)`
-                       : `lleva ${a.d_out||1}d agotado`};
-  if (save>0 && s.length>=3 && a.pct_min<=0)
+  if (save>0 && s.length>=3 && a.pct_min!=null && a.pct_min<=0)
     return {rank:0, cls:"real", label:"buen momento",
             tip:`oferta real: ahorra $${(+save).toFixed(2)} y está en su mínimo`};
   if (PAID[sku] && l[1] <= PAID[sku].paid*100)

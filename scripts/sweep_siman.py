@@ -148,12 +148,12 @@ def fetch_search(q):
 
 
 def watches_remote():
-    """Watches del usuario en Appwrite (si hay API key); [] si no."""
+    """Valid empty is []; unavailable/unconfigured is None."""
     if not all(aw_env()):
-        return []
+        return None
     try:
         out = []
-        for r in aw_rows("siman_watch"):
+        for r in aw_rows("siman_watch", strict=True):
             w = {"q": r.get("q")}
             if r.get("talla"):
                 w["talla"] = r["talla"]
@@ -165,12 +165,12 @@ def watches_remote():
         return out
     except Exception as e:
         print(f"  (watches remotos no disponibles: {e})")
-        return []
+        raise RuntimeError("Appwrite watchlist unavailable; keeping prior data") from e
 
 
 def load_watches():
     w = watches_remote()
-    if w:
+    if w is not None:
         return w
     if os.path.exists(WATCH_FILE):
         with open(WATCH_FILE, encoding="utf-8") as f:
@@ -197,8 +197,13 @@ def sweep(watches):
             if it["iid"] not in items:
                 it["watch"] = q
                 it["talla"] = w.get("talla")
+                it["watches"] = []
                 items[it["iid"]] = it
                 n += 1
+            membership = {"q": q, "talla": w.get("talla") or "",
+                          "solo": w.get("solo") or []}
+            if membership not in items[it["iid"]]["watches"]:
+                items[it["iid"]]["watches"].append(membership)
         print(f"  '{q}': {n} items")
         time.sleep(SLEEP)
     return items
@@ -243,7 +248,7 @@ def link_recoded_history(conn, events):
             (e["iid"], e["old_iid"], e["iid"]))
 
 
-def record_history(items, date, events=None):
+def record_history(items, date, events=None, watches=None):
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""CREATE TABLE IF NOT EXISTS items (
         itemId TEXT PRIMARY KEY, pid TEXT, title TEXT, brand TEXT,
@@ -257,6 +262,11 @@ def record_history(items, date, events=None):
         avail INT, card INT, PRIMARY KEY (itemId, date))""")
     conn.execute("""CREATE TABLE IF NOT EXISTS imgcache (
         url TEXT PRIMARY KEY, h TEXT)""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS watch_memberships (
+        itemId TEXT, q TEXT, talla TEXT, filtro TEXT, observed_at TEXT,
+        PRIMARY KEY (itemId, q, talla))""")
+    conn.execute("""CREATE TABLE IF NOT EXISTS sweep_runs (
+        date TEXT PRIMARY KEY, watches TEXT NOT NULL, coverage TEXT NOT NULL)""")
     conn.executemany(
         """INSERT INTO items (itemId, pid, title, brand, link, image,
            vname, watch, talla, first_seen, last_seen, imghash)
@@ -275,6 +285,23 @@ def record_history(items, date, events=None):
         [(iid, date, p.get("price"), p.get("list"), p.get("qty"),
           int(p["avail"]), int(p.get("card") or 0))
          for iid, p in items.items()])
+    memberships = []
+    for iid, p in items.items():
+        for w in p.get("watches", [{"q": p.get("watch") or "",
+                                    "talla": p.get("talla") or ""}]):
+            memberships.append((iid, w["q"], w.get("talla") or "",
+                                ",".join(w.get("solo") or []), date))
+    conn.execute("DELETE FROM watch_memberships WHERE observed_at = ?", (date,))
+    conn.executemany(
+        "INSERT OR REPLACE INTO watch_memberships VALUES (?,?,?,?,?)",
+        memberships)
+    if watches is None:
+        watches = [{"q": q, "talla": talla}
+                   for q, talla in sorted({(m[1], m[2]) for m in memberships})]
+    conn.execute("INSERT OR REPLACE INTO sweep_runs VALUES (?,?,?)",
+                 (date, json.dumps(watches),
+                  json.dumps([{"q": w["q"], "max_products": ROWS * MAX_PAGES}
+                              for w in watches])))
     link_recoded_history(conn, events)
     # poda de mantenimiento: sin esto items/prices/imgcache de listings
     # muertos (Siman recodifica a diario) crecen sin tope en el cache
@@ -424,18 +451,19 @@ def main():
         cur = sweep(watches)
         print(f"Total: {len(cur)} items unicos")
         attach_hashes(cur)   # foto = identidad que sobrevive recodes
-        snap_file = os.path.join(SNAP_DIR, f"{today}.json")
-        with open(snap_file, "w") as f:
-            json.dump({"date": today, "items": cur}, f)
-        print(f"Snapshot: {snap_file}")
         known = history_index()[0]
         events = diff(prev, cur, today, known)
         if not prev and not known:
             # primera observacion (o perdida del cache): no reportar
             # miles de 'nuevo' por un arranque en frio
             events = []
-        record_history(cur, today, events)
+        record_history(cur, today, events, watches=watches)
         print(f"Historia actualizada en {DB_PATH}")
+        snap_file = os.path.join(SNAP_DIR, f"{today}.json")
+        with open(snap_file + ".tmp", "w", encoding="utf-8") as f:
+            json.dump({"date": today, "items": cur}, f)
+        os.replace(snap_file + ".tmp", snap_file)
+        print(f"Snapshot: {snap_file}")
         prune_snapshots()
 
     by_type = {}

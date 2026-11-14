@@ -21,11 +21,13 @@ Env:
   SITE_URL                                    — links del digest
 """
 
+import hashlib
 import json
 import os
 import sqlite3
 import statistics
 import sys
+import time
 from html import escape as hesc
 
 if hasattr(sys.stdout, "reconfigure"):   # consolas cp1252 (Windows)
@@ -44,6 +46,7 @@ from common import (
     tkey,
     today_sv,
 )
+from data_health import atomic_json
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -66,6 +69,8 @@ TODAY = today_sv()
 SESSION = requests.Session()
 FRESH_DAYS = 30          # ganga "al minimo" vence a los 30d sin moverse
 BIG_DROP = -30.0         # rebaja silenciosa >=30% amerita push
+DELIVERY = {c: {"sent": 0, "skipped": 0, "failed": 0}
+            for c in ("email", "push")}
 
 
 def money(c):
@@ -155,7 +160,9 @@ def catalog_state():
         out[sku] = {
             "title": pr.get("title", sku), "image": pr.get("image") or "",
             "price": last["price"],
-            "saving": last["saving"] or 0, "in_stock": bool(last["in_stock"]),
+            "saving": last["saving"] or 0,
+            "in_stock": bool(last["in_stock"] and last["date"] == TODAY),
+            "observed_at": last["date"],
             "min": min(prices) if prices else None,
             "max": max(prices) if prices else None,
             "n_ch": len(ch), "last_ch": ch[-1]["date"] if ch else None,
@@ -184,6 +191,20 @@ def siman_items():
             "on p.itemId=m.itemId and p.date=m.md"):
         if r["itemId"] in items:
             items[r["itemId"]].update(dict(r))
+    tables = {r[0] for r in con.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table'")}
+    memberships = {}
+    if "watch_memberships" in tables:
+        for iid, size in con.execute(
+                "SELECT itemId, talla FROM watch_memberships "
+                "WHERE observed_at = ?", (TODAY,)):
+            memberships.setdefault(iid, []).append(size)
+    for iid, it in items.items():
+        if "watch_memberships" in tables:
+            it["eligible"] = any(talla_hit(it.get("vname"), size)
+                                 for size in memberships.get(iid, []))
+        it["avail"] = bool(it.get("avail") and it.get("date") == TODAY
+                           and it.get("eligible", True))
     con.close()
     return items
 
@@ -263,13 +284,17 @@ def build_alerts(events, cat, favs, paid, tgts):
     return out
 
 
-def siman_gangas(events, sitems=None):
+def siman_gangas(events, sitems=None, *, strict=False):
     """bajos/ofertas de Siman hoy, menos lo muteado/ya visto y lo que
     no se puede comprar (variante agotada u otra talla)."""
     if sitems is None:
         sitems = siman_items()
-    muted = {r["tkey"] for r in aw_rows("siman_muted")}
-    seen = {r["tkey"]: r["price"] for r in aw_rows("siman_seen")}
+    muted_rows = (aw_rows("siman_muted", strict=True) if strict
+                  else aw_rows("siman_muted"))
+    seen_rows = (aw_rows("siman_seen", strict=True) if strict
+                 else aw_rows("siman_seen"))
+    muted = {r["tkey"] for r in muted_rows}
+    seen = {r["tkey"]: r["price"] for r in seen_rows}
 
     def hit(rule, tk, it):
         # paridad con ruleHit del PWA: "pid|tkey|h1,h2,.." matchea por
@@ -296,8 +321,9 @@ def siman_gangas(events, sitems=None):
         it = sitems.get(str(e.get("iid"))) or {}
         if it and not it.get("avail"):
             continue   # la variante esta agotada: nada que comprar hoy
-        if it.get("talla") and not talla_hit(it.get("vname"),
-                                            it["talla"]):
+        if (not it.get("eligible", True)
+                or ("eligible" not in it and it.get("talla")
+                    and not talla_hit(it.get("vname"), it["talla"]))):
             continue   # bajo otra talla, no la vigilada
         tk = tkey(e.get("title"))
         if any(hit(r, tk, it) for r in muted):
@@ -329,17 +355,54 @@ def siman_gangas(events, sitems=None):
 
 # ---------------- envio ----------------
 
+def _delivery_key(channel, recipient, content):
+    raw = json.dumps([channel, TODAY, recipient, content],
+                     sort_keys=True, ensure_ascii=True, separators=(",", ":"))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _receipts():
+    path = os.path.join(DATA, "notifications.json")
+    if not os.path.exists(path):
+        return {"schema_version": 1, "sent": {}}
+    with open(path, encoding="utf-8") as f:
+        ledger = json.load(f)
+    if ledger.get("schema_version") != 1 or not isinstance(ledger.get("sent"), dict):
+        raise ValueError("invalid notification receipts; refusing duplicate sends")
+    return ledger
+
+
+def _accepted(ledger, key, channel):
+    ledger["sent"][key] = {"date": TODAY, "channel": channel}
+    atomic_json(os.path.join(DATA, "notifications.json"), ledger)
+    DELIVERY[channel]["sent"] += 1
+
+
+def _dry_run():
+    return "--dry-run" in sys.argv or os.environ.get("PW_NOTIFY_DRY_RUN") == "1"
+
+
 def send_push(subs, payload):
+    if _dry_run():
+        DELIVERY["push"]["skipped"] += len(subs)
+        return
     try:
         from pywebpush import WebPushException, webpush
     except ImportError:
         print("  ! pywebpush no instalado — push omitido")
+        DELIVERY["push"]["skipped"] += len(subs)
         return
     vp = os.environ.get("VAPID_PRIVATE")
     if not vp:
         print("  ! sin VAPID_PRIVATE — push omitido")
+        DELIVERY["push"]["skipped"] += len(subs)
         return
+    ledger = _receipts()
     for s in subs:
+        key = _delivery_key("push", s["endpoint"], payload)
+        if key in ledger["sent"]:
+            DELIVERY["push"]["skipped"] += 1
+            continue
         try:
             webpush(
                 subscription_info={"endpoint": s["endpoint"],
@@ -347,13 +410,20 @@ def send_push(subs, payload):
                 data=json.dumps(payload),
                 vapid_private_key=vp,
                 vapid_claims={"sub": "mailto:notificaciones@agtisa.com"},
-                ttl=86400)
+                ttl=86400, timeout=20)
+            _accepted(ledger, key, "push")
         except WebPushException as e:
             code = getattr(e.response, "status_code", 0)
             if code in (404, 410):       # endpoint muerto: podar
                 aw("DELETE", f"/tablesdb/{AW_DB}/tables/push_subs"
                              f"/rows/{s['$id']}")
+                DELIVERY["push"]["skipped"] += 1
+                continue
             print(f"  ! push {s['$id']}: HTTP {code}")
+            DELIVERY["push"]["failed"] += 1
+        except Exception:
+            print("  ! push: request or receipt failed")
+            DELIVERY["push"]["failed"] += 1
 
 
 def send_email(subject, html, text):
@@ -362,20 +432,34 @@ def send_email(subject, html, text):
     to = os.environ.get("RESEND_TO", "")
     if not (key and to):
         print("  ! sin RESEND_API_KEY/RESEND_TO — email omitido")
+        DELIVERY["email"]["skipped"] += 1
+        return
+    content = {"from": frm, "to": to, "subject": subject,
+               "html": html, "text": text}
+    receipt = _delivery_key("email", to, content)
+    ledger = _receipts()
+    if receipt in ledger["sent"] or _dry_run():
+        DELIVERY["email"]["skipped"] += 1
         return
     # Cloudflare (1010) banea el UA por defecto de urllib; mandar uno propio
-    try:
-        r = SESSION.post("https://api.resend.com/emails",
-                         json={"from": frm, "to": to, "subject": subject,
-                               "html": html, "text": text},
-                         headers={"Authorization": f"Bearer {key}", **UA},
-                         timeout=30)
-        if r.ok:
-            print(f"  email enviado: {r.json().get('id')}")
-        else:
-            print(f"  ! Resend HTTP {r.status_code}: {r.text[:300]}")
-    except Exception as e:
-        print(f"  ! Resend fallo: {e}")
+    for attempt in range(3):
+        try:
+            r = SESSION.post("https://api.resend.com/emails", json=content,
+                             headers={"Authorization": f"Bearer {key}",
+                                      "Idempotency-Key": "pricewatch-" + receipt,
+                                      **UA}, timeout=30)
+            if r.ok:
+                _accepted(ledger, receipt, "email")
+                print("  email accepted by provider")
+                return
+            if r.status_code != 429 and r.status_code < 500:
+                break
+        except requests.RequestException:
+            pass
+        if attempt < 2:
+            time.sleep(2 ** (attempt + 1))
+    DELIVERY["email"]["failed"] += 1
+    print("  ! email not accepted after bounded retry")
 
 
 # ---------------- digest ----------------
@@ -661,15 +745,16 @@ def main():
     if aw_down:
         print("  ! Appwrite no responde — DB posiblemente pausada "
               "por inactividad")
-    favs = [r["sku"] for r in aw_rows("favs")] if AW_KEY else []
+    favs = [r["sku"] for r in aw_rows("favs", strict=True)] if AW_KEY else []
     tgts = {}
     if AW_KEY:
         ensure_targets_table(aw_tables)
         ensure_siman_tables(aw_tables)
-        tgts = {str(r["sku"]): r["target"] for r in aw_rows("targets")
+        tgts = {str(r["sku"]): r["target"]
+                for r in aw_rows("targets", strict=True)
                 if r.get("sku") and r.get("target")}
     paid, paid_d = {}, {}
-    for r in aw_rows("compras") if AW_KEY else []:
+    for r in aw_rows("compras", strict=True) if AW_KEY else []:
         if r.get("paid") and r.get("date", "") >= paid_d.get(r["sku"], ""):
             paid[r["sku"]], paid_d[r["sku"]] = r["paid"], r.get("date", "")
 
@@ -677,7 +762,7 @@ def main():
     sitems = siman_items()          # foto/link/avail de cada itemId
     # sitems ya cargado: el filtro de gangas lo usa para no alertar
     # variantes agotadas ni tallas ajenas al watch
-    siman = siman_gangas(sevents, sitems)   # aw_rows() -> [] sin creds
+    siman = siman_gangas(sevents, sitems, strict=bool(AW_KEY))
     # "casi en objetivo": a <=5% de cruzar el target — anticipa el aviso
     # de mañana en vez de solo reportar los que ya cruzaron
     near_tgt = [{"sku": s, "title": cat[s]["title"], "price": cat[s]["price"],
@@ -720,7 +805,7 @@ def main():
         push_items.append(f"{len(siman)} ganga Siman")
     if push_items and AW_KEY:
         ensure_push_table(aw_tables)
-        subs = aw_rows("push_subs")
+        subs = aw_rows("push_subs", strict=True)
         print(f"  push -> {len(subs)} subs: {' · '.join(push_items)}")
         send_push(subs, {"title": "PriceWatch",
                          "body": " · ".join(push_items)[:170],
@@ -791,4 +876,15 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        atomic_json(os.path.join(DATA, "notification_result.json"), DELIVERY)
+        summary = os.environ.get("GITHUB_STEP_SUMMARY")
+        if summary:
+            with open(summary, "a", encoding="utf-8") as f:
+                f.write("## Notification results\n\n"
+                        + "\n".join(f"- {c}: {json.dumps(v)}"
+                                    for c, v in DELIVERY.items()) + "\n")
+    if any(v["failed"] for v in DELIVERY.values()):
+        raise SystemExit(1)

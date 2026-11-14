@@ -102,8 +102,9 @@ def _mk_dbs(root):
                   title text, brand text, link text, image text,
                   vname text, watch text, talla text, first_seen text,
                   last_seen text, imghash text)""")
+    # vname coincide con la talla pedida: la variante si es elegible
     sc.execute("""insert into items values
-                  ('1','P1','Zapato','N','l','i','U','zap','10',
+                  ('1','P1','Zapato','N','l','i','10','zap','10',
                    '2026-10-01','2026-10-14','h')""")
     sc.execute("""create table prices (itemId text, date text,
                   price real, list real, qty int, avail int, card int)""")
@@ -119,11 +120,16 @@ def test_build_site_end_to_end(tmp_path):
     _mk_dbs(_root(tmp_path))
     d = bs.build_site(str(tmp_path))
     assert d["generated"] == "2026-10-14"
-    # payload liviano: sin "sku" interno ni claves vacias
+    # payload liviano: sin "sku" interno ni claves vacias, con
+    # procedencia por producto (observed_at/current/currency)
     assert d["products"]["A"] == {"title": "Prod", "brand": "B",
                                   "category": "Cat", "slug": "slug",
-                                  "image": "img"}
-    assert d["products"]["Z"] == {"title": "Vacio"}
+                                  "image": "img",
+                                  "observed_at": "2026-10-14",
+                                  "current": True, "currency": "USD"}
+    assert d["products"]["Z"] == {"title": "Vacio",
+                                  "observed_at": "2026-10-14",
+                                  "current": True, "currency": "USD"}
     # series sin ahorro exportan 3 cols; con ahorro, 4
     assert d["series"]["A"][0] == ["2026-10-13", 1000, 1]
     assert d["series"]["A"][1] == ["2026-10-14", 800, 1, 2.0]

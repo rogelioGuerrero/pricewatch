@@ -1,0 +1,21 @@
+PriceWatch SV — vendored third-party assets
+===========================================
+Local copies replace CDN loads so the PWA works fully offline and is not
+subject to CDN outages. Vendored 2026-11-11 from the public npm registry;
+tarball sha512 integrity verified against the registry metadata at
+download time (see hashes below). Licenses are included alongside.
+
+echarts 5.5.0 (Apache-2.0)
+  source:    https://registry.npmjs.org/echarts/-/echarts-5.5.0.tgz
+  file:      dist/echarts.min.js        -> echarts.min.js
+  file:      LICENSE                    -> echarts.LICENSE
+  integrity: sha512-rNYnNCzqDAPCr4m/fqyUFv7fD9qIsd50S6GDFgO1DxZhncCsNsG7IfUlAlvZe5oSEQxtsjnHiUuppzccry93Xw==
+
+appwrite 26.2.0 (BSD-3-Clause)
+  source:    https://registry.npmjs.org/appwrite/-/appwrite-26.2.0.tgz
+  file:      dist/iife/sdk.js           -> appwrite-sdk.js
+  file:      LICENSE                    -> appwrite.LICENSE
+  integrity: sha512-8TCd4mMKhhUxGF9sjZ6W2V1gesnj43v1SFZoeAue/0O0ikMXIU92p96PiRn0D4nAVvFM/92bluTTb/PoXH5mnQ==
+  note:      sdk.js is the package's default browser bundle
+             (package.json "jsdelivr"/"unpkg" fields); it exposes the
+             global `Appwrite` used by docs/js/sync.js.

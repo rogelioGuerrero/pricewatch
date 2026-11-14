@@ -7,6 +7,7 @@
 let chart, chCal;
 const BARS = {};
 const TABS = [
+  ["inicio","Inicio", ""],
   ["favs","Mi lista", FAV.size],
   ["cambios","Movimientos", ev.filter(e =>
     ["bajo","subio","oferta_termino","rebaja"].includes(e.type)
@@ -32,6 +33,30 @@ $("#tabs").innerHTML = TABS.map(([id,n,nr]) =>
 // "[" rompia querySelector y un tab inexistente dejaba la app sin pane
 const tabEl = id => [...document.querySelectorAll(".tab")]
   .find(t => t.dataset.t === id);
+// barra inferior movil: los 4 destinos primarios reusan la MISMA
+// activacion de tabs — nada de handlers paralelos
+const bnavSync = id => document.querySelectorAll("#bnav button")
+  .forEach(b => {
+    const on = b.dataset.t === id;
+    b.classList.toggle("on", on);
+    on ? b.setAttribute("aria-current", "page")
+       : b.removeAttribute("aria-current");
+  });
+document.querySelectorAll("#bnav button")
+  .forEach(b => b.onclick = () => goTab(b.dataset.t));
+// el alcance del buscador cambia por tab: catalogo PriceSmart vs
+// filtro de alertas Siman — el placeholder lo dice siempre
+const qScope = t => {
+  const q = $("#q");
+  if (t === "siman") {
+    q.placeholder = "Filtrar alertas de Siman (título, marca)…";
+    q.setAttribute("aria-label", "filtrar alertas de Siman");
+  } else {
+    q.placeholder = "Buscar en PriceSmart — nombre, marca o SKU…";
+    q.setAttribute("aria-label",
+                   "buscar en el catálogo de PriceSmart");
+  }
+};
 document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   // roving tabindex: solo el tab activo entra al orden de Tab
   document.querySelectorAll(".tab").forEach(x => {
@@ -44,9 +69,11 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   t.setAttribute("aria-selected", "true");
   t.tabIndex = 0;
   document.getElementById("pane-"+t.dataset.t).classList.add("on");
-  localStorage.setItem("pw-tab", t.dataset.t);
+  PWStore.set("pw-tab", t.dataset.t);
   const lbl = TABS.find(x=>x[0]===t.dataset.t);
   $("#fab-label").textContent = lbl ? lbl[1] : "";
+  bnavSync(t.dataset.t);
+  qScope(t.dataset.t);
   if (t.dataset.t==="favs" && favFilter!=="all") favFilter = "all";
   // render perezoso: rellena solo el pane entrante y pinta sus sparks
   render();
@@ -82,7 +109,10 @@ document.querySelectorAll("#f-ofertas .chip")
     render(); });
 // FAB + hoja movil: arriba el Resumen accionable, abajo las secciones
 const dlgNav = document.getElementById("dlg-nav");
-$("#fab").onclick = () => {
+// la misma hoja de secciones la abre el FAB (legado, oculto) y el
+// boton "☰ secciones" del header en movil
+const openNav = () => {
+  stampFormOwner(dlgNav);
   $("#navres").innerHTML = RESUMEN.length
     ? `<div class="navsec">Resumen${RESUMEN_N ? " "+RESUMEN_N : ""}
         · ${D.generated ? `datos al ${+_d} ${MESES[+_m-1]}` : "sin datos"}</div>`
@@ -98,6 +128,8 @@ $("#fab").onclick = () => {
         <span class="meta">${nr}</span></button>`).join("");
   dlgNav.showModal();
 };
+$("#fab").onclick = openNav;
+$("#moresec").onclick = openNav;
 $("#dlg-nav").onclick = e => {
   const it = e.target.closest(".navitem"); if (!it) return;
   dlgNav.close();
@@ -107,7 +139,9 @@ $("#dlg-nav").onclick = e => {
   favFilter = it.dataset.ff || "all";
   render();
 };
-$("#alerts").onclick = e => {
+// resumen accionable: la misma navegacion sirve al strip global
+// (#alerts) y al panel de Inicio (#ini-alerts)
+const alertClick = e => {
   const a = e.target.closest(".alert"); if (!a) return;
   if (a.dataset.sku) { openProd(a.dataset.sku); return; }
   if (a.dataset.tab === "cambios") setCf(a.dataset.cf || "all");
@@ -115,7 +149,10 @@ $("#alerts").onclick = e => {
   if (a.dataset.ff) favFilter = a.dataset.ff;
   render();
 };
+$("#alerts").onclick = alertClick;
+$("#ini-alerts").onclick = alertClick;
 $("#fav-filter").onclick = () => { favFilter = "all"; render(); };
+$("#cart-view").onclick = () => openCheckout();
 
 
 // ---- modo compra (carrito) ----
@@ -125,16 +162,240 @@ $("#shopmode").onclick = () => {
   $("#shopmode").classList.toggle("on", SHOP);
   render();
 };
-$("#cart-clear").onclick = () => { CART.clear(); saveCart(); render(); };
-$("#done-btn").onclick = () => {
+$("#cart-clear").onclick = () => {
+  CART.clear();
+  for (const k in CART_LINES) delete CART_LINES[k];
+  saveCart(); saveCartLines(); render();
+};
+$("#done-btn").onclick = openCheckout;
+
+// ---- dialogos de compra / checkout / recuperacion / sync ----
+// foco devuelto al opener en cualquier dialogo modal
+for (const id of ["dlg-purchase","dlg-checkout","dlg-recover","dlg-nav"])
+  document.getElementById(id)?.addEventListener("close", () => {
+    if (lastFocus && lastFocus.focus) {
+      try { lastFocus.focus(); } catch (_) {}
+    }
+    lastFocus = null;
+  });
+
+// registro de compra: validacion en submit; cancelar no toca nada
+const dlgPurchase = document.getElementById("dlg-purchase");
+document.getElementById("pu-form")
+  .addEventListener("submit", e => {
+    e.preventDefault();
+    if (!dlgPurchase.open) return;   // submit tardio tras cancel/close
+    const err = document.getElementById("pu-err");
+    // el dialogo abierto quedo de un namespace anterior: ni mutar el
+    // estado de esta cuenta ni encolar operaciones con su draft
+    if (!formOwnerLive(dlgPurchase._pwOwner)) {
+      err.textContent =
+        "La cuenta cambió; vuelve a abrir el formulario.";
+      return;
+    }
+    const cents = PWData.parseMoney(
+      document.getElementById("pu-price").value);
+    // Number(), no parseInt: 1.5/99.9/1e-1 no se truncan — caen en la
+    // validacion entera 1-99 de PWData.purchaseRows con error honesto
+    const qty = Number(document.getElementById("pu-qty").value);
+    const date = document.getElementById("pu-date").value;
+    if (cents == null) {
+      err.textContent = "precio inválido — usa formato 12.34";
+      return;
+    }
+    let res;
+    try {
+      res = commitPurchases(
+        [{ sku: String(PU_SKU), quantity: qty, unitCents: cents }],
+        date);
+    } catch (ex) { err.textContent = ex.message; return; }
+    dlgPurchase.close();
+    if (!res.ok) undoToast(
+      "compra guardada solo en memoria — sin persistencia local",
+      null);
+    render();
+    if (dlg.open) openProd(PU_SKU);
+  });
+document.getElementById("pu-cancel").onclick =
+document.getElementById("pu-close").onclick = () => dlgPurchase.close();
+
+// checkout multi-fila: cada linea editable (cantidad + precio por
+// unidad); el catalogo se etiqueta como estimado; el total se
+// calcula en centavos enteros; cancelar no muta COMPRAS ni CART
+const dlgCk = document.getElementById("dlg-checkout");
+function openCheckout(){
   if (!CART.size) return;
-  const n = [...CART].filter(s => (D.series[s]||[]).length).length;
-  if (!confirm(`¿Registrar ${n} compras al precio de hoy?`)) return;
-  [...CART].forEach(comprarAuto);
-  CART.clear(); saveCart();
+  lastFocus = document.activeElement;
+  const owner = stampFormOwner(dlgCk);   // sello ANTES de las filas
+  const rows = document.getElementById("ck-rows");
+  rows.innerHTML = [...CART].map(s => {
+    const p = D.products[s]||{}, l = lastOf(s),
+          ln = CART_LINES[s] || {};
+    const est = ln.unitCents ?? (l ? l[1] : null);
+    return `<div class="ckrow" data-sku="${esc(s)}"
+      data-form-epoch="${PWStore.currentEpoch()}">
+      <span class="t">${esc(p.title||s)}<br>
+        <span class="meta">catálogo ${l?fmt(l[1]):"—"} (estimado)</span></span>
+      <input class="ck-q" type="number" min="1" max="99" step="1"
+        value="${ln.quantity||1}"
+        aria-label="cantidad de ${esc(p.title||s)}">
+      <input class="ck-p" inputmode="decimal" autocomplete="off"
+        value="${est != null ? (est/100).toFixed(2) : ""}"
+        placeholder="precio"
+        aria-label="precio por unidad de ${esc(p.title||s)}">
+      <button type="button" class="ck-del"
+        aria-label="quitar ${esc(p.title||s)} del carrito">✕</button>
+    </div>`;
+  }).join("");
+  // cada fila queda ligada a ESTA apertura: un cancel+reopen en la
+  // misma cuenta deja huerfanas las filas viejas aunque uid+epoch
+  // no cambien
+  rows.querySelectorAll(".ckrow").forEach(r => r._pwOwner = owner);
+  const d = document.getElementById("ck-date");
+  d.value = todaySV(); d.max = todaySV();
+  document.getElementById("ck-err").textContent = "";
+  ckTotal();
+  dlgCk.showModal();
+}
+function ckTotal(){
+  let tot = 0, ok = true;
+  document.querySelectorAll("#ck-rows .ckrow").forEach(r => {
+    const c = PWData.parseMoney(r.querySelector(".ck-p").value);
+    const q = Number(r.querySelector(".ck-q").value);
+    if (!(c != null && Number.isInteger(q) && q >= 1 && q <= 99))
+      ok = false;
+    else tot += c * q;
+  });
+  document.getElementById("ck-total").textContent =
+    ok ? `total ${fmt(tot)}` : "revisa precios y cantidades";
+  return ok;
+}
+// la edicion de filas se persiste en las lineas del carrito — un
+// cancel conserva el draft para la proxima apertura
+document.getElementById("ck-rows").addEventListener("input", e => {
+  // doble candado: el dialogo debe seguir ABIERTO y de este dueno, y
+  // la fila pertenece a ESTA apertura+epoch — una fila vieja (cancel
+  // +reopen o cambio de cuenta) no edita el carrito vigente
+  if (!dlgCk.open || !formOwnerLive(dlgCk._pwOwner)) return;
+  const r = e.target.closest(".ckrow"); if (!r) return;
+  if (r._pwOwner !== dlgCk._pwOwner
+      || +r.dataset.formEpoch !== PWStore.currentEpoch()) return;
+  const q = Number(r.querySelector(".ck-q").value);
+  const c = PWData.parseMoney(r.querySelector(".ck-p").value);
+  cartSetLine(r.dataset.sku, {
+    ...(Number.isInteger(q) && q >= 1 && q <= 99 ? {quantity:q} : {}),
+    ...(c != null ? {unitCents:c} : {}) });
+  ckTotal();
+});
+// quitar una linea puntual: sale del carrito con deshacer — NO toca
+// COMPRAS ni las demas lineas; si era la ultima el dialogo se cierra
+document.getElementById("ck-rows").addEventListener("click", e => {
+  const b = e.target.closest(".ck-del"); if (!b) return;
+  if (!dlgCk.open || !formOwnerLive(dlgCk._pwOwner)) return;
+  const r = b.closest(".ckrow"), sku = r.dataset.sku;
+  if (r._pwOwner !== dlgCk._pwOwner
+      || +r.dataset.formEpoch !== PWStore.currentEpoch()) return;
+  const prev = CART_LINES[sku];
+  CART.delete(sku); delete CART_LINES[sku];
+  saveCart(); saveCartLines();
+  undoToast("quitado del carrito", () => {
+    CART.add(sku); if (prev) CART_LINES[sku] = prev;
+    saveCart(); saveCartLines(); render();
+  });
+  r.remove(); ckTotal(); render();
+  if (!CART.size) dlgCk.close();
+});
+document.getElementById("ck-ok").onclick = () => {
+  const err = document.getElementById("ck-err");
+  const okB = document.getElementById("ck-ok");
+  // un confirm tardio tras close/cancel no puede reenviar filas DOM
+  // que ya no existen — y el doble-tap sigue siendo un solo commit
+  if (!dlgCk.open || okB.disabled) return;
+  if (!formOwnerLive(dlgCk._pwOwner)) {
+    err.textContent =
+      "La cuenta cambió; vuelve a abrir el formulario.";
+    return;
+  }
+  const lines = [];
+  for (const r of document.querySelectorAll("#ck-rows .ckrow"))
+    lines.push({ sku: r.dataset.sku,
+      quantity: Number(r.querySelector(".ck-q").value),
+      unitCents: PWData.parseMoney(r.querySelector(".ck-p").value) });
+  const date = document.getElementById("ck-date").value;
+  let res;
+  okB.disabled = true;
+  try { res = commitPurchases(lines, date); }
+  catch (ex) { err.textContent = ex.message; okB.disabled = false; return; }
+  okB.disabled = false;
+  if (!res.ok)
+    err.textContent =
+      "guardado solo en memoria — sin persistencia local";
+  // el carrito se vacia DESPUES del commit local: si fallo la
+  // persistencia la compra vive en memoria y las lineas se van igual
+  // (ya estan registradas); cancelar jamas toca COMPRAS ni CART
+  CART.clear();
+  for (const k in CART_LINES) delete CART_LINES[k];
+  saveCart(); saveCartLines();
   SHOP = false; document.body.classList.remove("shop");
-  $("#shopmode").classList.remove("on");
-  render();
+  document.getElementById("shopmode").classList.remove("on");
+  dlgCk.close(); render();
+};
+document.getElementById("ck-cancel").onclick =
+document.getElementById("ck-close").onclick = () => dlgCk.close();
+
+// strip de estado: reintento manual de sync y recuperacion de datos
+// corruptos — siempre visibles fuera del dialogo de cuenta
+document.getElementById("ds-retry").onclick = () => {
+  if (AW.user) syncAll().finally(() => render());
+};
+const dlgRc = document.getElementById("dlg-recover");
+const openRecover = () => {
+  lastFocus = document.activeElement;
+  const ks = PWStore.corruptKeys();
+  document.getElementById("rc-msg").textContent =
+    `Llaves dañadas en este espacio: ${ks.join(", ") || "?"} — ` +
+    `los valores originales están en cuarentena y exportables.`;
+  document.getElementById("rc-status").textContent = "";
+  stampFormOwner(dlgRc);
+  dlgRc.showModal();
+};
+document.getElementById("ds-fix").onclick = openRecover;
+document.getElementById("rc-cancel").onclick =
+document.getElementById("rc-close").onclick = () => dlgRc.close();
+// export privado: todo el namespace + pendientes + cuarentena en un
+// JSON descargable — la copia vive fuera de la app antes de recuperar
+document.getElementById("rc-export").onclick = () => {
+  // exportar/reparar exige el dialogo vivo de ESTE dueno: un click
+  // tardio de la cuenta anterior no descarga ni toca nada de esta
+  if (!dlgRc.open || !formOwnerLive(dlgRc._pwOwner)) return;
+  const data = PWStore.exportNS();
+  const blob = new Blob([JSON.stringify(data, null, 2)],
+    { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `pricewatch-datos-${PWStore.currentUser() || "guest"}-${todaySV()}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  document.getElementById("rc-status").textContent =
+    "copia exportada — guardala fuera de la app";
+};
+document.getElementById("rc-fix").onclick = async () => {
+  if (!dlgRc.open || !formOwnerLive(dlgRc._pwOwner)) return;
+  // el await puede cruzar un cambio de cuenta: el resultado viejo
+  // jamas se pinta sobre el dialogo (o namespace) nuevo
+  const owner = dlgRc._pwOwner;
+  const st = document.getElementById("rc-status");
+  st.textContent = "recuperando…";
+  const r = await recoverNS();
+  // mismo namespace pero dialogo reabierto durante el await: este
+  // resultado pertenece al sello viejo — no pintar sobre el nuevo
+  if (!dlgRc.open || !formOwnerLive(owner)
+      || dlgRc._pwOwner !== owner) return;
+  st.textContent = r.ok
+    ? `recuperado (${r.fixed.length} llaves reparadas)`
+      + ` — sincronización reanudada`
+    : "valores válidos conservados — la sincronización sigue pendiente";
+  paintAcct(); render();
 };
 // el buscador global: >=2 letras muestra panel de resultados del catalogo
 // completo sobre cualquier tab; tambien filtra las tablas Perspective
@@ -203,11 +464,17 @@ async function loadExplorer(attempt=0){
             prev = ser.slice(-2)[0];
       const a = D.agg[sku]||{};
       const mc = MYCLUB ? (D.clubs[sku]||{})[MYCLUB] : null;
+      // stock solo se afirma con lectura vigente; un dato viejo es
+      // "?" honesto, no "sí"/"no" inventado
+      const pst = PWData.product(sku).state,
+            cst = mc ? PWData.product(sku, MYCLUB).state : null;
+      const stTxt = st2 => st2 === "available" ? "sí"
+        : st2 === "unavailable" ? "no" : "?";
       return {sku, producto:p.title, marca:p.brand||"", categoria:p.category||"",
         precio: l?+(l[1]/100).toFixed(2):null,
         ahorro: l?+((l[3]||0).toFixed(2)):0,
         desc_pct: l&&l[1]?+((l[3]||0)/(l[1]/100)*100).toFixed(1):0,
-        stock: l?(l[2]?"sí":"no"):"?",
+        stock: stTxt(pst),
         min_hist: a.min!=null?+(a.min/100).toFixed(2):null,
         max_hist: a.max!=null?+(a.max/100).toFixed(2):null,
         pct_sobre_min: a.pct_min ?? null,
@@ -223,7 +490,7 @@ async function loadExplorer(attempt=0){
         ahorro_tipico: a.of_save ?? null,
         pct_dias_stock: a.pct_stock ?? null, dias_agotado: a.d_out ?? 0,
         n_veces_agotado: a.n_out ?? 0,
-        mi_club: mc ? (mc.in_stock?"sí":"no") : "—"};
+        mi_club: mc ? stTxt(cst) : "—"};
     });
     const worker = await psp.worker();
     const table = await worker.table(mkRows());
@@ -272,6 +539,32 @@ async function loadExplorer(attempt=0){
 }
 
 const dlg = document.getElementById("dlg");
+// borrado puntual de una compra desde la ficha: el indice y la epoch
+// viajan en el boton — una fila DOM pintada bajo otro dueno/otra
+// apertura no puede borrar compras de esta cuenta
+document.getElementById("dbuys").addEventListener("click", e => {
+  const b = e.target.closest("[data-compra-index]");
+  if (!b || !dlg.open || !formOwnerLive(dlg._pwOwner)) return;
+  // el boton pertenece a ESTA apertura (reabrir, aun en la misma
+  // cuenta, sella otro owner) y a la epoch vigente
+  if (b._pwOwner !== dlg._pwOwner
+      || +b.dataset.formEpoch !== PWStore.currentEpoch()) return;
+  const p = b._pwPurchase;
+  // resolver el indice VIGENTE por identidad — rid estable si hay,
+  // referencia exacta para compras legacy sin rid; jamas la posicion
+  // numerica vieja: un merge/remate reordena COMPRAS y el indice 0
+  // de un boton viejo podria ser OTRA compra
+  const i = p && (p.rid
+    ? COMPRAS.findIndex(c => c.rid === p.rid && c.sku === p.sku)
+    : COMPRAS.indexOf(p));
+  if (!p || i < 0) {
+    // la fila ya no existe: solo repintar la ficha abierta, sin
+    // borrar nada por posicion
+    if (dlg.dataset.sku) openProd(dlg.dataset.sku);
+    return;
+  }
+  delCompra(i, COMPRAS[i].sku);
+});
 // barras horizontales reutilizables (Movimientos y Gangas): divergentes
 // por signo o de un color; ★ = tu lista, ● = nuevo desde tu ultima
 // visita; clic abre la ficha del producto
@@ -359,9 +652,9 @@ function dealChart(list){
 [["chmov-wrap","ch-cambios","pw-chmov"],
  ["chofe-wrap","ch-ofertas","pw-chofe"]].forEach(([w,id,ls]) => {
   const d = document.getElementById(w);
-  d.open = localStorage.getItem(ls) === "1";
+  d.open = PWStore.get(ls) === "1";
   d.addEventListener("toggle", () => {
-    localStorage.setItem(ls, d.open ? "1" : "0");
+    PWStore.set(ls, d.open ? "1" : "0");
     // el evento llega antes de que el contenido abierto tenga layout;
     // esperar un frame o offsetWidth sigue en 0 y paintBar se salta
     requestAnimationFrame(() => paintBar(id));
@@ -373,14 +666,45 @@ window.addEventListener("resize", () => {
   chart && chart.resize();
   chCal && chCal.resize();
 });
+let lastFocus = null;
+// la observacion va con SU fecha — jamas "hoy" sobre dato viejo
+const observationText = pf =>
+  `última lectura ${pf.observedAt || "sin fecha"}`
+  + (pf.state === "stale" ? " — dato vencido"
+    : pf.state === "unknown" ? " — sin verificar" : "");
+// estado por club via PWData: una lectura vencida dice
+// "sin verificacion" con su fecha — jamas afirma stock/agotado
+const clubStock = (sku, name, c) => {
+  const cs = PWData.product(sku, name);
+  return cs.state === "available"
+    ? `<b style="color:var(--down)">✓ ${c.qty} uds</b>`
+    : cs.state === "unavailable"
+      ? '<span style="color:var(--mut)">agotado</span>'
+      : `<span class="meta">sin verificación${
+          cs.observedAt ? " (" + esc(cs.observedAt) + ")" : ""}</span>`;
+};
 function openProd(sku){
   const p = D.products[sku]||{}, s = D.series[sku]||[];
   const last = s.slice(-1)[0];
+  const pf = PWData.product(sku);
+  dlg.dataset.sku = sku;
+  // dueno de ESTA apertura: las closures mutables verifican uid/epoch
+  // vigentes e identidad del sello — una ficha reabierta (incluso en
+  // la misma cuenta) invalida los callbacks de la apertura anterior
+  const owner = stampFormOwner(dlg);
   $("#dimg").src = img(sku); $("#dimg").style.display = img(sku)?"":"none";
-  $("#dtitle").textContent = p.title||sku;
+  const dtt = $("#dtitle");
+  dtt.textContent = p.title||sku;
+  dtt.classList.remove("open");
+  // titulos largos: clamp de 2 lineas con toggle explicito — nunca
+  // se desbordan ni se cortan en silencio
+  const tm = $("#dtitle-more");
+  tm.style.display = (p.title||"").length > 60 ? "" : "none";
+  tm.onclick = () => dtt.classList.toggle("open");
   $("#dmeta").textContent = `${p.brand||""} · ${p.category||""} · SKU ${sku}`
     + (s.length && s[s.length-1][0] < D.generated ? ` · última vez en catálogo: ${s[s.length-1][0]}` : "")
     + ((D.agg[sku]||{}).temp ? " · de temporada" : "");
+  $("#dobs").textContent = observationText(pf);
   $("#dprice").textContent = last ? fmt(last[1]) : "—";
   const dl = $("#dlink");
   if (p.slug){ dl.style.display=""; dl.href =
@@ -388,35 +712,99 @@ function openProd(sku){
   else dl.style.display = "none";
   const ds = $("#dstar");
   ds.textContent = FAV.has(sku) ? "★" : "☆";
-  ds.className = "star" + (FAV.has(sku) ? " on" : "");
-  ds.onclick = () => toggleFav(sku, {stopPropagation(){}}) || openProd(sku);
+  ds.className = "star dstar" + (FAV.has(sku) ? " on" : "");
+  ds.setAttribute("aria-pressed", String(FAV.has(sku)));
+  ds.setAttribute("aria-label",
+    "seguir " + (p.title || sku));
+  ds.onclick = () => {
+    if (!dlg.open || !formOwnerLive(owner) || dlg._pwOwner !== owner)
+      return;
+    toggleFav(sku, {stopPropagation(){}}) || openProd(sku);
+  };
   const dvs = $("#dvs"), dagg = D.agg[sku]||{};
   dvs.innerHTML = (dagg.vs_med != null
     ? `<span style="color:${dagg.vs_med<=0?"var(--down)":"var(--up)"}">${dagg.vs_med>0?"+":""}${dagg.vs_med}% vs precio habitual (${fmt(dagg.med)})</span>`
     : "")
-    + (dagg.of_every ? ` <span class="meta">· en oferta cada ~${dagg.of_every}d${dagg.of_save?` (ahorra ~$${(+dagg.of_save).toFixed(2)})`:""}</span>` : "");
+    + (dagg.of_every ? ` <span class="meta">· en oferta cada ~${dagg.of_every}d${dagg.of_save?` (ahorra ~$${(+dagg.of_save).toFixed(2)})`:""}</span>` : "")
+    + rotTag(sku);
   const db = $("#dbuy");
   db.checked = COMPRAS.some(c => c.sku === sku);
-  db.onchange = () => buyToggled(sku, db);
+  db.onchange = () => {
+    if (!dlg.open || !formOwnerLive(owner) || dlg._pwOwner !== owner)
+      return;
+    buyToggled(sku, db);
+  };
   const dm = $("#dmore");
   dm.style.display = COMPRAS.some(c => c.sku === sku) ? "" : "none";
-  dm.onclick = () => { if (comprar(sku)) openProd(sku); };
+  dm.onclick = () => {
+    if (!dlg.open || !formOwnerLive(owner) || dlg._pwOwner !== owner)
+      return;
+    comprar(sku);
+  };
+  const dc = $("#dcart");
+  const paintCart = () => {
+    dc.textContent = CART.has(sku) ? "🛒 en el carrito ✓" : "🛒 al carrito";
+    dc.setAttribute("aria-pressed", String(CART.has(sku)));
+  };
+  paintCart();
+  dc.onclick = () => {
+    if (!dlg.open || !formOwnerLive(owner) || dlg._pwOwner !== owner)
+      return;
+    cartToggle(sku, !CART.has(sku)); paintCart();
+  };
   const dt = $("#dtgt");
   dt.value = TARGETS[sku] != null ? (TARGETS[sku]/100).toFixed(2) : "";
+  $("#dtgt-err").textContent = "";
   dt.onchange = () => {
-    const v = parseFloat(dt.value);
-    if (v > 0) TARGETS[sku] = Math.round(v*100); else delete TARGETS[sku];
-    localStorage.setItem("pw-targets", JSON.stringify(TARGETS));
-    if (AW.user) v > 0 ? tgtSet(sku, TARGETS[sku]) : tgtDel(sku);
+    // autosave en blur: cerrar la ficha puede disparar change DESPUES
+    // de quitar open — se exige dueno vigente + identidad del sello,
+    // nunca que siga abierto (es el guardar-legitimo del blur)
+    if (!formOwnerLive(owner) || dlg._pwOwner !== owner) return;
+    const err = $("#dtgt-err"), v = dt.value.trim();
+    if (!v) {
+      delete TARGETS[sku]; saveTargets(); err.textContent = "";
+      if (PWStore.currentUser()) tgtDel(sku);
+      render(); return;
+    }
+    // parseMoney exige 12.34 real: 1e3, .5x o basura no pisa el
+    // objetivo anterior — el input conserva el valor valido
+    const cents = PWData.parseMoney(v);
+    if (cents == null) {
+      err.textContent = "precio inválido — usa formato 12.34";
+      dt.value = TARGETS[sku] != null
+        ? (TARGETS[sku]/100).toFixed(2) : "";
+      return;
+    }
+    err.textContent = "";
+    TARGETS[sku] = cents; saveTargets();
+    if (PWStore.currentUser()) tgtSet(sku, cents);
     render();
   };
+  // historial agrupado (fecha|precio): "2 × $10.01" muestra unidades;
+  // cada grupo borra UNA unidad con deshacer — no la compra entera
   const buys = COMPRAS.map((c,i)=>({c,i})).filter(x=>x.c.sku===sku);
+  const grp = {};
+  buys.forEach(x => {
+    const k = (x.c.date||"") + "|" + x.c.paid;
+    (grp[k] ??= { n: 0, paid: x.c.paid, date: x.c.date, last: x.i }).n++;
+  });
   $("#dbuys").innerHTML = buys.length
-    ? "Lo compraste: " + buys.map(x=>
-        `<span>$${(+x.c.paid).toFixed(2)} (${x.c.date||"?"})
-         <a style="cursor:pointer;color:var(--up)"
-            onclick="delCompra(${x.i},'${sku}')">✕</a></span>`).join(", ")
+    ? "Lo compraste: " + Object.values(grp).map(g =>
+        `<span>${g.n>1?g.n+" × ":""}$${(+g.paid).toFixed(2)}`
+        + `${g.date?" ("+g.date+")":""} `
+        + `<button type="button" class="chip" style="padding:0 8px"
+           aria-label="eliminar una compra de ${g.date||"sin fecha"}"
+           data-compra-index="${g.last}"
+           data-form-epoch="${PWStore.currentEpoch()}">✕</button></span>`)
+        .join(", ")
     : "";
+  // cada boton queda ligado a ESTA apertura y a la fila que mostraba:
+  // un merge/remate posterior reordena COMPRAS y un indice numerico
+  // viejo borraria la compra equivocada
+  $("#dbuys").querySelectorAll("[data-compra-index]").forEach(b => {
+    b._pwOwner = owner;
+    b._pwPurchase = COMPRAS[+b.dataset.compraIndex] || null;
+  });
   $("#dshare").onclick = () => {
     const url = `${location.origin}${location.pathname}?sku=${sku}`;
     const txt = `${p.title||sku} — ${last?fmt(last[1]):""} | PriceWatch SV`;
@@ -445,7 +833,10 @@ function openProd(sku){
       clubRows.map(([n,c])=>{
         const st = (n===MYCLUB?"color:var(--warn);":"")
                  + (n==="El Salvador"?"border-top:2px solid var(--line)":"");
-        return `<tr${st?` style="${st}"`:""}><td>${n===MYCLUB?"📍 ":""}${n==="El Salvador"?"Total (nacional)":esc(n)}</td><td>${c.in_stock?`<b style="color:var(--down)">✓ ${c.qty} uds</b>`:'<span style="color:var(--mut)">agotado</span>'}</td><td>${typeof qtySpark==="function"?qtySpark(ch[n], cDates):""}</td></tr>`;
+        // la celda lleva su club estatico: el refresh de frescura la
+        // repinta sin reabrir la ficha ni pisar inputs del usuario
+        const stockTd = clubStock(sku, n, c);
+        return `<tr${st?` style="${st}"`:""}><td>${n===MYCLUB?"📍 ":""}${n==="El Salvador"?"Total (nacional)":esc(n)}</td><td data-stock-club="${esc(n)}">${stockTd}</td><td>${typeof qtySpark==="function"?qtySpark(ch[n], cDates):""}</td></tr>`;
       }).join("") + "</table>"
     : "<p class='meta' style='margin-top:10px'>Sin dato de stock por club todavía — se consulta solo para ofertas, movimientos y tu lista.</p>";
   // tabla por episodios: una fila por regimen (mismo precio+stock+letrero),
@@ -457,7 +848,8 @@ function openProd(sku){
     if (e && e.pr===pr && e.st===st && (e.sv||0)===(sv||0)) e.to = d;
     else eps.push({from:d, to:d, pr, st, sv});
   });
-  const endD = d => d === D.generated ? "hoy" : d;
+  // fecha siempre: ni "hoy" — una observacion vieja no se disfraza
+  const endD = d => d;
   $("#dtable").innerHTML =
     "<tr><th>Período</th><th>Precio</th><th>Ahorro</th><th>Stock</th></tr>"
     + eps.slice().reverse().map(e => {
@@ -468,10 +860,16 @@ function openProd(sku){
              + `<td>${e.sv?"$"+(+e.sv).toFixed(2):"—"}</td>`
              + `<td>${e.st?"✓":"✗"}</td></tr>`;
       }).join("");
-  // PC: ficha anclada a la derecha (no modal) — master-detail con la lista
+  // PC: ficha anclada a la derecha (no modal) — master-detail con la
+  // lista. Movil: modal a pantalla completa con scroll del fondo
+  // bloqueado y foco devuelto al cerrar
   const wide = matchMedia("(min-width:900px)").matches;
-  if (!dlg.open) wide ? dlg.show() : dlg.showModal();
+  if (!dlg.open) {
+    lastFocus = document.activeElement;
+    wide ? dlg.show() : dlg.showModal();
+  }
   document.body.classList.toggle("detail", wide);
+  document.body.classList.toggle("locked", !wide && dlg.open);
   // sin echarts (CDN caido/bloqueado) la ficha sigue completa — tabla,
   // clubes y compras — y el aviso explica el hueco de la grafica
   const hayChart = typeof echarts !== "undefined";
@@ -501,14 +899,20 @@ function openProd(sku){
               formatter:"rango habitual"}},
       {yAxis:+(qtl(.75)/100).toFixed(2)}]] : [];
     chart = chart || echarts.init(document.getElementById("chart"), null, {renderer:"svg"});
+    // precio null = hueco honesto en la serie — jamas un punto en $0
+    // (un dia sin lectura no vale cero)
     chart.setOption({
       grid:{left:55,right:15,top:20,bottom:30},
       xAxis:{type:"category",data:s.map(p=>p[0]),axisLabel:{color:"#8b93ad",fontSize:10}},
       yAxis:{type:"value",axisLabel:{color:"#8b93ad",formatter:v=>"$"+v},splitLine:{lineStyle:{color:"#2a3350"}},scale:true},
-      series:[{type:"line",step:"end",data:s.map(p=>+(p[1]/100).toFixed(2)),showSymbol:true,symbolSize:5,
+      series:[{type:"line",step:"end",
+        data:s.map(p=>p[1]==null?null:+(p[1]/100).toFixed(2)),
+        showSymbol:true,symbolSize:5,
         lineStyle:{color:"#60a5fa"},areaStyle:{color:"#60a5fa18"},
         markLine:{silent:true,data:[
-          {yAxis:+(Math.min(...s.map(p=>p[1]))/100).toFixed(2)},
+          ...(px.length
+            ? [{yAxis:+(Math.min(...px)/100).toFixed(2)}]
+            : []),
           // med es de historia completa: si cae fuera del rango visible
           // la linea quedaria pegada al borde y confunde — no dibujarla
           ...(dagg.med!=null && dagg.med>=px[0]*0.95
@@ -553,13 +957,18 @@ function openProd(sku){
   } else calEl.style.display = "none";
 }
 // clic fuera del modal (backdrop) lo cierra
-for (const d of [dlg, lgDlg, dlgNav]) d.addEventListener("click", e => {
+for (const d of [dlg, lgDlg, dlgNav, dlgPurchase, dlgCk, dlgRc])
+  d.addEventListener("click", e => {
   const r = d.getBoundingClientRect();
   if (e.clientX < r.left || e.clientX > r.right
       || e.clientY < r.top || e.clientY > r.bottom) d.close();
 });
 dlg.addEventListener("close", () => {
   document.body.classList.remove("detail");
+  document.body.classList.remove("locked");
+  // devolver el foco al control que abrio la ficha
+  if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (_) {} }
+  lastFocus = null;
   // deep link ?sku= consumido: si quedaba en la URL, una recarga (p.ej.
   // el banner de "hay datos nuevos") reabria una ficha ya cerrada
   const q = new URLSearchParams(location.search);
@@ -574,12 +983,12 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape" && dlg.open) dlg.close();
 });
 // primer render: activa el ultimo tab usado (o ?tab=), cayendo a
-// Mi lista si el valor guardado/pedido no existe. Va al final del
+// Inicio si el valor guardado/pedido no existe. Va al final del
 // script porque el click dispara render(), que lee cf/OF_F y todo lo
 // cableado arriba — aqui abajo ya no hace falta un render() aparte
 const reqTab = new URLSearchParams(location.search).get("tab")
-  || localStorage.getItem("pw-tab") || "favs";
-(tabEl(reqTab) || tabEl("favs"))?.click();
+  || PWStore.get("pw-tab") || "inicio";
+(tabEl(reqTab) || tabEl("inicio"))?.click();
 // deep link compartible: ?sku=498227 abre la ficha directo
 const qs = new URLSearchParams(location.search).get("sku");
 if (qs && D.products[qs]) openProd(qs);
@@ -592,9 +1001,34 @@ const checkVer = () => fetch("version.json?t=" + Date.now())
       upd.style.display = "block";
   }).catch(() => {});
 upd.onclick = () => location.reload();
+// la ficha abierta tambien vence: al cruzar el corte (o volver a la
+// pestana) se repintan fecha de lectura y stock por club SIN reabrir —
+// openProd destruiria el objetivo a medio escribir, el scroll y el foco
+function refreshOpenProduct(){
+  const sku = dlg.dataset.sku;
+  if (!dlg.open || !sku) return;
+  document.getElementById("dobs").textContent =
+    observationText(PWData.product(sku));
+  document.querySelectorAll("#dclubs td[data-stock-club]")
+    .forEach(td => {
+      const name = td.dataset.stockClub;
+      td.innerHTML = clubStock(sku, name, (D.clubs[sku]||{})[name]||{});
+    });
+}
 document.addEventListener("visibilitychange",
-  () => { if (!document.hidden) checkVer(); });
+  () => { if (!document.hidden) { render(); refreshOpenProduct(); checkVer(); } });
 setInterval(checkVer, 30 * 60 * 1000);
+// re-render exacto en el corte 06:00 SV (PWData.nextSweep): lo que era
+// "fresco" vence aunque nadie toque la pagina — un solo timeout que se
+// reprograma, sin intervalo extra ni polling
+const refreshFreshness = () => {
+  render();
+  refreshOpenProduct();
+  setTimeout(refreshFreshness,
+    Math.max(1, Date.parse(PWData.nextSweep()) - Date.now() + 1));
+};
+setTimeout(refreshFreshness,
+  Math.max(1, Date.parse(PWData.nextSweep()) - Date.now() + 1));
 // ---- web push: el sweep (GH Action) despierta al dispositivo ----
 // La suscripcion vive en Appwrite push_subs; no requiere cuenta porque
 // la "identidad" es el endpoint mismo — unsubscribe() lo mata en origen
@@ -605,6 +1039,11 @@ setInterval(checkVer, 30 * 60 * 1000);
 // colgada y el boton de avisos nunca aparecia
 if ("serviceWorker" in navigator)
   navigator.serviceWorker.register("sw.js", {scope: "./"}).catch(()=>{});
+// un SW nuevo tomando el control NUNCA recarga solo: un formulario a
+// medio llenar se perderia — solo deja visible el boton de update
+if ("serviceWorker" in navigator && navigator.serviceWorker.addEventListener)
+  navigator.serviceWorker.addEventListener("controllerchange",
+    () => { upd.style.display = "block"; });
 const VAPID_PUBLIC = "BCe97olK0g7PDhtvuC4BknYtgjzkzSlXv8MJ_Ve-9tMwnagCAU-lQmI1JtSgrSNrQZQE2pBr0O4H-vruxep4H6c";
 const b64u8 = s => Uint8Array.from(
   atob(s.replace(/-/g,"+").replace(/_/g,"/")), c => c.charCodeAt(0));
@@ -644,9 +1083,17 @@ const pushBtn = document.getElementById("pushbtn");
 })();
 
 // sesion previa: al cargar por ultimo, render() y los
-// helpers ya estan definidos (syncAll los necesita).
+// helpers ya estan definidos (syncAll los necesita). Se liga el
+// namespace de la cuenta ANTES del sync; sin sesion (offline o
+// borrada) se conserva el namespace del hint — la data de la ultima
+// cuenta ligada sigue usable en este dispositivo.
 (async () => {
   if (!AW.ok) return;
-  try { AW.user = await AW.acc.get(); await syncAll(); } catch(e) {}
+  try {
+    AW.user = await AW.acc.get();
+    PWStore.activate(AW.user.$id);
+    hydrateNS();
+    await syncAll();
+  } catch(e) { hydrateNS(); }
   paintAcct();
 })();

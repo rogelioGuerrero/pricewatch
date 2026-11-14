@@ -13,20 +13,25 @@
 <title>PriceWatch SV</title>
 <!-- defer: no bloquean el primer pintado; los modulos los usan despues
      de que data.json llega, asi que ya estaran evaluados -->
-<script defer src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/appwrite@26.2.0"></script>
+<!-- vendor local: mismas versiones que el CDN (NOTICE en vendor/),
+     la app no depende de jsdelivr para arrancar -->
+<script defer src="vendor/echarts.min.js?v=28"></script>
+<script defer src="vendor/appwrite-sdk.js?v=28"></script>
 <!-- themes.css de Perspective se carga bajo demanda en loadExplorer()
      (movil nunca abre el explorador: ~60KB ahorrados) -->
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=28">
 <!-- preload de los modulos: el scanner del navegador los baja en
      paralelo con data.json usando destination "script" — un fetch()
      manual tendria destination "" y el SW revalidaria cada archivo
-     dos veces (10 requests en vez de 5) -->
-<link rel="preload" as="script" href="js/state.js">
-<link rel="preload" as="script" href="js/siman.js">
-<link rel="preload" as="script" href="js/sync.js">
-<link rel="preload" as="script" href="js/render.js">
-<link rel="preload" as="script" href="js/app.js">
+     dos veces (10 requests en vez de 5). Los ?v=NN son inmutables
+     por release: coinciden con el CORE del service worker -->
+<link rel="preload" as="script" href="js/storage.js?v=28">
+<link rel="preload" as="script" href="js/freshness.js?v=28">
+<link rel="preload" as="script" href="js/state.js?v=28">
+<link rel="preload" as="script" href="js/siman.js?v=28">
+<link rel="preload" as="script" href="js/sync.js?v=28">
+<link rel="preload" as="script" href="js/render.js?v=28">
+<link rel="preload" as="script" href="js/app.js?v=28">
 </head>
 <body>
 <div class="wrap">
@@ -35,16 +40,29 @@
       <select id="clubsel" class="chip" aria-label="tu club"></select>
       <button type="button" id="acct" class="chip" style="display:none">cuenta</button>
       <button type="button" id="pushbtn" class="chip" title="avisos" style="display:none">🔕</button>
+      <button type="button" id="moresec" class="chip" aria-label="más secciones">☰ secciones</button>
     </div>
     <h1>PriceWatch SV</h1>
     <p>PriceSmart El Salvador · datos al <b id="gen"></b></p>
     <span class="demo" id="demo-banner" style="display:none">DEMO — el historial es sintético hasta acumular corridas reales (mar/jue)</span>
   </header>
+  <div id="datastrip" role="status" aria-live="polite">
+    <span id="ds-text"></span>
+    <button type="button" class="chip" id="ds-retry" style="display:none">reintentar sync</button>
+    <button type="button" class="chip" id="ds-fix" style="display:none">recuperar datos</button>
+  </div>
   <div class="tabs" id="tabs" role="tablist"></div>
   <p class="meta" id="boot" style="display:none;padding:12px">Cargando datos…</p>
   <div id="alerts"></div>
-  <div class="filters"><input id="q" type="search" autocomplete="off" name="pw-search" inputmode="search" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" aria-label="buscar en todo el catálogo" placeholder="Buscar en todo el catálogo (nombre, marca, SKU)…"></div>
-  <div class="pane" id="pane-buscar" role="tabpanel"><div class="grid" id="g-buscar"></div></div>
+  <div class="filters"><input id="q" type="search" autocomplete="off" name="pw-search" inputmode="search" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" aria-label="buscar en el catálogo de PriceSmart" placeholder="Buscar en PriceSmart — nombre, marca o SKU…"></div>
+  <div class="pane on" id="pane-inicio" role="tabpanel" aria-labelledby="tab-inicio">
+    <div id="ini-alerts"></div>
+    <h2 class="sec">Gangas verificadas</h2>
+    <div class="grid" id="g-ini-deals"></div>
+    <h2 class="sec">Tu lista</h2>
+    <div class="grid" id="g-ini-favs"></div>
+  </div>
+  <div class="pane" id="pane-buscar" role="tabpanel"><div class="grid" id="g-buscar"></div><div id="more-buscar" class="morewrap"></div></div>
   <div class="pane" id="pane-cambios" role="tabpanel" aria-labelledby="tab-cambios">
     <div class="filters" id="f-cambios">
       <button type="button" class="chip" data-cf="new" id="cf-new" style="display:none">✨ nuevas</button>
@@ -56,6 +74,7 @@
     </div>
     <details class="acc" id="chmov-wrap"><summary>mayores movimientos<span class="meta" id="chmov-n"></span></summary><div id="ch-cambios" class="accbody"></div></details>
     <div class="grid" id="g-cambios"></div>
+    <div id="more-cambios" class="morewrap"></div>
   </div>
   <div class="pane" id="pane-ofertas" role="tabpanel" aria-labelledby="tab-ofertas">
     <div class="filters" id="f-ofertas">
@@ -68,19 +87,23 @@
     </div>
     <details class="acc" id="chofe-wrap"><summary>mejores gangas<span class="meta" id="chofe-n"></span></summary><div id="ch-ofertas" class="accbody"></div></details>
     <div class="grid" id="g-ofertas"></div>
+    <div id="more-ofertas" class="morewrap"></div>
   </div>
-  <div class="pane" id="pane-stock" role="tabpanel" aria-labelledby="tab-stock"><div class="grid" id="g-stock"></div></div>
-  <div class="pane" id="pane-nuevos" role="tabpanel" aria-labelledby="tab-nuevos"><div class="grid" id="g-nuevos"></div></div>
-  <div class="pane on" id="pane-favs" role="tabpanel" aria-labelledby="tab-favs">
+  <div class="pane" id="pane-stock" role="tabpanel" aria-labelledby="tab-stock"><div class="grid" id="g-stock"></div><div id="more-stock" class="morewrap"></div></div>
+  <div class="pane" id="pane-nuevos" role="tabpanel" aria-labelledby="tab-nuevos"><div class="grid" id="g-nuevos"></div><div id="more-nuevos" class="morewrap"></div></div>
+  <div class="pane" id="pane-favs" role="tabpanel" aria-labelledby="tab-favs">
     <p class="meta" id="favs-sum" style="margin-bottom:10px"></p>
     <button type="button" class="chip" id="shopmode">🛒 comprando</button>
+    <button type="button" class="chip" id="cart-view" style="display:none">🛒 ver carrito</button>
     <button type="button" class="chip on" id="fav-filter" style="display:none"></button>
     <div class="grid" id="g-favs"></div>
+    <div id="more-favs" class="morewrap"></div>
   </div>
   <div class="pane" id="pane-siman" role="tabpanel" aria-labelledby="tab-siman">
     <p class="meta" style="margin-bottom:8px"><button type="button" id="siman-tog"
       style="cursor:pointer;background:none;border:0;color:inherit;padding:0"
-      aria-label="mostrar vigilancias y silenciados">▸</button> <span id="siman-sum"></span></p>
+      aria-label="mostrar vigilancias y silenciados">▸</button> <span id="siman-sum"></span>
+      <span class="meta" id="siman-fresh"></span></p>
     <div id="siman-panel" style="margin-bottom:8px;display:none">
       <div id="siman-watches" style="margin-bottom:6px"></div>
       <div id="siman-muted"></div>
@@ -101,6 +124,9 @@
       <button type="button" class="chip on" id="sw-add"
         style="flex:none">+ vigilar</button>
     </div>
+    <p class="meta" id="sw-note">Los términos vigilados se guardan en tu
+      cuenta para que el barrido los revise — no pongas datos
+      personales ni información sensible en la búsqueda.</p>
     <div class="meta" id="siman-sort" style="margin:8px 0">
       ordenar:
       <button type="button" class="chip" data-ss="count">más alertas</button>
@@ -136,29 +162,93 @@
 <dialog id="dlg" aria-labelledby="dtitle">
   <button type="button" class="close" onclick="dlg.close()" aria-label="cerrar">✕</button>
   <div style="display:flex;gap:12px;align-items:start">
-    <img id="dimg" style="width:80px;height:80px;object-fit:contain;background:#fff;border-radius:8px">
-    <div style="flex:1"><h2 id="dtitle"></h2><div class="meta" id="dmeta"></div><div class="bigprice" id="dprice"></div><div class="meta" id="dvs"></div></div>
-    <span id="dstar" class="star" style="position:static;font-size:26px"></span>
+    <img id="dimg" style="width:80px;height:80px;object-fit:contain;background:#fff;border-radius:8px;flex:none">
+    <div style="flex:1;min-width:0"><h2 id="dtitle" class="clamp2"></h2>
+      <button type="button" id="dtitle-more" class="chip" style="display:none;padding:1px 8px;font-size:11px">título completo</button>
+      <div class="meta" id="dmeta"></div><div class="meta" id="dobs"></div>
+      <div class="bigprice" id="dprice"></div><div class="meta" id="dvs"></div></div>
+    <button type="button" id="dstar" class="star dstar" aria-pressed="false" aria-label="seguir producto"></button>
   </div>
+  <div class="dactions">
+    <label class="sw"><input type="checkbox" id="dbuy"><i></i>lo compré</label>
+    <button type="button" class="chip" id="dmore" style="display:none">+ registrar compra</button>
+    <button type="button" class="chip" id="dcart">🛒 al carrito</button>
+    <button type="button" class="chip" id="dshare">Compartir</button>
+    <label class="meta" style="font-size:12px;display:inline-flex;align-items:center;gap:4px">🎯 avísame si baja de
+      <input id="dtgt" type="text" inputmode="decimal" placeholder="$"
+        autocomplete="off"
+        data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
+        aria-label="precio objetivo en dólares"
+        title="alerta cuando el precio baje de este monto"
+        style="width:78px;padding:3px 8px;font-size:12px"></label>
+  </div>
+  <p class="meta" id="dtgt-err" role="alert" style="color:var(--up)"></p>
+  <p class="meta" id="dbuys" style="margin-top:8px"></p>
   <div id="chart"></div>
   <div id="dcal"></div>
-  <p class="meta" id="dnograph" style="display:none">historial disponible — gráficas no cargadas (sin acceso al CDN de echarts)</p>
-  <div id="dclubs"></div>
+  <p class="meta" id="dnograph" style="display:none">historial disponible — gráficas no cargadas</p>
+  <details id="dclubs-wrap" open><summary>Disponibilidad en clubes</summary><div id="dclubs"></div></details>
+  <details id="dtable-wrap" open><summary>Historial de precios</summary><table id="dtable"></table></details>
   <a id="dlink" class="plink" target="_blank" rel="noopener">Ver en pricesmart.com ↗</a>
-  <label class="sw" style="margin-left:14px"><input type="checkbox" id="dbuy"><i></i>lo compré</label>
-  <a id="dmore" class="plink" style="margin-left:10px;cursor:pointer;display:none">+ otra</a>
-  <a id="dshare" class="plink" style="margin-left:14px;cursor:pointer">Compartir</a>
-  <span class="meta" style="margin-left:14px;font-size:12px">🎯 avísame si baja de</span>
-  <input id="dtgt" type="number" min="0" step="0.01" placeholder="$"
-    data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
-         title="alerta cuando el precio baje de este monto"
-         style="width:78px;padding:3px 8px;font-size:12px;margin-left:4px">
-  <p class="meta" id="dbuys" style="margin-top:8px"></p>
-  <table id="dtable"></table>
 </dialog>
+<dialog id="dlg-purchase" aria-labelledby="pu-h">
+  <button type="button" class="close" id="pu-close" aria-label="cerrar">✕</button>
+  <h2 id="pu-h">Registrar compra</h2>
+  <p class="meta" id="pu-title"></p>
+  <form id="pu-form" novalidate>
+    <label class="fld">precio por unidad (US$)
+      <input id="pu-price" inputmode="decimal" autocomplete="off"
+        data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
+        placeholder="ej. 10.01" required></label>
+    <label class="fld">cantidad
+      <input id="pu-qty" type="number" min="1" max="99" step="1" value="1" required></label>
+    <label class="fld">fecha
+      <input id="pu-date" type="date" required></label>
+    <p class="meta" id="pu-err" role="alert" aria-live="polite" style="color:var(--up)"></p>
+    <div class="row">
+      <button type="button" class="chip" id="pu-cancel">Cancelar</button>
+      <button type="submit" class="chip on" id="pu-ok">Guardar</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="dlg-checkout" aria-labelledby="ck-h">
+  <button type="button" class="close" id="ck-close" aria-label="cerrar">✕</button>
+  <h2 id="ck-h">Terminar compra</h2>
+  <p class="meta">Los precios vienen del catálogo como <b>estimado</b> — ajusta lo que pagaste por unidad antes de registrar.</p>
+  <div id="ck-rows"></div>
+  <label class="fld">fecha de compra
+    <input id="ck-date" type="date" required></label>
+  <p class="meta" id="ck-err" role="alert" aria-live="polite" style="color:var(--up)"></p>
+  <div class="row">
+    <span class="meta" id="ck-total" style="margin-right:auto"></span>
+    <button type="button" class="chip" id="ck-cancel">Cancelar</button>
+    <button type="button" class="chip on" id="ck-ok">Registrar compras</button>
+  </div>
+</dialog>
+<dialog id="dlg-recover" aria-labelledby="rc-h">
+  <button type="button" class="close" id="rc-close" aria-label="cerrar">✕</button>
+  <h2 id="rc-h">Datos locales dañados</h2>
+  <p class="meta" id="rc-msg"></p>
+  <p class="meta">La sincronización está congelada para no pisar datos
+    buenos con una lectura incompleta. Exporta una copia primero —
+    incluye los valores originales dañados — y luego recupera.</p>
+  <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:12px">
+    <button type="button" class="chip" id="rc-export">Exportar datos privados (JSON)</button>
+    <button type="button" class="chip on" id="rc-fix">Conservar valores locales válidos y recuperar lo demás</button>
+    <button type="button" class="chip" id="rc-cancel">Ahora no</button>
+  </div>
+  <p class="meta" id="rc-status" aria-live="polite" style="margin-top:10px"></p>
+</dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+<nav id="bnav" aria-label="navegación principal">
+  <button type="button" data-t="inicio">Inicio</button>
+  <button type="button" data-t="favs">Mi lista</button>
+  <button type="button" data-t="ofertas">Gangas</button>
+  <button type="button" data-t="siman">Siman</button>
+</nav>
 <button class="fab" id="fab" aria-label="secciones"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg><span id="fab-label"></span></button>
 <dialog id="dlg-nav" class="sheet" aria-label="secciones"><div id="navres"></div><div id="navitems"></div></dialog>
-<div id="upd">Hay datos nuevos — <b>actualizar</b></div>
+<button type="button" id="upd">Hay datos nuevos — actualizar</button>
 <div id="shopbar"><span id="shop-tot"></span>
   <span><button type="button" class="chip" id="cart-clear">vaciar</button>
   <button type="button" class="chip on" id="done-btn">terminé — pagué ✓</button></span></div>
@@ -176,8 +266,10 @@
   </div>
   <div id="lg-out" style="display:none;margin-top:12px">
     <p id="lg-who"></p>
+    <button type="button" class="chip" id="lg-import" style="display:none">Importar datos de este dispositivo</button>
     <button type="button" class="chip" id="lg-off">Salir</button>
   </div>
+  <p class="meta" id="sync-status" aria-live="polite"></p>
   <p class="meta" id="lg-msg" style="margin-top:10px"></p>
 </dialog>
 <script>
@@ -188,25 +280,97 @@
 (async () => {
   const boot = document.getElementById("boot");
   boot.style.display = "";
-  // Los CDN (echarts, appwrite) entran con defer: ejecutan despues del
-  // parseo pero antes de DOMContentLoaded. Si los modulos se agregaran
-  // antes, AW.ok quedaria false para siempre aunque el SDK llegara unos
-  // ms tarde. Se espera el evento SIN frenar data.json (corre en
-  // paralelo desde ya).
+  // Los vendor (echarts, appwrite) entran con defer: ejecutan despues
+  // del parseo pero antes de DOMContentLoaded. Si los modulos se
+  // agregaran antes, AW.ok quedaria false para siempre aunque el SDK
+  // llegara unos ms tarde. Se espera el evento SIN frenar data.json
+  // (corre en paralelo desde ya).
   const ready = document.readyState === "loading"
     ? new Promise(ok => document.addEventListener(
         "DOMContentLoaded", ok, { once: true }))
     : Promise.resolve();
+  // esquema del dataset (el MISMO predicado que el service worker):
+  // un 200 malformado (proxy/pagina de error), un payload truncado o
+  // un esquema equivocado NO se acepta ni pisa la copia buena. Los
+  // campos privados quedan fuera a proposito: el builder es dueño de
+  // la privacidad y el estado de cliente no nace de D.mis
+  const validData = d => {
+    const map = x => x != null && typeof x === "object" && !Array.isArray(x);
+    const recordList = x => Array.isArray(x) && x.every(map);
+    const day = s => typeof s === "string" && (s === "" ||
+      (/^\d{4}-\d{2}-\d{2}$/.test(s) && Number.isFinite(Date.parse(s))
+        && new Date(Date.parse(s)).toISOString().slice(0, 10) === s));
+    return map(d) && ["products", "series", "agg", "clubs"].every(k => map(d[k]))
+      && Object.values(d.products).every(map) && Object.values(d.agg).every(map)
+      && Object.values(d.series).every(rows => Array.isArray(rows) && rows.every(r =>
+        Array.isArray(r) && r.length >= 3 && typeof r[0] === "string"
+        && (r[1] == null || Number.isFinite(r[1]))))
+      && recordList(d.events) && recordList(d.ofertas) && day(d.generated)
+      && (d.siman == null || (map(d.siman)
+        && recordList(d.siman.items) && recordList(d.siman.events)));
+  };
+  const parseData = async r => {
+    if (!r || !r.ok) throw new Error("HTTP " + (r ? r.status : "sin red"));
+    const d = await r.json();
+    if (!validData(d)) throw new Error("datos con formato inválido");
+    return d;
+  };
+  const fail = msg => {
+    boot.innerHTML = "";
+    const p = document.createElement("span");
+    p.textContent = msg + " ";
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.textContent = "Reintentar";
+    b.onclick = () => location.reload();
+    boot.appendChild(p); boot.appendChild(b);
+  };
   try {
-    const MODS = ["js/state.js", "js/siman.js", "js/sync.js",
-                  "js/render.js", "js/app.js"];
+    const MODS = ["js/storage.js?v=28", "js/freshness.js?v=28",
+                  "js/state.js?v=28", "js/siman.js?v=28",
+                  "js/sync.js?v=28", "js/render.js?v=28",
+                  "js/app.js?v=28"];
     // los modulos ya vienen precargados via <link rel="preload"> en el
     // head; aqui solo baja data.json y luego se EJECUTAN en orden —
     // los modulos leen window.D al evaluarse
-    window.D = await fetch("data.json").then(r => {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      return r.json();
-    });
+    // copia guardada en caches PROPIOS (pricewatch-*), el release
+    // vigente primero: una copia invalida mas nueva no tapa una buena
+    // mas vieja — y jamas se consulta un cache ajeno
+    const cachedData = async () => {
+      if (typeof caches === "undefined") return null;
+      try {
+        const names = (await caches.keys())
+          .filter(k => k.startsWith("pricewatch-"));
+        names.sort((a, b) =>
+          (b === "pricewatch-v28") - (a === "pricewatch-v28"));
+        for (const n of names) {
+          const hit = await caches.open(n)
+            .then(c => c.match("data.json")).catch(() => null);
+          if (!hit) continue;
+          try {
+            const d = await hit.json();
+            if (validData(d)) return d;
+          } catch (_) {}
+        }
+      } catch (_) {}
+      return null;
+    };
+    let fromCache = false;
+    try {
+      const r = await fetch("data.json");
+      window.D = await parseData(r);
+      // el SW marca la copia guardada que sirvio: el datastrip la
+      // anuncia igual que la ruta offline del fallback
+      fromCache = !!(r.headers
+        && r.headers.get("X-PriceWatch-Cache") === "1");
+    } catch (_) {
+      // red caida, 5xx o 200 malformado: la copia guardada por el SW
+      // sigue siendo valida si pasa el mismo esquema
+      const d = await cachedData();
+      if (d == null) throw _;
+      window.D = d;
+      fromCache = true;   // el datastrip lo anuncia: "copia guardada"
+    }
+    window.DATA_FROM_CACHE = fromCache;
     await ready;
     for (const src of MODS)
       await new Promise((ok, bad) => {
@@ -217,8 +381,8 @@
       });
     boot.remove();
   } catch (e) {
-    boot.textContent = "No se pudieron cargar los datos — revisa la " +
-      "conexión y recarga. (" + (e.message || e) + ")";
+    fail("No se pudieron cargar los datos — revisa la conexión."
+         + " (" + (e.message || e) + ")");
   }
 })();
 </script>

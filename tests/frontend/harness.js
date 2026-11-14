@@ -7,7 +7,8 @@ const fs = require("fs"), path = require("path"), vm = require("node:vm");
 const ROOT = path.join(__dirname, "..", "..");
 const srcOf = f =>
   fs.readFileSync(path.join(ROOT, "docs", "js", f), "utf8");
-const MODS = ["state.js", "siman.js", "sync.js", "render.js", "app.js"];
+const MODS = ["storage.js", "freshness.js", "state.js", "siman.js",
+              "sync.js", "render.js", "app.js"];
 
 const VOID = new Set(("area base br col embed hr img input link meta "
   + "source track wbr").split(" "));
@@ -298,7 +299,7 @@ const APPWRITE_STUB = {
     orderAsc: f => ({ q: "asc", f }),
     cursorAfter: c => ({ q: "after", c }),
   },
-  ID: { unique: () => "u1" },
+  ID: { unique: (n => () => "u" + (++n))(0) },
   Permission: { read: u => `read ${u}`, update: u => `update ${u}`,
                 delete: u => `delete ${u}` },
   Role: { user: u => `user ${u}` },

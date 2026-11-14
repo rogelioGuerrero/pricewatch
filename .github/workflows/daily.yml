@@ -6,12 +6,23 @@ on:
     # un solo run — un solo cache save (sin carreras entre workflows),
     # el digest ve siempre el estado completo y hay un solo deploy/dia.
     - cron: '0 12 * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "full: recolectar; publish: publicar datos recuperados sin avisos"
+        type: choice
+        options: [full, publish]
+        default: publish
+      send_notifications:
+        description: "Enviar avisos reales (solo modo full)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read   # el sitio viaja como artefacto: nada de commits al repo
   pages: write
   id-token: write
+  actions: read
 
 concurrency:
   group: pricewatch-daily
@@ -30,7 +41,17 @@ jobs:
           # pinneado (fetch por hash abajo), no del historial local
           fetch-depth: 25
 
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Instalar dependencias
+        run: python -m pip install -r requirements.txt -q
+
       - name: Restore data cache (db + snapshots + logs viven fuera de git)
+        id: restore
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -40,8 +61,15 @@ jobs:
             data/siman_snapshots/
             data/events.jsonl
             data/siman_events.jsonl
-          key: pwdata-${{ github.run_id }}
+            data/notifications.json
+          key: pwdata-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: pwdata-
+
+      - name: Recuperar respaldo independiente si falta el cache
+        if: steps.restore.outputs.cache-matched-key == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/data_health.py restore-github
 
       - name: Bootstrap de eventos si el cache llegó vacío
         # rescata los jsonl del último commit que los tuvo — pinneado
@@ -57,16 +85,8 @@ jobs:
             fi
           done
 
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.12'
-          cache: pip
-
-      - name: Instalar dependencias
-        run: python -m pip install -r requirements.txt -q
-
       - name: PriceSmart sweep + diff + historia
+        if: github.event_name == 'schedule' || inputs.mode == 'full'
         env:
           APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
           APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
@@ -74,6 +94,7 @@ jobs:
         run: python scripts/sweep.py
 
       - name: Siman watchlist sweep
+        if: github.event_name == 'schedule' || inputs.mode == 'full'
         env:
           APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
           APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
@@ -84,34 +105,14 @@ jobs:
       # sobre stock_candidates) — un --stock-check aparte repetia la
       # descarga contra la misma fecha base. El flag sigue existiendo
       # en sweep.py para corridas manuales a media tarde.
+      - name: Validar integridad y frescura antes de promover datos
+        id: health
+        run: >-
+          python scripts/data_health.py check --output data/quality.json
+          ${{ (github.event_name == 'schedule' || inputs.mode == 'full') && '--fresh' || '' }}
+
       - name: Rebuild dashboard
         run: python scripts/build_site.py
-
-      - name: Check data sana antes de guardar cache
-        # si el restore fallo y los scripts abortaron, un save vacio se
-        # volveria el cache "mas reciente" y lo restauraria el proximo
-        # run — solo guardar si hay db con contenido
-        id: datacheck
-        if: always()
-        run: |
-          if [ -s data/prices.db ]; then
-            echo "ok=1" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::data incompleta — cache no se guarda"
-          fi
-
-      - name: Save data cache
-        if: always() && steps.datacheck.outputs.ok == '1'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            data/prices.db
-            data/siman.db
-            data/snapshots/
-            data/siman_snapshots/
-            data/events.jsonl
-            data/siman_events.jsonl
-          key: pwdata-${{ github.run_id }}
 
       - name: Empaquetar sitio (artefacto)
         # v5 usa upload-artifact@v7, no visible para deploy-pages@v4 en este run.
@@ -124,13 +125,19 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+      - name: Confirmar que la version nueva esta publicada
+        run: >-
+          python scripts/data_health.py verify-site
+          --url https://rogelioguerrero.github.io/pricewatch/
+
       - name: Digest email + push alerts (solo si hay novedades)
         # consolida los 3 sweeps del run; notify.py decide los umbrales.
         # Va DESPUES del deploy: cuando el push llega al telefono el
-        # data.json nuevo ya esta publicado. always() + datacheck: un
-        # fallo de Pages nunca bloquea el digest, pero tampoco corre
-        # sobre data rota
-        if: always() && steps.datacheck.outputs.ok == '1'
+        # Solo notificar despues de verificar la publicacion; una
+        # re-publicacion manual nunca consulta tiendas ni envia avisos.
+        if: >-
+          success() && (github.event_name == 'schedule' ||
+          (inputs.mode == 'full' && inputs.send_notifications))
         env:
           APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
           APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
@@ -142,3 +149,33 @@ jobs:
           VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
           SITE_URL: https://rogelioguerrero.github.io/pricewatch/
         run: python scripts/notify.py
+
+      - name: Crear respaldo validado de datos
+        id: backup
+        if: always() && steps.health.outcome == 'success'
+        run: >-
+          python scripts/data_health.py backup
+          --output backup/pricewatch-backup.tar.gz
+
+      - name: Guardar respaldo independiente del cache (90 dias)
+        if: always() && steps.backup.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pricewatch-backup-${{ github.run_id }}-${{ github.run_attempt }}
+          path: backup/pricewatch-backup.tar.gz
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Save data cache
+        if: always() && steps.health.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data/prices.db
+            data/siman.db
+            data/snapshots/
+            data/siman_snapshots/
+            data/events.jsonl
+            data/siman_events.jsonl
+            data/notifications.json
+          key: pwdata-${{ github.run_id }}-${{ github.run_attempt }}

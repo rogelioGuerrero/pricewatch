@@ -584,13 +584,16 @@ def main():
             print(f"  ! {len(inherited)} productos heredados de "
                   f"{', '.join(sorted(failed))} (no verificados hoy)")
         snap_file = os.path.join(SNAP_DIR, f"{today}.json")
-        with open(snap_file, "w") as f:
-            json.dump({"date": today, "products": cur}, f)
-        print(f"Snapshot: {snap_file}")
         # indice de historia ANTES de grabar hoy (last = ultimo estado previo)
         hist_idx = history_index()
         record_history(cur, today, skip=set(inherited))
         print(f"Historia actualizada en {DB_PATH}")
+        with open(snap_file + ".tmp", "w", encoding="utf-8") as f:
+            json.dump({"date": today, "products": cur,
+                       "failed_categories": sorted(failed),
+                       "inherited_count": len(inherited)}, f)
+        os.replace(snap_file + ".tmp", snap_file)
+        print(f"Snapshot: {snap_file}")
         cleanup_synthetic()
         prune_snapshots()
     else:

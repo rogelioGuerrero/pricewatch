@@ -195,12 +195,46 @@ def aw_request(method, path, body=None, timeout=20):
         return {}, r.status_code
 
 
-def aw_rows(table, limit=500):
-    """Filas de una tabla (hasta `limit`); [] si falla o no hay creds."""
-    q = quote(json.dumps({"method": "limit", "values": [limit]}))
-    res, code = aw_request("GET", f"/tablesdb/{AW_DB}/tables/{table}/rows"
-                                  f"?queries%5B%5D={q}")
-    return res.get("rows", []) if code == 200 else []
+class AppwriteReadError(RuntimeError):
+    """A failed read is not an empty collection."""
+
+
+def aw_rows(table, limit=500, *, strict=False):
+    """All rows, cursor-paginated; strict consumers distinguish failure/empty."""
+    if not all(aw_env()):
+        if strict:
+            raise AppwriteReadError(f"{table}: Appwrite not configured")
+        return []
+    rows, cursor = [], None
+    page_size = min(500, max(1, int(limit)))
+    try:
+        while True:
+            queries = [{"method": "limit", "values": [page_size]},
+                       {"method": "orderAsc", "values": ["$id"]}]
+            if cursor:
+                queries.append({"method": "cursorAfter", "values": [cursor]})
+            qs = "&".join("queries%5B%5D=" + quote(json.dumps(q))
+                          for q in queries)
+            res, code = aw_request(
+                "GET", f"/tablesdb/{AW_DB}/tables/{table}/rows?{qs}")
+            page = res.get("rows") if isinstance(res, dict) else None
+            if (code != 200 or not isinstance(page, list)
+                    or any(not isinstance(r, dict) for r in page)):
+                raise AppwriteReadError(f"{table}: HTTP {code}/invalid rows")
+            if not page:
+                return rows
+            next_cursor = page[-1].get("$id")
+            if not next_cursor or next_cursor == cursor:
+                raise AppwriteReadError(f"{table}: cursor did not advance")
+            rows.extend(page)
+            if len(page) < page_size:
+                return rows
+            cursor = next_cursor
+    except AppwriteReadError:
+        if strict:
+            raise
+        print(f"  ! {table}: Appwrite read failed; no partial rows returned")
+        return []
 
 
 def aw_tables():

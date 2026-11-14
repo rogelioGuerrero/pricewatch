@@ -11,7 +11,7 @@ const { makeCtx, boot, APPWRITE_STUB, vm } = require("./harness.js");
 // el mock del test — Appwrite real jamas se toca
 function ctxSync(listRows) {
   const ctx = makeCtx({ appwrite: APPWRITE_STUB });
-  boot(ctx, ["sync.js"]);
+  boot(ctx, ["storage.js", "sync.js"]);
   ctx.__dbs = { listRows };
   vm.runInContext("AW.dbs = __dbs", ctx);
   return ctx;

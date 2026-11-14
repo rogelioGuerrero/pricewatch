@@ -44,9 +44,16 @@
   .deadzone .card:hover { border-color:var(--line) }
   .dead-toggle:hover { color:var(--txt) }
   .card { background:var(--card); border:1px solid var(--line); border-radius:10px;
-          padding:10px 12px; cursor:pointer; display:flex; gap:10px;
+          padding:10px 12px; display:flex; gap:10px;
           transition:border-color .15s }
   .card:hover { border-color:var(--info) }
+  /* card compacta: encabezado real + boton de detalle — nada de
+     contenedor-clickable con botones anidados */
+  .card h3.t { font:inherit; font-size:13px; margin-bottom:4px;
+    line-height:1.3; overflow-wrap:break-word; padding-right:20px }
+  .card .det { background:none; border:0; color:var(--info);
+    cursor:pointer; font-size:12px; padding:4px 0; }
+  .card .det:hover { text-decoration:underline }
   .card img { width:64px; height:64px; object-fit:contain; border-radius:8px;
               background:#fff; flex-shrink:0 }
   .card .t { font-size:13px; margin-bottom:4px; line-height:1.3;
@@ -87,7 +94,9 @@
   th { color:var(--mut); font-weight:500 }
   .bigprice { font-size:30px; font-weight:700; margin:10px 0 }
   .star { position:absolute; top:8px; right:10px; font-size:18px; cursor:pointer;
-          color:var(--mut) } .star.on { color:var(--warn) }
+          color:var(--mut); background:none; border:0; padding:0 4px;
+          font:inherit } .star.on { color:var(--warn) }
+  button.dstar { position:static; font-size:26px; align-self:flex-start }
   .card { position:relative }
   .plink { display:inline-block; margin-top:10px; color:var(--info);
            font-size:13px }
@@ -96,12 +105,50 @@
   .alert { background:var(--card); border:1px solid var(--warn); color:var(--txt);
            border-radius:10px; padding:8px 12px; font-size:12px; cursor:pointer }
   .alert.new { border-color:var(--info) }
-  .fab { display:none; position:fixed; right:16px; bottom:18px; z-index:60;
-         height:46px; padding:0 16px; border-radius:99px; background:var(--info);
-         color:#fff; border:0; font-size:13px; font-weight:600;
-         box-shadow:0 4px 14px #0008; cursor:pointer;
-         align-items:center; gap:8px }
-  .fab svg { flex:none }
+  /* el FAB ya no es navegacion primaria: movil usa la barra inferior
+     y "☰ secciones" en el header; el elemento queda oculto (su
+     handler abre la misma hoja dlg-nav) */
+  .fab { display:none !important }
+  #moresec { display:none }
+  #datastrip { display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    font-size:11px; color:var(--mut); padding:2px 0 0; min-height:22px }
+  #datastrip .warn { color:var(--warn) }
+  #bnav { display:none }
+  #toast { position:fixed; left:50%; transform:translateX(-50%) translateY(20px);
+    bottom:72px; z-index:80; background:var(--card);
+    border:1px solid var(--line); border-radius:99px; padding:8px 14px;
+    font-size:13px; opacity:0; pointer-events:none;
+    transition:opacity .2s, transform .2s; box-shadow:0 4px 14px #0008;
+    max-width:92vw }
+  #toast.show { opacity:1; pointer-events:auto; transform:translateX(-50%) }
+  #toast button { margin-left:10px; background:none; border:0;
+    color:var(--info); cursor:pointer; font:inherit; font-weight:600 }
+  h2.sec { font-size:14px; margin:18px 0 8px }
+  .morewrap { grid-column:1/-1; display:flex; align-items:center;
+    gap:10px; margin:6px 0 }
+  .morewrap .meta { flex:1 }
+  .dactions { display:flex; gap:10px; flex-wrap:wrap;
+    align-items:center; margin-top:12px }
+  .fld { display:block; font-size:12px; color:var(--mut); margin-top:10px }
+  .fld input { display:block; width:100%; margin-top:4px }
+  .row { display:flex; gap:10px; margin-top:14px; align-items:center;
+    justify-content:flex-end }
+  .clamp2 { display:-webkit-box; -webkit-line-clamp:2;
+    -webkit-box-orient:vertical; overflow:hidden;
+    overflow-wrap:break-word }
+  .clamp2.open { display:block; -webkit-line-clamp:unset }
+  .ckrow { display:grid; grid-template-columns:1fr 64px 100px; gap:8px;
+    align-items:center; padding:8px 0;
+    border-bottom:1px solid var(--line) }
+  .ckrow .t { font-size:13px; overflow-wrap:break-word }
+  .ckrow input { width:100%; padding:5px 8px }
+  .sbtn { background:none; border:1px solid var(--line); border-radius:8px;
+    color:var(--mut); font-size:12px; padding:4px 10px; cursor:pointer }
+  .sbtn:hover { color:var(--txt) }
+  .sbtn.neg:hover { color:var(--up); border-color:var(--up) }
+  dialog#dlg details summary { cursor:pointer; color:var(--mut);
+    font-size:12px; margin-top:12px; font-weight:600 }
+  body.locked { overflow:hidden }
   dialog.sheet { position:fixed; bottom:0; left:0; right:0; top:auto; margin:0;
                  width:100%; max-width:100%; border-radius:16px 16px 0 0 }
   .navitem { display:flex; justify-content:space-between; padding:13px 4px;
@@ -119,16 +166,36 @@
   body.shop .fab { bottom:70px }
   body.shop .wrap { padding-bottom:70px }
   @media (max-width:700px) {
-    .tabs { display:none } .fab { display:flex }
-    /* el FAB fijo no debe tapar el final del feed */
-    .wrap { padding-bottom:84px }
+    .tabs { display:none } #moresec { display:inline-flex }
+    /* navegacion primaria: 4 destinos fijos abajo, targets >=44px y
+       padding de safe-area para iPhone con home indicator */
+    #bnav { display:flex; position:fixed; left:0; right:0; bottom:0;
+      z-index:56; background:var(--card);
+      border-top:1px solid var(--line);
+      padding-bottom:env(safe-area-inset-bottom,0px) }
+    #bnav button { flex:1; min-height:48px; background:none; border:0;
+      border-top:2px solid transparent; color:var(--mut);
+      font-size:12px; padding:8px 4px; font-family:inherit }
+    #bnav button.on { color:var(--txt); border-top-color:var(--info);
+      font-weight:600 }
+    /* la barra fija no debe tapar el final del feed */
+    .wrap { padding-bottom:96px }
     /* va DESPUES del base body.shop 70px: misma especificidad,
        si queda antes gana la regla de escritorio */
-    body.shop .wrap { padding-bottom:130px }
+    body.shop .wrap { padding-bottom:150px }
     #q { width:100% }
     .header-actions { float:none; margin:10px 0 0; max-width:100%;
                       justify-content:flex-start }
-    #shopbar { flex-wrap:wrap; row-gap:6px }
+    /* el carrito fijo va ENCIMA de la barra de navegacion */
+    #shopbar { flex-wrap:wrap; row-gap:6px; bottom:56px }
+    #toast { bottom:120px }
+  }
+  /* la ficha movil es pantalla completa (100dvh: alto visible real
+     con la barra del navegador); desktop sigue anclada a la derecha */
+  @media (max-width:899px) {
+    dialog#dlg { position:fixed; inset:0; margin:0; width:100vw;
+      max-width:100vw; height:100dvh; max-height:100dvh; border:0;
+      border-radius:0; overflow-y:auto; overscroll-behavior:contain }
   }
   .navsec { color:var(--mut); font-size:11px; text-transform:uppercase;
             letter-spacing:.6px; padding:14px 4px 6px }
@@ -153,6 +220,7 @@
          z-index:70; display:none; background:var(--card);
          border:1px solid var(--info); border-radius:99px;
          padding:8px 16px; font-size:13px; cursor:pointer;
+         color:var(--txt); font-family:inherit;
          box-shadow:0 4px 14px #0008 }
   .acc { margin-bottom:8px }
   .acc summary { cursor:pointer; padding:10px 12px; background:var(--card);

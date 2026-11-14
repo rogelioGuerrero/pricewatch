@@ -7,6 +7,7 @@ sin tocar el filesystem del repo; main() solo corre bajo __main__.
 """
 
 import json
+import math
 import os
 import sqlite3
 import statistics
@@ -14,6 +15,7 @@ from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 
 from common import SV_TZ, read_events, talla_hit
+from data_health import inspect_data
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -117,13 +119,36 @@ def build_siman_payload(siman_db, siman_events, watchlist, gen_date):
     # La unidad vigilada es la busqueda (marca/tipo); el itemId es
     # efimero (Siman recodifica). Alerta = precio rompe su propio
     # minimo historico.
-    siman = {"items": [], "events": [], "n_items": 0, "watches": []}
+    siman = {"items": [], "events": [], "n_items": 0, "watches": [],
+             "generated": "", "coverage": []}
+    has_memberships = False
+    memberships = defaultdict(list)
     if os.path.exists(siman_db):
         sc = sqlite3.connect(siman_db)
         sc.row_factory = sqlite3.Row
         try:
             sitems = {r["itemId"]: dict(r)
                       for r in sc.execute("SELECT * FROM items")}
+            siman["generated"] = sc.execute(
+                "SELECT MAX(date) FROM prices").fetchone()[0] or ""
+            tables = {r[0] for r in sc.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'")}
+            if "sweep_runs" in tables:
+                run = sc.execute(
+                    "SELECT date, coverage FROM sweep_runs "
+                    "ORDER BY date DESC LIMIT 1").fetchone()
+                if run:
+                    siman["generated"] = run["date"]
+                    siman["coverage"] = [
+                        {"max_products": row["max_products"]}
+                        for row in json.loads(run["coverage"])]
+            if "watch_memberships" in tables:
+                has_memberships = True
+                for r in sc.execute(
+                        "SELECT itemId, q, talla FROM watch_memberships "
+                        "WHERE observed_at = ?", (siman["generated"],)):
+                    memberships[r["itemId"]].append(
+                        {"q": r["q"], "talla": r["talla"]})
             # frescura ~14d: un itemId no visto es un listing muerto
             # (Siman recodifica) congelado con su ultimo avail — fuera
             # del payload o alertaria como zombie y engordaria el html
@@ -152,47 +177,68 @@ def build_siman_payload(siman_db, siman_events, watchlist, gen_date):
         sc.close()
         siman["events"] = [e for e in read_events(siman_events)
                            if e.get("iid")][-200:]
-        prod = {}
+        groups = defaultdict(list)
         for iid, it in sitems.items():
             s = sser.get(iid, [])
             if not s:
                 continue
+            watches = (memberships[iid] if has_memberships else
+                       [{"q": it.get("watch") or "",
+                         "talla": it.get("talla") or ""}])
+            for w in watches:
+                groups[(it["pid"], w["q"], w["talla"] or "")].append(
+                    (iid, it, s))
+        prod = []
+        for (pid, query, size), variants in groups.items():
+            # Pick the requested size before comparing prices. Every price,
+            # discount and historical claim below belongs to this same row.
+            current = [v for v in variants
+                       if v[2][-1][0] == siman["generated"]]
+            available = [v for v in current if v[2][-1][2]]
+            matching = [v for v in current if talla_hit(v[1]["vname"], size)]
+            stocked = [v for v in matching if v[2][-1][2]]
+            eligible = [v for v in stocked if _valid_price(v[2][-1][1])]
+            candidates = eligible or stocked or matching
+            iid, it, s = (min(candidates, key=lambda v:
+                              (v[2][-1][1] if _valid_price(v[2][-1][1])
+                               else math.inf, v[0]))
+                          if candidates else max(variants,
+                                                 key=lambda v: v[2][-1][0]))
             last = s[-1]
-            prev_min = min((x[1] for x in s[:-1] if x[1] is not None),
+            price = last[1] if candidates and _valid_price(last[1]) else None
+            lp = last[3] if candidates and _valid_price(last[3]) else None
+            prev_min = min((x[1] for x in s[:-1] if _valid_price(x[1])),
                            default=None)
-            broke = (last[1] is not None and prev_min is not None
-                     and last[1] < prev_min)
-            g = prod.setdefault(it["pid"], {
-                "pid": it["pid"], "t": it["title"], "b": it["brand"],
-                "l": it["link"], "img": it["image"], "w": it["watch"],
-                "ta": it["talla"], "p": None, "lp": None, "ok": False,
-                "broke": False, "decl": False, "n": 0, "crd": False,
-                "avail": False, "last": "", "ihs": set()})
-            if it.get("imghash"):
-                g["ihs"].add(it["imghash"])
-            avail = bool(last[2])
-            if avail and talla_hit(it["vname"], it["talla"]):
-                g["ok"] = True
-                if g["p"] is None or (last[1] or 1e18) < g["p"]:
-                    g["p"], g["lp"] = last[1], last[3]
-            elif g["p"] is None and avail:
-                g["p"], g["lp"] = last[1], last[3]
-            g["broke"] = g["broke"] or broke
-            g["decl"] = g["decl"] or (
-                last[1] is not None and last[3] and last[1] < last[3])
-            g["n"] = max(g["n"], len(s))
-            g["crd"] = g["crd"] or bool(last[4])
-            g["avail"] = g["avail"] or avail
-            g["last"] = max(g["last"], s[-1][0])
-        for g in prod.values():   # set -> list para json
-            g["ihs"] = sorted(g["ihs"])
-        siman["items"] = sorted(prod.values(),
+            active = bool(eligible)
+            prod.append({
+                "pid": pid, "iid": iid, "t": it["title"], "b": it["brand"],
+                "l": it["link"], "img": it["image"], "w": query,
+                "ta": size or None, "p": price, "lp": lp, "ok": bool(stocked),
+                "price_cents": round(price * 100) if price is not None else None,
+                "currency": "USD",
+                "broke": bool(active and prev_min is not None
+                              and price < prev_min),
+                "decl": bool(active and lp is not None and price < lp),
+                "n": len(s), "crd": bool(active and last[4]),
+                "avail": bool(available), "last": last[0],
+                "current": bool(matching) and last[0] == siman["generated"],
+                "ihs": sorted({v[1]["imghash"] for v in variants
+                               if v[1].get("imghash")}),
+            })
+        siman["items"] = sorted(prod,
                                 key=lambda x: (not x["broke"], not x["decl"]))
-        siman["n_items"] = len(sitems)
-    if os.path.exists(watchlist):
-        with open(watchlist, encoding="utf-8") as f:
-            siman["watches"] = json.load(f)
+        siman["n_items"] = sum(
+            bool(sser.get(i) and sser[i][-1][0] == siman["generated"])
+            and (not has_memberships or bool(memberships[i]))
+            for i in sitems)
+    # Compatibility key only: private watch configuration is never a seed for
+    # a new browser/account. Product groups still describe the public radar.
     return siman
+
+
+def _valid_price(value):
+    return (isinstance(value, (int, float)) and not isinstance(value, bool)
+            and math.isfinite(value) and value > 0)
 
 
 def build_site(root_dir=ROOT):
@@ -203,7 +249,6 @@ def build_site(root_dir=ROOT):
     docs_dir = os.path.join(root_dir, "docs")
     db = os.path.join(data_dir, "prices.db")
     events_path = os.path.join(data_dir, "events.jsonl")
-    mis_path = os.path.join(data_dir, "mis-compras.json")
     snap_dir = os.path.join(data_dir, "snapshots")
 
     products, latest = {}, {}
@@ -234,13 +279,14 @@ def build_site(root_dir=ROOT):
         # desglose de los que no se chequearon ese día)
         try:
             for r in conn.execute(
-                    "SELECT cs.sku, cs.club_name, cs.in_stock, cs.qty "
+                    "SELECT cs.sku, cs.club_name, cs.in_stock, cs.qty, cs.date "
                     "FROM club_stock cs "
                     "JOIN (SELECT sku, MAX(date) AS md FROM club_stock "
                     "      GROUP BY sku) m "
                     "ON cs.sku = m.sku AND cs.date = m.md"):
                 clubs[r["sku"]][r["club_name"]] = {
-                    "in_stock": bool(r["in_stock"]), "qty": r["qty"]}
+                    "in_stock": bool(r["in_stock"]), "qty": r["qty"],
+                    "observed_at": r["date"]}
         except sqlite3.OperationalError:
             pass  # tabla aun no existe
         # Historial reciente de qty por club para la ficha (grafico de
@@ -267,22 +313,9 @@ def build_site(root_dir=ROOT):
         print(f"  {n_dead} ajustes de catalogo sobre articulos sin stock "
               f"(ocultos en front/email)")
 
+    # Personal purchase history stays on the device/Appwrite, never in Pages.
+    # Keep the compatibility field empty; do not alter the private source file.
     mis = []
-    if os.path.exists(mis_path):
-        for m in json.load(open(mis_path, encoding="utf-8")):
-            sku = str(m["sku"])
-            cur = latest.get(sku)
-            hist = [p[1] for p in series.get(sku, []) if p[1] is not None]
-            mis.append({
-                "sku": sku, "paid": m["paid"], "date": m.get("date"),
-                "title": products.get(sku, {}).get("title", sku),
-                "now": cur["price"] if cur else None,
-                "hist_min": min(hist) if hist else None,
-            })
-
-    ofertas = [{"sku": s, "saving": r["saving"], "price": r["price"],
-                **products.get(s, {})}
-               for s, r in latest.items() if (r["saving"] or 0) > 0]
 
     # Archivo: el PWA solo embebe productos vistos en los ultimos 45 dias
     # (o referenciados por eventos/compras, para que sus cards tengan
@@ -290,14 +323,27 @@ def build_site(root_dir=ROOT):
     # (deteccion de 'regreso', ficha historica); el payload no se llena
     # de muertos.
     gen = max((r[0] for s in series.values() for r in s), default="")
+    coverage = {}
     if gen:
+        current_snapshot = os.path.join(snap_dir, gen + ".json")
+        if os.path.exists(current_snapshot):
+            with open(current_snapshot, encoding="utf-8") as f:
+                snapshot = json.load(f)
+            observed = snapshot["products"]
+            latest = {s: r for s, r in latest.items()
+                      if s in observed and not observed[s].get("_carried")}
+            coverage = {"failed_categories": snapshot.get("failed_categories", []),
+                        "inherited_count": snapshot.get("inherited_count", 0)}
         cutoff = (date.fromisoformat(gen) - timedelta(days=45)).isoformat()
         keep = {s for s, ser in series.items() if ser[-1][0] >= cutoff}
-        keep |= {e["sku"] for e in events} | {m["sku"] for m in mis}
+        keep |= {e["sku"] for e in events}
         series = {s: v for s, v in series.items() if s in keep}
         products = {s: p for s, p in products.items() if s in keep}
 
     agg = compute_agg(series, latest)
+    ofertas = [{"sku": s, "saving": r["saving"], "price": r["price"],
+                **products.get(s, {})}
+               for s, r in latest.items() if (r["saving"] or 0) > 0]
 
     siman = build_siman_payload(
         os.path.join(data_dir, "siman.db"),
@@ -323,8 +369,10 @@ def build_site(root_dir=ROOT):
 
     # payload liviano: "sku" es redundante (ya es la llave del objeto) y
     # >90% de los puntos llevan ahorro 0 — el front lee r[3] || 0
-    products = {s: {k: v for k, v in p.items()
-                    if k != "sku" and v not in (None, "")}
+    products = {s: {**{k: v for k, v in p.items()
+                      if k != "sku" and v not in (None, "")},
+                    "observed_at": series[s][-1][0] if series.get(s) else "",
+                    "current": s in latest, "currency": "USD"}
                 for s, p in products.items()}
     series = {s: [r[:3] if not r[3] else r for r in v]
               for s, v in series.items()}
@@ -344,6 +392,8 @@ def build_site(root_dir=ROOT):
                 pass
 
     data = {
+        "schema_version": 2,
+        "quality": inspect_data(data_dir),
         "generated": gen,
         "built": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "demo": demo,
@@ -355,6 +405,7 @@ def build_site(root_dir=ROOT):
         "indice": indice, "n_cambios_idx": len(chg),
         "siman": siman,
     }
+    data["quality"]["sources"]["pricesmart"]["coverage"] = coverage
     out = os.path.join(docs_dir, "index.html")
     os.makedirs(docs_dir, exist_ok=True)
     # payload separado del HTML: el shell (~14 KB) se cachea solo y solo

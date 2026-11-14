@@ -98,7 +98,10 @@ def _make_root(tmp_path):
     return data, db
 
 
-def test_build_mis_hist_min_ignora_nones(tmp_path):
+def test_build_mis_privado_nunca_llega_al_payload(tmp_path):
+    """Las compras personales viven en el dispositivo/Appwrite: el
+    payload publico exporta mis vacio, el archivo fuente privado
+    queda intacto byte a byte y su marca nunca aparece en data.json."""
     data, db = _make_root(tmp_path)
     db.execute("INSERT INTO products VALUES ('A','Prod A','','','','')")
     for d, pr in (("2026-10-14", None), ("2026-10-15", 1200),
@@ -107,15 +110,21 @@ def test_build_mis_hist_min_ignora_nones(tmp_path):
                    ("A", d, pr, None, 0, 1))
     db.commit()
     db.close()
-    (data / "mis-compras.json").write_text(
-        json.dumps([{"sku": "A", "paid": 11.0, "date": "2026-10-10"}]),
-        encoding="utf-8")
+    secret = json.dumps(
+        [{"sku": "PRIVATE-PURCHASE-MARKER", "paid": 11.0,
+          "date": "2026-10-10"}])
+    (data / "mis-compras.json").write_text(secret, encoding="utf-8")
     _copy_template(tmp_path)
     out = build_site.build_site(str(tmp_path))
-    assert out["mis"][0]["hist_min"] == 900
+    assert out["mis"] == []
+    # la semilla privada no se leyo ni se copio al artefacto publico
+    assert "PRIVATE-PURCHASE-MARKER" not in (
+        tmp_path / "docs" / "data.json").read_text(encoding="utf-8")
+    assert (data / "mis-compras.json").read_text(
+        encoding="utf-8") == secret
 
 
-def test_build_mis_hist_min_sin_precios_es_none(tmp_path):
+def test_build_mis_sin_precios_tampoco_filtra_nada(tmp_path):
     data, db = _make_root(tmp_path)
     db.execute("INSERT INTO products VALUES ('B','Prod B','','','','')")
     for d in ("2026-10-15", "2026-10-16"):
@@ -123,11 +132,16 @@ def test_build_mis_hist_min_sin_precios_es_none(tmp_path):
                    ("B", d, None, None, 0, 1))
     db.commit()
     db.close()
-    (data / "mis-compras.json").write_text(
-        json.dumps([{"sku": "B", "paid": 5.0}]), encoding="utf-8")
+    secret = json.dumps([{"sku": "PRIVATE-PURCHASE-MARKER-2",
+                          "paid": 5.0}])
+    (data / "mis-compras.json").write_text(secret, encoding="utf-8")
     _copy_template(tmp_path)
     out = build_site.build_site(str(tmp_path))
-    assert out["mis"][0]["hist_min"] is None
+    assert out["mis"] == []
+    assert "PRIVATE-PURCHASE-MARKER-2" not in (
+        tmp_path / "docs" / "data.json").read_text(encoding="utf-8")
+    assert (data / "mis-compras.json").read_text(
+        encoding="utf-8") == secret
 
 
 def _copy_template(tmp_path):

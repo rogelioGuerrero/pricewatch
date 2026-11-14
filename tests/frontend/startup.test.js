@@ -11,8 +11,8 @@ const { makeCtx, boot, DEMO_D, vm } = require("./harness.js");
 
 const panesOn = doc =>
   doc.querySelectorAll(".pane.on").map(e => e.id.slice(5));
-const TABS_ALL = ["favs", "cambios", "ofertas", "stock", "nuevos",
-                  "siman", "explorar"];
+const TABS_ALL = ["inicio", "favs", "cambios", "ofertas", "stock",
+                  "nuevos", "siman", "explorar"];
 
 function startup(opts) {
   const ctx = makeCtx(opts);
@@ -20,20 +20,20 @@ function startup(opts) {
   return ctx;
 }
 
-test("arranque default: Mi lista activa, app cableada hasta el final", () => {
+test("arranque default: Inicio activo, app cableada hasta el final", () => {
   const ctx = startup({ stored: { "pw-favs": '["111"]' } });
   const doc = ctx.__doc;
-  assert.deepEqual(panesOn(doc), ["favs"]);
-  const tab = doc.querySelector('.tab[data-t="favs"]');
+  assert.deepEqual(panesOn(doc), ["inicio"]);
+  const tab = doc.querySelector('.tab[data-t="inicio"]');
   assert.ok(tab.classSet.has("on"));
   assert.equal(tab.getAttribute("aria-selected"), "true");
   // el click del tab persiste la eleccion y llega hasta el final de
   // app.js (setInterval del chequeo de version corre una sola vez)
-  assert.equal(ctx.localStorage.getItem("pw-tab"), "favs");
+  assert.equal(ctx.localStorage.getItem("pw-tab"), "inicio");
   assert.equal(ctx.__intervals.n, 1);
   assert.equal(doc.getElementById("gen").textContent, "29 sep 2026");
-  // render lleno el pane: la card del favorito existe con su spark
-  assert.ok(doc.querySelector("#g-favs .card"));
+  // render lleno el pane: la card del favorito existe en Inicio
+  assert.ok(doc.querySelector("#g-ini-favs .card"));
   // nada de red: ni fetch ni Appwrite se tocaron
   assert.equal(ctx.__netCalls.length, 0);
 });
@@ -60,7 +60,7 @@ test("roving tabindex y vínculo tab↔panel", () => {
     // aria-labelledby conecta el panel con el tab que lo abre
     const pane = doc.getElementById("pane-" + t.dataset.t);
     assert.equal(pane.getAttribute("aria-labelledby"), t.id);
-    const active = t.dataset.t === "favs";
+    const active = t.dataset.t === "inicio";
     assert.equal(t.tabIndex, active ? 0 : -1, `tabIndex de ${t.id}`);
   }
   // mover el foco mueve el tabindex activo
@@ -92,22 +92,25 @@ test("?tab de URL gana sobre localStorage", () => {
   assert.equal(ctx.localStorage.getItem("pw-tab"), "nuevos");
 });
 
-test("tab invalido/malicioso cae a Mi lista sin SyntaxError", () => {
+test("tab invalido/malicioso cae a Inicio sin SyntaxError", () => {
   for (const bad of ['x"]', "foo[", "a.b", "*", '"]][data-t="',
                      "explorar,x"]) {
     const ctx = startup({ stored: { "pw-tab": bad } });
-    assert.deepEqual(panesOn(ctx.__doc), ["favs"],
-      `pw-tab=${JSON.stringify(bad)} debio caer a favs`);
+    assert.deepEqual(panesOn(ctx.__doc), ["inicio"],
+      `pw-tab=${JSON.stringify(bad)} debio caer a inicio`);
   }
   const ctx = startup({ search: "?tab=" + encodeURIComponent('q"][') });
-  assert.deepEqual(panesOn(ctx.__doc), ["favs"]);
+  assert.deepEqual(panesOn(ctx.__doc), ["inicio"]);
 });
 
-test("pantalla angosta: 'explorar' no existe y cae a favs", () => {
+test("pantalla angosta: 'explorar' no existe y cae a inicio", () => {
   const ctx = startup({ mobile: true, stored: { "pw-tab": "explorar" } });
-  assert.deepEqual(panesOn(ctx.__doc), ["favs"]);
-  // el tab tampoco esta en la barra
+  assert.deepEqual(panesOn(ctx.__doc), ["inicio"]);
+  // el tab tampoco esta en la barra, y el bottom-nav marca Inicio
   assert.ok(!ctx.__doc.querySelector('.tab[data-t="explorar"]'));
+  const bn = ctx.__doc.querySelectorAll("#bnav button");
+  assert.equal(bn.length, 4);
+  assert.equal(bn.find(b => b.classSet.has("on")).dataset.t, "inicio");
 });
 
 test("generated vacio: header 'sin datos' y el arranque no muere", () => {
@@ -122,7 +125,7 @@ test("generated vacio: header 'sin datos' y el arranque no muere", () => {
 test("sin echarts + deep link ?sku: ficha abre, graficas ocultas con aviso", () => {
   const ctx = startup({ search: "?sku=111" });
   const doc = ctx.__doc;
-  assert.deepEqual(panesOn(doc), ["favs"]);
+  assert.deepEqual(panesOn(doc), ["inicio"]);
   const dlg = doc.getElementById("dlg");
   assert.equal(dlg.open, true, "el deep link debio abrir la ficha");
   assert.equal(doc.getElementById("dtitle").textContent, "Prod Uno");
@@ -153,12 +156,12 @@ test("teclado: ArrowRight/Home/End mueven foco Y activan", () => {
   const fire = (key, i) => tabsEl._fire("keydown",
     { key, target: tabs[i], preventDefault() {} });
   fire("ArrowRight", 0);
-  assert.deepEqual(panesOn(doc), ["cambios"]);
+  assert.deepEqual(panesOn(doc), ["favs"]);
   assert.equal(doc.activeElement, tabs[1]);
   fire("End", 1);
   assert.equal(doc.activeElement, tabs[tabs.length - 1]);
   fire("Home", tabs.length - 1);
-  assert.deepEqual(panesOn(doc), ["favs"]);
+  assert.deepEqual(panesOn(doc), ["inicio"]);
   assert.equal(doc.activeElement, tabs[0]);
   fire("ArrowLeft", 0);   // wrap-around al ultimo
   assert.equal(doc.activeElement, tabs[tabs.length - 1]);
