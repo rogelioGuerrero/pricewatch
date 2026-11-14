@@ -174,3 +174,18 @@ Pasados en local, sin despliegue publico ni Appwrite real:
 - La resurreccion del cache viejo por puts en vuelo queda como
   limite conocido de limpieza; el borrado manual de la prueba no es
   una correccion implementada en la aplicacion.
+
+## Compatibilidad del cache historico
+
+La primera corrida del nuevo workflow, `43603596327`, publico datos del
+14 de noviembre pero arranco sin el historial: anadir `notifications.json`
+a las rutas cambio la version interna del cache de Actions, aunque la
+clave conservaba el prefijo `pwdata-`. El cache del 13 seguia retenido.
+
+El parche conserva las seis rutas originales del catalogo, en el mismo
+orden, tanto al restaurar como al guardar. Los recibos usan un cache
+independiente `pwnotify-`, ademas del respaldo validado. Se restauran
+despues de recuperar el respaldo y solo si no existen; se guardan tambien
+tras un fallo de entrega si hay recibos confirmados y datos validados.
+No se eliminan caches anteriores. Las regresiones comprueban este
+contrato de migracion, no solamente la sintaxis YAML.
