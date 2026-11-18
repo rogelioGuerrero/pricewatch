@@ -29,6 +29,9 @@ python -m http.server -d docs 8080    # preview local del PWA
   externos, `open()` sin `with` — no "arreglar" por estilo
 - `ruff.toml` restringe las reglas a E/F/W/I por lo anterior
 - Nada se commitea desde CI: los workflows solo leen el repo
+- Los assets llevan `?v=NN`: publicar JS/CSS cambiados exige subir el
+  número de shell en `scripts/template.html` + `docs/sw.js` (CACHE,
+  VER, CORE) — si no, el cache del SW sirve la versión vieja
 
 ## Memoria MCP
 

@@ -47,7 +47,10 @@
           padding:10px 12px; display:flex; gap:10px;
           transition:border-color .15s }
   .card:hover { border-color:var(--info) }
-  .card[data-sku] { cursor:pointer }
+  /* en touch no existe :hover: el :active da feedback visible al tap
+     y el tap-highlight quita el resaltado gris de webkit */
+  .card[data-sku] { cursor:pointer; -webkit-tap-highlight-color:transparent }
+  .card[data-sku]:active { border-color:var(--info); background:#1f2740 }
   /* card compacta: toda la card abre la ficha por delegacion; el
      boton .det queda para teclado/lectores — invisible hasta :focus */
   .card h3.t { font:inherit; font-size:13px; margin-bottom:4px;
@@ -99,7 +102,7 @@
   th { color:var(--mut); font-weight:500 }
   .bigprice { font-size:30px; font-weight:700; margin:10px 0 }
   .star { position:absolute; top:8px; right:10px; font-size:18px; cursor:pointer;
-          color:var(--mut); background:none; border:0; padding:0 4px;
+          color:var(--mut); background:none; border:0; padding:6px 8px;
           font:inherit } .star.on { color:var(--warn) }
   button.dstar { position:static; font-size:26px; align-self:flex-start }
   .card { position:relative }
@@ -194,6 +197,11 @@
     /* el carrito fijo va ENCIMA de la barra de navegacion */
     #shopbar { flex-wrap:wrap; row-gap:6px; bottom:56px }
     #toast { bottom:120px }
+    /* iOS hace zoom al enfocar inputs con fuente <16px */
+    input { font-size:16px }
+    /* targets >=36px para el pulgar: estrella y chips del header */
+    .star { padding:10px }
+    .chip { min-height:36px; display:inline-flex; align-items:center }
   }
   /* la ficha movil es pantalla completa (100dvh: alto visible real
      con la barra del navegador); desktop sigue anclada a la derecha */

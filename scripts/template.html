@@ -15,23 +15,23 @@
      de que data.json llega, asi que ya estaran evaluados -->
 <!-- vendor local: mismas versiones que el CDN (NOTICE en vendor/),
      la app no depende de jsdelivr para arrancar -->
-<script defer src="vendor/echarts.min.js?v=28"></script>
-<script defer src="vendor/appwrite-sdk.js?v=28"></script>
+<script defer src="vendor/echarts.min.js?v=29"></script>
+<script defer src="vendor/appwrite-sdk.js?v=29"></script>
 <!-- themes.css de Perspective se carga bajo demanda en loadExplorer()
      (movil nunca abre el explorador: ~60KB ahorrados) -->
-<link rel="stylesheet" href="styles.css?v=28">
+<link rel="stylesheet" href="styles.css?v=29">
 <!-- preload de los modulos: el scanner del navegador los baja en
      paralelo con data.json usando destination "script" — un fetch()
      manual tendria destination "" y el SW revalidaria cada archivo
      dos veces (10 requests en vez de 5). Los ?v=NN son inmutables
      por release: coinciden con el CORE del service worker -->
-<link rel="preload" as="script" href="js/storage.js?v=28">
-<link rel="preload" as="script" href="js/freshness.js?v=28">
-<link rel="preload" as="script" href="js/state.js?v=28">
-<link rel="preload" as="script" href="js/siman.js?v=28">
-<link rel="preload" as="script" href="js/sync.js?v=28">
-<link rel="preload" as="script" href="js/render.js?v=28">
-<link rel="preload" as="script" href="js/app.js?v=28">
+<link rel="preload" as="script" href="js/storage.js?v=29">
+<link rel="preload" as="script" href="js/freshness.js?v=29">
+<link rel="preload" as="script" href="js/state.js?v=29">
+<link rel="preload" as="script" href="js/siman.js?v=29">
+<link rel="preload" as="script" href="js/sync.js?v=29">
+<link rel="preload" as="script" href="js/render.js?v=29">
+<link rel="preload" as="script" href="js/app.js?v=29">
 </head>
 <body>
 <div class="wrap">
@@ -325,10 +325,10 @@
     boot.appendChild(p); boot.appendChild(b);
   };
   try {
-    const MODS = ["js/storage.js?v=28", "js/freshness.js?v=28",
-                  "js/state.js?v=28", "js/siman.js?v=28",
-                  "js/sync.js?v=28", "js/render.js?v=28",
-                  "js/app.js?v=28"];
+    const MODS = ["js/storage.js?v=29", "js/freshness.js?v=29",
+                  "js/state.js?v=29", "js/siman.js?v=29",
+                  "js/sync.js?v=29", "js/render.js?v=29",
+                  "js/app.js?v=29"];
     // los modulos ya vienen precargados via <link rel="preload"> en el
     // head; aqui solo baja data.json y luego se EJECUTAN en orden —
     // los modulos leen window.D al evaluarse
@@ -341,7 +341,7 @@
         const names = (await caches.keys())
           .filter(k => k.startsWith("pricewatch-"));
         names.sort((a, b) =>
-          (b === "pricewatch-v28") - (a === "pricewatch-v28"));
+          (b === "pricewatch-v29") - (a === "pricewatch-v29"));
         for (const n of names) {
           const hit = await caches.open(n)
             .then(c => c.match("data.json")).catch(() => null);
