@@ -176,7 +176,7 @@
   @media (max-width:700px) {
     .tabs { display:none } #moresec { display:inline-flex }
     /* navegacion primaria: 4 destinos fijos abajo, targets >=44px y
-       padding de safe-area para iPhone con home indicator */
+       padding de safe-area para telefonos con barra de gestos */
     #bnav { display:flex; position:fixed; left:0; right:0; bottom:0;
       z-index:56; background:var(--card);
       border-top:1px solid var(--line);
@@ -197,7 +197,7 @@
     /* el carrito fijo va ENCIMA de la barra de navegacion */
     #shopbar { flex-wrap:wrap; row-gap:6px; bottom:56px }
     #toast { bottom:120px }
-    /* iOS hace zoom al enfocar inputs con fuente <16px */
+    /* Chrome Android hace zoom al enfocar inputs con fuente <16px */
     input { font-size:16px }
     /* targets >=36px para el pulgar: estrella y chips del header */
     .star { padding:10px }
