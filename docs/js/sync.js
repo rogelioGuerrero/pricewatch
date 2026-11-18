@@ -820,21 +820,20 @@ const recoverNS = async () => {
 const lgDlg = document.getElementById("dlg-login");
 const acctBtn = document.getElementById("acct");
 const lgMsg = t => document.getElementById("lg-msg").textContent = t;
-// estado honesto: "sincronizado" solo cuando el merge cerro completo,
-// nunca por el solo hecho de tener sesion abierta
+// solo estados excepcionales: cuando todo va bien devuelve "" — el
+// "sincronizado" y el "cuenta ligada" normales no ocupan el strip
 const syncLine = () => {
-  const tail = PWStore.status().persisted
-    ? "" : " — sin persistencia local";
+  if (!PWStore.status().persisted)
+    return "Tus datos no se guardarán al cerrar la app";
   if (!AW.user)
-    return "sin cuenta — datos solo en este dispositivo" + tail;
+    return AW.ok && FAV.size
+      ? "Sin sesión: tus favoritos solo están en este teléfono" : "";
   const p = OUTBOX.length;
   if (SYNC.state === "syncing") return "sincronizando…";
   if (p) return `${p} cambio${p > 1 ? "s" : ""} pendiente${p > 1 ? "s" : ""}`
-    + (SYNC.err ? " — " + SYNC.err : "") + tail;
-  if (SYNC.state === "ok") return "sincronizado" + tail;
-  if (SYNC.state === "error")
-    return "sincronización con errores" + tail;
-  return "cuenta ligada — pendiente de sincronizar" + tail;
+    + (SYNC.err ? " — " + SYNC.err : "");
+  if (SYNC.state === "error") return "sincronización con errores";
+  return "";
 };
 function paintAcct(){
   if (!AW.ok) return;

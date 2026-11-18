@@ -47,13 +47,18 @@
           padding:10px 12px; display:flex; gap:10px;
           transition:border-color .15s }
   .card:hover { border-color:var(--info) }
-  /* card compacta: encabezado real + boton de detalle — nada de
-     contenedor-clickable con botones anidados */
+  .card[data-sku] { cursor:pointer }
+  /* card compacta: toda la card abre la ficha por delegacion; el
+     boton .det queda para teclado/lectores — invisible hasta :focus */
   .card h3.t { font:inherit; font-size:13px; margin-bottom:4px;
     line-height:1.3; overflow-wrap:break-word; padding-right:20px }
-  .card .det { background:none; border:0; color:var(--info);
-    cursor:pointer; font-size:12px; padding:4px 0; }
-  .card .det:hover { text-decoration:underline }
+  .card .det { position:absolute; width:1px; height:1px; padding:0;
+    margin:-1px; overflow:hidden; clip:rect(0 0 0 0);
+    white-space:nowrap; border:0 }
+  .card .det:focus { position:static; width:auto; height:auto;
+    margin:0; overflow:visible; clip:auto; white-space:normal;
+    background:none; color:var(--info); cursor:pointer;
+    font-size:12px; padding:4px 0 }
   .card img { width:64px; height:64px; object-fit:contain; border-radius:8px;
               background:#fff; flex-shrink:0 }
   .card .t { font-size:13px; margin-bottom:4px; line-height:1.3;

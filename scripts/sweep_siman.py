@@ -98,7 +98,7 @@ def fetch_search(q):
     for page in range(MAX_PAGES):
         url = (f"{API}?ft={quote(q)}&_from={page*ROWS}"
                f"&_to={page*ROWS + ROWS - 1}")
-        for attempt in range(2):
+        for attempt in range(4):
             try:
                 response = SESSION.get(url, headers=HEADERS, timeout=30)
                 response.raise_for_status()
@@ -107,9 +107,9 @@ def fetch_search(q):
                     raise ValueError("respuesta de busqueda invalida")
                 break
             except Exception:
-                if attempt:
+                if attempt == 3:
                     raise
-                time.sleep(3)
+                time.sleep(5 * 3 ** attempt)
         if not res:
             break
         for p in res:

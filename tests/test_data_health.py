@@ -161,21 +161,70 @@ def test_expected_next_day_fails(tmp_path):
     healthy_dir(tmp_path)
     r = dh.inspect_data(tmp_path, NEXT)
     assert not r["ok"]
-    assert any("not current" in p
-               for p in r["sources"]["pricesmart"]["problems"])
-    assert any("not current" in p
-               for p in r["sources"]["siman"]["problems"])
+    ps = r["sources"]["pricesmart"]
+    assert not ps["ok"] and not ps["stale"]
+    assert any("not current" in p for p in ps["problems"])
+    # siman viejo si pasa: ok con confesion stale, no tumba el run
+    sm = r["sources"]["siman"]
+    assert sm["ok"] and sm["stale"]
+    assert any("not current" in p for p in sm["problems"])
 
 
-def test_siman_run_newer_than_prices_fails(tmp_path):
+def test_siman_stale_only_is_soft_failure(tmp_path):
+    # el sweep Siman no corrio hoy: la lectura de ayer es valida —
+    # ok con stale confesado, el resto del run sigue adelante
+    make_ps_db(tmp_path / "prices.db", NEXT)
+    make_sm_db(tmp_path / "siman.db", DAY)
+    r = dh.inspect_data(tmp_path, NEXT)
+    sm = r["sources"]["siman"]
+    assert sm["ok"] and sm["stale"] and sm["observed_at"] == DAY
+    assert sm["problems"], "la razon del stale queda registrada"
+    assert r["ok"], r
+
+
+def test_pricesmart_stale_remains_hard_failure(tmp_path):
+    make_ps_db(tmp_path / "prices.db", DAY)
+    make_sm_db(tmp_path / "siman.db", NEXT)
+    r = dh.inspect_data(tmp_path, NEXT)
+    assert not r["ok"]
+    ps = r["sources"]["pricesmart"]
+    assert not ps["ok"] and not ps["stale"]
+
+
+def test_siman_corrupt_remains_hard_failure(tmp_path):
+    make_ps_db(tmp_path / "prices.db", NEXT)
+    (tmp_path / "siman.db").write_bytes(b"esto no es sqlite")
+    r = dh.inspect_data(tmp_path, NEXT)
+    sm = r["sources"]["siman"]
+    assert not sm["ok"] and not sm["stale"] and sm["problems"]
+    assert not r["ok"]
+
+
+def test_siman_stale_runtime_verifies_old_snapshot(tmp_path):
+    # con require_runtime el snapshot exigido es el de la fecha
+    # OBSERVADA (la vieja), que existe porque ese barrido si corrio
+    make_ps_db(tmp_path / "prices.db", NEXT)
+    make_sm_db(tmp_path / "siman.db", DAY)
+    _runtime_files(tmp_path, NEXT)
+    (tmp_path / "siman_snapshots" / f"{DAY}.json").write_text(
+        json.dumps({"date": DAY, "items": {}}))
+    r = dh.inspect_data(tmp_path, NEXT, require_runtime=True)
+    sm = r["sources"]["siman"]
+    assert sm["ok"] and sm["stale"], sm
+    assert r["ok"], r
+
+
+def test_siman_run_newer_than_prices_is_stale_not_fresh(tmp_path):
     # un run con fecha nueva pero precios del dia anterior no es
-    # "current": la metadata no refresca observaciones viejas
+    # "current": la metadata no refresca observaciones viejas — se
+    # confiesa stale en vez de pasar por vigente
     make_ps_db(tmp_path / "prices.db", NEXT)
     make_sm_db(tmp_path / "siman.db", NEXT, price_date=DAY)
     r = dh.inspect_data(tmp_path, NEXT)
-    assert not r["ok"]
+    sm = r["sources"]["siman"]
+    assert sm["ok"] and sm["stale"]
     assert any("no observations for expected date" in p
-               for p in r["sources"]["siman"]["problems"])
+               for p in sm["problems"])
 
 
 def test_require_runtime_matching_snapshots_empty_logs_pass(tmp_path):

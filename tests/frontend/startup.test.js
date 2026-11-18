@@ -113,6 +113,22 @@ test("pantalla angosta: 'explorar' no existe y cae a inicio", () => {
   assert.equal(bn.find(b => b.classSet.has("on")).dataset.t, "inicio");
 });
 
+test("hora del build en GMT-6 junto a la fecha del dataset", () => {
+  // D.built es UTC iso; El Salvador = UTC-6 fijo (sin DST)
+  const ctx = startup({ data: { ...DEMO_D,
+    built: "2026-09-29T12:05:00+00:00" } });
+  assert.equal(ctx.__doc.getElementById("gen-time").textContent,
+    " · 06:05");
+  // built invalido o ausente: la hora queda vacia, la fecha sigue
+  for (const bad of ["b-test", "", null]) {
+    const c = startup({ data: { ...DEMO_D, built: bad } });
+    assert.equal(c.__doc.getElementById("gen-time").textContent, "",
+      `built=${JSON.stringify(bad)} no pinta hora`);
+    assert.equal(c.__doc.getElementById("gen").textContent,
+      "29 sep 2026");
+  }
+});
+
 test("generated vacio: header 'sin datos' y el arranque no muere", () => {
   const D = { ...DEMO_D, generated: "" };
   const ctx = startup({ data: D, stored: { "pw-tab": "siman" } });

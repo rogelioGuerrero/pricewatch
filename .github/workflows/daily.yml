@@ -104,13 +104,41 @@ jobs:
           APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
         run: python scripts/sweep.py
 
+      # continue-on-error: un Siman caido no puede tumbar el run —
+      # health/build/deploy/backup/cache-save corren igual con la
+      # lectura anterior (data_health la reporta como stale, no rota)
       - name: Siman watchlist sweep
+        id: siman
+        continue-on-error: true
         if: github.event_name == 'schedule' || inputs.mode == 'full'
         env:
           APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
           APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
           APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
         run: python scripts/sweep_siman.py
+
+      # un 500 de Siman suele durar minutos: segundo intento tras una
+      # pausa larga. Es idempotente — el barrido aborta antes de escribir
+      # historia o snapshot si una busqueda queda incompleta.
+      - name: Siman watchlist sweep (reintento tras pausa)
+        id: siman2
+        continue-on-error: true
+        if: steps.siman.outcome == 'failure'
+        env:
+          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          echo "::warning::Siman fallo en el primer intento; reintentando en 5 min"
+          sleep 300
+          python scripts/sweep_siman.py
+
+      - name: Confesar que Siman quedo con la lectura anterior
+        if: steps.siman2.outcome == 'failure'
+        run: |
+          echo "::warning::Siman sweep fallo; se conserva el snapshot anterior"
+          echo "Siman sweep fallo; se conserva el snapshot anterior" \
+            >> "$GITHUB_STEP_SUMMARY"
 
       # el fetch de stock por club va dentro del sweep (un solo pase
       # sobre stock_candidates) — un --stock-check aparte repetia la

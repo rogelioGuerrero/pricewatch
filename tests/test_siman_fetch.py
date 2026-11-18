@@ -47,20 +47,19 @@ def fake_get(queue):
 def test_http_500_con_json_lista_no_es_exito_vacio(monkeypatch):
     # VTEX devolviendo una lista aparente con 500: raise_for_status
     # manda — no se acepta como "busqueda vacia"
-    get, calls = fake_get([Resp([{"productId": "1"}], status=500),
-                           Resp([{"productId": "1"}], status=500)])
+    get, calls = fake_get([Resp([{"productId": "1"}], status=500)] * 4)
     monkeypatch.setattr(sm, "SESSION", SimpleNamespace(get=get))
     with pytest.raises(Exception):
         sm.fetch_search("zapato")
-    assert len(calls) == 2
+    assert len(calls) == 4
 
 
 def test_payload_objeto_se_rechaza(monkeypatch):
-    get, calls = fake_get([Resp({"error": "x"}), Resp({"error": "x"})])
+    get, calls = fake_get([Resp({"error": "x"})] * 4)
     monkeypatch.setattr(sm, "SESSION", SimpleNamespace(get=get))
     with pytest.raises(Exception):
         sm.fetch_search("zapato")
-    assert len(calls) == 2
+    assert len(calls) == 4
 
 
 def test_lista_vacia_normal_es_aceptada(monkeypatch):
@@ -84,8 +83,8 @@ def test_sweep_segunda_busqueda_caida_levanta_runtimeerror(monkeypatch):
     with pytest.raises(RuntimeError, match="roto"):
         sm.sweep([{"q": "zapato"}, {"q": "roto"}])
     assert sum("ft=zapato" in u for u in calls) == 1
-    assert sum("ft=roto" in u for u in calls) == 2, \
-        "un solo reintento antes del RuntimeError"
+    assert sum("ft=roto" in u for u in calls) == 4, \
+        "tres reintentos antes del RuntimeError"
 
 
 def test_main_falla_no_toca_snapshot_db_ni_log(monkeypatch, tmp_path):

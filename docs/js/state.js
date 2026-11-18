@@ -11,6 +11,11 @@ const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov"
 const [_y,_m,_d] = D.generated.split("-");
 document.getElementById("gen").textContent = D.generated
   ? `${+_d} ${MESES[+_m-1]} ${_y}` : "sin datos";
+// hora del build: D.built es UTC iso -> GMT-6 (El Salvador, sin DST)
+const _bt = Date.parse(D.built || "");
+const _gt = document.getElementById("gen-time");
+if (_gt) _gt.textContent = Number.isFinite(_bt)
+  ? " · " + new Date(_bt - 6 * 3600e3).toISOString().slice(11, 16) : "";
 if (D.demo) document.getElementById("demo-banner").style.display = "";
 const img = sku => (D.products[sku]||{}).image || "";
 const ev = D.events.slice().reverse();

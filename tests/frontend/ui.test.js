@@ -4,7 +4,8 @@
 // etiquetas honestas de frescura. Todo contra el DOM stub del harness.
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { makeCtx, boot, DEMO_D, vm } = require("./harness.js");
+const { makeCtx, boot, DEMO_D, vm, APPWRITE_STUB } =
+  require("./harness.js");
 
 const startup = opts => { const ctx = makeCtx(opts); boot(ctx); return ctx; };
 const run = (ctx, js) => vm.runInContext(js, ctx);
@@ -231,6 +232,64 @@ test("ficha: acciones accesibles y estrella con aria-pressed", () => {
   assert.equal(star.getAttribute("aria-pressed"), "true");
   for (const id of ["dcart", "dshare", "dtgt"])
     assert.ok(doc.getElementById(id), id + " existe en la ficha");
+});
+
+test("tap en la card abre la ficha; estrella y carrito no", () => {
+  const ctx = startup({ stored: { "pw-favs": '["111"]' } });
+  const doc = ctx.__doc;
+  const card = doc.querySelector("#g-ini-favs .card");
+  assert.ok(card, "card del favorito en Inicio");
+  assert.equal(card.dataset.sku, "111",
+    "la card lleva data-sku para la delegacion");
+  // tap en el cuerpo de la card (titulo): abre la ficha
+  doc._fire("click", { target: card.querySelector("h3.t") });
+  assert.equal(doc.getElementById("dlg").open, true,
+    "tap en la card abrio la ficha");
+  assert.equal(doc.getElementById("dlg").dataset.sku, "111");
+  doc.getElementById("dlg").close();
+  // tap en la estrella: es boton propio, no abre la ficha
+  doc._fire("click", { target: card.querySelector(".star") });
+  assert.equal(doc.getElementById("dlg").open, false,
+    "la estrella no abre la ficha");
+  // modo compra: el checkbox del carrito tampoco abre la ficha
+  run(ctx, "SHOP = true; render();");
+  const card2 = doc.querySelector("#g-ini-favs .card");
+  const chk = card2.querySelector(".cartcheck");
+  assert.ok(chk, "cartcheck visible en modo compra");
+  doc._fire("click", { target: chk });
+  assert.equal(doc.getElementById("dlg").open, false,
+    "el cartcheck no abre la ficha");
+  // pero el cuerpo sigue abriendo en modo compra
+  doc._fire("click", { target: card2.querySelector("h3.t") });
+  assert.equal(doc.getElementById("dlg").open, true);
+  assert.equal(doc.getElementById("dlg").dataset.sku, "111");
+});
+
+test("datastrip: solo excepciones; oculto cuando todo va bien", () => {
+  const ctx = startup();
+  const doc = ctx.__doc;
+  assert.equal(doc.getElementById("datastrip").style.display, "none",
+    "sin novedades el strip queda oculto");
+  // siman con lectura vieja (quality.stale) se confiesa
+  ctx.D.quality = { sources: { siman: { ok: true, stale: true } } };
+  run(ctx, "render()");
+  assert.match(doc.getElementById("ds-text").textContent,
+    /Siman sin actualizar hoy/);
+  assert.equal(doc.getElementById("datastrip").style.display, "");
+  // copia servida por el SW tambien se anuncia
+  run(ctx, "window.DATA_FROM_CACHE = true; render();");
+  assert.match(doc.getElementById("ds-text").textContent,
+    /Mostrando datos guardados/);
+  // offline se declara en lenguaje plano
+  ctx.navigator.onLine = false;
+  run(ctx, "render()");
+  assert.match(doc.getElementById("ds-text").textContent,
+    /Sin conexión/);
+  // guest con favoritos y Appwrite configurado: aviso de local-only
+  const ctx2 = startup({ appwrite: APPWRITE_STUB,
+                         stored: { "pw-favs": '["111"]' } });
+  assert.match(ctx2.__doc.getElementById("ds-text").textContent,
+    /Sin sesión: tus favoritos solo están en este teléfono/);
 });
 
 test("ficha movil: el dlg abre como modal y bloquea el fondo", () => {

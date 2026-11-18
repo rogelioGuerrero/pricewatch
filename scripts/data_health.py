@@ -41,7 +41,8 @@ def inspect_data(data_dir, expected_date=None, *, require_runtime=False):
     for source, filename, required in (
             ("pricesmart", "prices.db", {"prices", "products"}),
             ("siman", "siman.db", {"prices", "items"})):
-        state = {"ok": False, "observed_at": "", "rows": 0, "problems": []}
+        state = {"ok": False, "observed_at": "", "rows": 0,
+                 "problems": [], "stale": False}
         result["sources"][source] = state
         path = root / filename
         if not path.is_file():
@@ -90,16 +91,28 @@ def inspect_data(data_dir, expected_date=None, *, require_runtime=False):
                 if not state["observed_at"] or (not count and not empty_watchlist):
                     raise ValueError("no observations")
                 date.fromisoformat(state["observed_at"])
+                # Siman caido no tumba el run: una base sana con datos
+                # de ayer es "stale" (ok con confesion), no invalida.
+                # Cualquier otro problema sigue siendo falla dura.
+                stale = []
                 if (expected_date
                         and state["observed_at"] != expected_date):
-                    raise ValueError("source is not current")
+                    if source == "siman":
+                        stale.append("source is not current")
+                    else:
+                        raise ValueError("source is not current")
                 # A metadata date cannot make an old observation fresh.
                 if expected_date and not empty_watchlist:
                     current = con.execute(
                         "SELECT COUNT(*) FROM prices WHERE date = ?",
                         (expected_date,)).fetchone()[0]
                     if not current:
-                        raise ValueError("no observations for expected date")
+                        if source == "siman":
+                            stale.append(
+                                "no observations for expected date")
+                        else:
+                            raise ValueError(
+                                "no observations for expected date")
                 if require_runtime:
                     folder, field, log = (
                         ("snapshots", "products", "events.jsonl")
@@ -124,6 +137,11 @@ def inspect_data(data_dir, expected_date=None, *, require_runtime=False):
                                 raise ValueError("invalid event log row")
                             date.fromisoformat(event["date"])
                 state["ok"] = True
+                if stale:
+                    # el snapshot verificado arriba es el de la fecha
+                    # observada (la vieja): la copia servida es legitima
+                    state["stale"] = True
+                    state["problems"].extend(stale)
         except (sqlite3.Error, ValueError, OSError, KeyError, TypeError) as exc:
             state["problems"].append(str(exc))
     result["ok"] = all(s["ok"] for s in result["sources"].values())

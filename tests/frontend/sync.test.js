@@ -644,19 +644,19 @@ test("estado de cuenta: no dice sincronizado solo por tener sesion", async () =>
   assert.equal(ctx.__doc.getElementById("lg-who").textContent,
     "u1@x.sv");
   const ss = ctx.__doc.getElementById("sync-status").textContent;
-  assert.match(ss, /pendiente de sincronizar/,
+  assert.notEqual(ss, "sincronizado",
     `estado honesto sin sync aun: ${ss}`);
   assert.equal(ctx.__doc.getElementById("sync-status")
     .getAttribute("aria-live"), "polite");
 });
 
-test("sync completo exitoso reporta sincronizado", async () => {
+test("sync completo exitoso: estado ok sin ruido en el strip", async () => {
   const ctx = context();
   db(ctx, {});
   await vm.runInContext("syncAll()", ctx);
   assert.equal(get(ctx, "SYNC.state"), "ok");
   assert.equal(ctx.__doc.getElementById("sync-status").textContent,
-    "sincronizado");
+    "", "todo en orden: el strip no repite 'sincronizado'");
 });
 
 test("compra ambigua: tuple heredado con 2 filas remotas = revisar", async () => {

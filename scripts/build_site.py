@@ -393,7 +393,10 @@ def build_site(root_dir=ROOT):
 
     data = {
         "schema_version": 2,
-        "quality": inspect_data(data_dir),
+        # expected_date = gen (la fecha propia del dataset): pricesmart
+        # siempre cuadra y siman confiesa stale cuando su ultima
+        # observacion quedo atras (sweep caido) — el front la anuncia
+        "quality": inspect_data(data_dir, gen or None),
         "generated": gen,
         "built": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "demo": demo,

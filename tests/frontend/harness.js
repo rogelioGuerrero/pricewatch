@@ -47,7 +47,12 @@ function matchPart(el, part) {
   }
   return true;
 }
+// selector: lista separada por comas — matchea si alguna alternativa
+// es cierta (los modulos usan closest("button, a, ..."))
 function matchesSel(el, sel) {
+  return String(sel).split(",").some(s => matchesOne(el, s));
+}
+function matchesOne(el, sel) {
   const parts = sel.trim().split(/\s+/);
   if (!matchPart(el, parts[parts.length - 1])) return false;
   let cur = el.parent;

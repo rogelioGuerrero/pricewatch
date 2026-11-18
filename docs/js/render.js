@@ -48,6 +48,16 @@ let SHOW_DEAD = false;
 document.addEventListener("click", e => {
   if (e.target.closest(".dead-toggle")) { SHOW_DEAD = !SHOW_DEAD; render(); }
 });
+// tocar cualquier parte de la card abre la ficha (un solo listener
+// delegado): los controles internos siguen siendo suyos — estrella,
+// checkbox de carrito, botones, links y acordeones no abren nada
+document.addEventListener("click", e => {
+  const c = e.target.closest(".card[data-sku]");
+  if (!c) return;
+  if (e.target.closest("button, input, a, summary, label, .star,"
+                       + " .cartcheck, .plink")) return;
+  openProd(c.dataset.sku);
+});
 function card(e, clubs){
   const p = D.products[e.sku]||{};
   let price;
@@ -92,7 +102,7 @@ function card(e, clubs){
     : (e.type==="bajo"||e.type==="rebaja") && lp>=e.from
       ? ` <span class="tag salio_del_catalogo">↩ ya volvió a subir</span>`
     : "")) || "";
-  return `<article class="card">
+  return `<article class="card" data-sku="${esc(e.sku)}">
     ${star(e.sku)}
     ${img(e.sku)?`<img src="${esc(img(e.sku))}" alt="" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
@@ -210,25 +220,19 @@ function render(){
   const nChFav = ev.filter(e=>["bajo","subio"].includes(e.type)&&FAV.has(e.sku)).length;
   const favN = document.querySelector('.tab[data-t="favs"] .n');
   if (favN) favN.textContent = FAV.size + (nChFav ? ` ⚡${nChFav}` : "");
-  // franja de estado fuera del dialogo de cuenta: edad del dataset,
-  // sync, proximo barrido y avisos de corrupcion/cache — siempre
-  // visible, nunca se auto-oculta al entrar una sesion
+  // franja de estado: solo estados excepcionales en lenguaje plano
+  // (sin conexion, copia guardada, siman vencido, sync pendiente o
+  // con error, datos corruptos) — oculta cuando todo va bien
   const dsTxt = document.getElementById("ds-text");
   if (dsTxt) {
     const parts = [];
-    if (window.DATA_FROM_CACHE) parts.push("copia guardada");
     if (typeof navigator !== "undefined"
-        && navigator.onLine === false) parts.push("sin conexión");
-    parts.push(`datos al ${D.generated || "?"}`);
-    const nxt = Date.parse(PWData.nextSweep());
-    if (Number.isFinite(nxt)) {
-      const sv = new Date(nxt - 6 * 3600e3);
-      parts.push(`próx. barrido ${
-        sv.toISOString().slice(0, 10) === todaySV()
-          ? "hoy" : "mañana"} ${sv.toISOString().slice(11, 16)}`);
-    }
+        && navigator.onLine === false) parts.push("Sin conexión");
+    if (window.DATA_FROM_CACHE) parts.push("Mostrando datos guardados");
+    if (D.quality?.sources?.siman?.stale)
+      parts.push("Siman sin actualizar hoy");
     if (typeof syncLine === "function") parts.push(syncLine());
-    dsTxt.innerHTML = parts.map(esc).join(" · ")
+    dsTxt.innerHTML = parts.filter(Boolean).map(esc).join(" · ")
       + (PWStore.corruptBlocking()
          ? ` <span class="warn">⚠ datos locales dañados —`
            + ` sincronización congelada</span>` : "");
@@ -238,6 +242,10 @@ function render(){
        && (SYNC.state === "error" || SYNC.err)) ? "" : "none";
     const fx = document.getElementById("ds-fix");
     if (fx) fx.style.display = PWStore.corruptBlocking() ? "" : "none";
+    const strip = document.getElementById("datastrip");
+    if (strip) strip.style.display =
+      (dsTxt.innerHTML || (rt && rt.style.display === "")
+       || (fx && fx.style.display === "")) ? "" : "none";
   }
   // panes perezosos: solo el activo se reconstruye — las interacciones
   // frecuentes (estrella, carrito, buscador) ya no pagan el HTML de los
@@ -498,7 +506,7 @@ function favCard(sku){
         : mcs.state === "unavailable" ? "✗" : "sin verificar"}${
         mcs.observedAt ? " "+esc(mcs.observedAt.slice(5)) : ""}</span>`
     : "";
-  return `<article class="card${SHOP&&inCart?" incart":""}">
+  return `<article class="card${SHOP&&inCart?" incart":""}" data-sku="${esc(sku)}">
     ${SHOP?`<input type="checkbox" class="cartcheck" ${inCart?"checked":""}
       aria-label="agregar ${esc(p.title||sku)} al carrito"
       onclick="cartToggle(${jsArg(sku)},this.checked,${PWStore.currentEpoch()})">`:star(sku)}
