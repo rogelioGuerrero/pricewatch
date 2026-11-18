@@ -882,3 +882,117 @@ test("compra de A obsoleto: pendiente, jamas confirmado en B", async () => {
     JSON.parse(ctx.localStorage.getItem("pw:user:u-a:pw-outbox")).length,
     1, "la cola persistida de A conserva el op para reintento");
 });
+
+// ---- rowId invalido de Appwrite: jamas reintentar lo imposible ----
+// Regresion: un op con rowId >36 chars quedaba en el outbox para
+// siempre (400 en cada flush, attempts++ eterno, SYNC.err congelado)
+
+test("outbox con rowId >36: se descarta al leer, ningun request", async () => {
+  const bad = "u1-" + "x".repeat(40);        // 43 chars: imposible
+  const ctx = context({
+    "pw-uid-hint": "u1",
+    "pw:user:u1:pw-outbox": JSON.stringify([{
+      id: "op-bad", uid: "u1", tableId: "favs", rowId: bad,
+      kind: "create", key: "x".repeat(40),
+      data: { sku: "x".repeat(40) },
+      createdAt: "2026-11-10", attempts: 7 }]),
+  });
+  assert.equal(get(ctx, "OUTBOX.length"), 0,
+    "la op imposible se descarto al leer (forma valida, no corrupcion)");
+  assert.equal(ctx.localStorage.getItem("pw:user:u1:pw-outbox"), "[]",
+    "la limpieza quedo persistida");
+  assert.equal(get(ctx, "PWStore.corruptBlocking()"), false,
+    "descartar una op mala no congela el namespace");
+  db(ctx, {});
+  await vm.runInContext("syncAll()", ctx);
+  assert.equal(ctx.__calls.filter(c => c.op !== "list").length, 0,
+    "ningun create/update/delete/get para el rowId invalido");
+});
+
+test("400 en create: el op sale del outbox y no vuelve a intentarse", async () => {
+  const ctx = context({
+    "pw-uid-hint": "u1",
+    "pw:user:u1:pw-outbox": JSON.stringify([{
+      id: "op-400", uid: "u1", tableId: "favs", rowId: "u1-222",
+      kind: "create", key: "222", data: { sku: "222" },
+      createdAt: "2026-11-10", attempts: 0 }]),
+  });
+  const e400 = new Error("Invalid rowId param"); e400.code = 400;
+  db(ctx, {}, { create: e400 });
+  await vm.runInContext("syncAll()", ctx);
+  assert.equal(ctx.__calls.filter(c => c.op === "create").length, 1,
+    "se intento una sola vez");
+  assert.equal(get(ctx, "OUTBOX.length"), 0,
+    "error deterministico: la intencion no queda para reintento");
+  assert.deepEqual(get(ctx, "snapJ.favs || []"), [],
+    "jamis se marco confirmada ni entro al snap");
+  ctx.__calls.length = 0;
+  await vm.runInContext("syncAll()", ctx);
+  assert.equal(ctx.__calls.filter(c => c.op !== "list").length, 0,
+    "segundo sync: ningun reintento del op muerto");
+});
+
+test("422 tambien es deterministico; error sin code sigue retenido", async () => {
+  const ctx = context({
+    "pw-uid-hint": "u1",
+    "pw:user:u1:pw-outbox": JSON.stringify([
+      { id: "op-422", uid: "u1", tableId: "favs", rowId: "u1-111",
+        kind: "create", key: "111", data: { sku: "111" },
+        createdAt: "2026-11-10", attempts: 0 },
+      { id: "op-500", uid: "u1", tableId: "favs", rowId: "u1-222",
+        kind: "create", key: "222", data: { sku: "222" },
+        createdAt: "2026-11-10", attempts: 0 }]),
+  });
+  db(ctx, {}, { create: a => {
+    const e = new Error(a.rowId === "u1-111" ? "data invalida"
+                                             : "sin senal");
+    if (a.rowId === "u1-111") e.code = 422; else e.code = 500;
+    return e;
+  } });
+  await vm.runInContext("syncAll()", ctx);
+  const ops = get(ctx, "OUTBOX");
+  assert.equal(ops.length, 1, "solo quedo el op con error transitorio");
+  assert.equal(ops[0].rowId, "u1-222");
+  assert.ok(ops[0].attempts >= 1,
+    "el transitorio sumo intentos (opFlush corre dos veces por sync)");
+});
+
+test("opEnqueue rechaza rowId invalido: null y nada entra a la cola", async () => {
+  const ctx = context({ "pw-uid-hint": "u1" });
+  const bad = "u1-" + "x".repeat(40);
+  const r = await vm.runInContext(
+    `(async () => {
+       const op = opEnqueue({ tableId: 'favs', rowId: '${bad}',
+         kind: 'create', key: 'x', data: { sku: 'x' } });
+       return { nul: op === null, done: _opDone(op),
+                n: OUTBOX.length };
+     })()`, ctx);
+  assert.equal(r.nul, true, "devuelve null: no rastreado");
+  assert.equal(r.n, 0, "la intencion jamas entro al outbox");
+  assert.equal(r.done, false, "_opDone(null) es false, nunca throw");
+});
+
+test("rowIdOf: sku corto = uid-sku; sku largo = uid-h16 <=36", async () => {
+  const ctx = context({ "pw-uid-hint": "u1" });
+  assert.equal(await vm.runInContext("favId('111')", ctx), "u1-111",
+    "sku normal conserva el formato legible (round-trip intacto)");
+  const long = "s".repeat(40);
+  const rid = await vm.runInContext(`favId('${long}')`, ctx);
+  const want = await vm.runInContext(`\`u1-\${h16('${long}')}\``, ctx);
+  assert.equal(rid, want, "sku largo cae al hash deterministico");
+  assert.ok(rid.length <= 36, "el fallback siempre cabe en la regla");
+  assert.equal(await vm.runInContext(`favId('${long}')`, ctx), rid,
+    "mismo sku, mismo rowId — estable entre llamadas");
+  // el create y el delete del mismo sku largo usan el mismo rowId
+  db(ctx, {});
+  await vm.runInContext(
+    `(async () => { FAV.add('${long}'); await favUp('${long}'); })()`,
+    ctx);
+  assert.equal(ctx.__remote.favs[0].$id, rid,
+    "el create remoto uso el rowId hasheado");
+  await vm.runInContext(
+    `(async () => { FAV.delete('${long}'); await favDown('${long}'); })()`,
+    ctx);
+  assert.equal(ctx.__remote.favs.length, 0,
+    "y el delete apunto a la misma fila");
+});

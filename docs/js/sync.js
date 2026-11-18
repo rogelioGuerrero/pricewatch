@@ -26,7 +26,17 @@ const docPerms = uid => {
 // viva: offline con hint del ultimo uid, la intencion se encola para
 // ESA cuenta y espera a que vuelva a autenticarse
 const boundUid = () => PWStore.currentUser();
-const favId = sku => `${boundUid()}-${sku}`;
+// regla de rowId de Appwrite: <=36 chars, [a-zA-Z0-9._-] y primer
+// caracter alfanumerico. Un id que no la cumple jamas puede existir
+// remoto — tampoco puede ejecutarse la intencion que lo apunta
+const rowIdValid = r => typeof r === "string"
+  && /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$/.test(r);
+// rowId canonico <uid>-<key>; si la llave no cabe en la regla cae a
+// <uid>-<h16(key)> — determinista: el mismo sku mapea igual en todos
+// los dispositivos y create/delete usan siempre el mismo id
+const rowIdOf = key => { const r = `${boundUid()}-${key}`;
+  return rowIdValid(r) ? r : `${boundUid()}-${h16(key)}`; };
+const favId = sku => rowIdOf(sku);
 // Appwrite corta en 500 filas por request: paginar por cursor sobre el
 // orden estable de $id hasta una pagina corta. Si el cursor no avanza
 // la API esta ignorando cursorAfter — lanzar en vez de devolver una
@@ -69,6 +79,17 @@ const saveSyncSnap = () => PWStore.write("pw-sync-snap", snapJ);
 // reintentos y el uid fija el dueno de la intencion.
 const OUTBOX = PWStore.read("pw-outbox", [], PWStore.valid.outbox);
 const saveOutbox = () => PWStore.write("pw-outbox", OUTBOX);
+// ops con rowId que Appwrite jamas aceptara (p.ej. >36 chars de un
+// formato viejo): la forma es valida — no es corrupcion — pero la
+// intencion nunca puede ejecutarse ni existir remota; descartarla al
+// leer no pierde nada. Devuelve cuantas salieron
+const dropBadRowIds = () => {
+  const n = OUTBOX.length;
+  for (let i = n - 1; i >= 0; i--)
+    if (!rowIdValid(OUTBOX[i].rowId)) OUTBOX.splice(i, 1);
+  return n - OUTBOX.length;
+};
+if (dropBadRowIds()) saveOutbox();
 const SYNC = { state: "local", err: "" };
 let _opSeq = 0;
 const opId = () => "op-" + Date.now().toString(36) + "-" + (++_opSeq);
@@ -92,6 +113,9 @@ const opPending = (tableId, kind) => {
 // gana, pero conserva el id del op original para que un reintento sea
 // el mismo request ante el servidor
 function opEnqueue(op) {
+  // defensa extra: un rowId invalido seria un 400 eterno — el caller
+  // recibe null ("no rastreado") y la intencion jamas entra a la cola
+  if (!rowIdValid(op.rowId)) return null;
   const i = OUTBOX.findIndex(o => o.tableId === op.tableId
     && o.rowId === op.rowId);
   if (i >= 0) {
@@ -264,7 +288,12 @@ const _flushBody = async key => {
       if (e && e.stale) continue;   // vuelo obsoleto: sale arriba,
                                     // sin tocar intentos ni estado
       if (!mine()) continue;
-      op.attempts++;
+      // 400/422 = validacion de Appwrite: deterministico, el reintento
+      // jamas pasaria — sale de la cola sin confirmar ni tocar snap
+      if (e && (e.code === 400 || e.code === 422)) {
+        const i = OUTBOX.indexOf(op);
+        if (i >= 0) OUTBOX.splice(i, 1);
+      } else op.attempts++;
       SYNC.err = String(e && e.message || e).slice(0, 80);
       saveOutbox();
     }
@@ -302,7 +331,9 @@ const ridOf = () => {
 // intencion — queda en OUTBOX para el proximo sync ----
 // true solo si opAck marco ESTE op — no "ya no esta en el array" (un
 // op ausente del OUTBOX de otra ns reportaba confirmacion falsa)
-const _opDone = op => !!op.confirmed;
+// opEnqueue puede devolver null (rowId invalido): "no rastreado" no
+// es "confirmado" — el caller recibe false y la intencion no existio
+const _opDone = op => !!(op && op.confirmed);
 const favUp = sku => {
   if (!sku || !boundUid()) return Promise.resolve(false);
   const op = opEnqueue({ tableId: COL_F, rowId: favId(sku),
@@ -331,7 +362,7 @@ const compraUp = c => {
     kind: "create", key: c.rid,
     data: { sku: c.sku, paid: c.paid, date: c.date || "1970-01-01" } });
   return opFlush().then(() => {
-    const pend = !op.confirmed;
+    const pend = !op || !op.confirmed;
     // callback tardio tras cambio de cuenta: no escribir el
     // namespace que ahora esta activo
     if (key === flushKey()) {
@@ -352,7 +383,7 @@ const tgtSet = (sku, t) => {
   const uid = boundUid();
   if (!sku || !(t > 0) || !uid) return Promise.resolve(false);
   const op = opEnqueue({ tableId: "targets",
-    rowId: `${uid}-${sku}`, kind: "upsert", key: sku,
+    rowId: rowIdOf(sku), kind: "upsert", key: sku,
     data: { sku, target: t } });
   return opFlush().then(() => _opDone(op)).catch(() => false);
 };
@@ -360,7 +391,7 @@ const tgtDel = sku => {
   const uid = boundUid();
   if (!uid) return Promise.resolve(false);
   const op = opEnqueue({ tableId: "targets",
-    rowId: `${uid}-${sku}`, kind: "delete", key: sku });
+    rowId: rowIdOf(sku), kind: "delete", key: sku });
   return opFlush().then(() => _opDone(op)).catch(() => false);
 };
 
@@ -695,6 +726,7 @@ const hydrateNS = () => {
   Object.assign(snapJ, rd("pw-sync-snap", {}, PWStore.valid.snap));
   OUTBOX.length = 0;
   rd("pw-outbox", [], PWStore.valid.outbox).forEach(x => OUTBOX.push(x));
+  if (dropBadRowIds()) saveOutbox();   // misma limpieza que el boot
   // re-migrar reglas legacy del namespace activo: vacia y repuebla
   // SUPG_* — jamas borra reglas viejas de OTRO uid con los ids de este
   if (typeof upgradeSimanRules === "function") upgradeSimanRules();
@@ -787,7 +819,7 @@ const recoverNS = async () => {
   for (const k in snapJ) delete snapJ[k];
   const uid = PWStore.currentUser();
   [...FAV].forEach(s =>
-    opEnqueue({ tableId: COL_F, rowId: `${uid}-${s}`,
+    opEnqueue({ tableId: COL_F, rowId: rowIdOf(s),
       kind: "create", key: s, data: { sku: s } }));
   COMPRAS.forEach(c => {
     if (!c.rid) c.rid = ridOf();
@@ -796,7 +828,7 @@ const recoverNS = async () => {
       data: { sku: c.sku, paid: c.paid, date: c.date || "1970-01-01" } });
   });
   for (const s in TARGETS)
-    opEnqueue({ tableId: "targets", rowId: `${uid}-${s}`,
+    opEnqueue({ tableId: "targets", rowId: rowIdOf(s),
       kind: "upsert", key: s, data: { sku: s, target: TARGETS[s] } });
   SWATCH.forEach(w =>
     opEnqueue({ tableId: "siman_watch",
