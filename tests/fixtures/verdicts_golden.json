@@ -61,7 +61,8 @@
       "max": 500,
       "n_ch": 0,
       "last_ch": null,
-      "d_ch": null
+      "d_ch": null,
+      "at_min": false
      }
     },
     "indice": null
@@ -130,7 +131,8 @@
       "max": 1000,
       "n_ch": 1,
       "last_ch": "2026-11-12",
-      "d_ch": 0
+      "d_ch": 0,
+      "at_min": false
      }
     },
     "indice": -10.0
@@ -197,7 +199,8 @@
       "max": 1000,
       "n_ch": 1,
       "last_ch": "2026-11-12",
-      "d_ch": 0
+      "d_ch": 0,
+      "at_min": false
      }
     },
     "indice": -20.0
@@ -284,7 +287,8 @@
       "max": 1000,
       "n_ch": 0,
       "last_ch": null,
-      "d_ch": null
+      "d_ch": null,
+      "at_min": false
      }
     },
     "indice": 0.0
@@ -359,7 +363,8 @@
       "max": 1200,
       "n_ch": 2,
       "last_ch": "2026-11-12",
-      "d_ch": 0
+      "d_ch": 0,
+      "at_min": true
      }
     },
     "indice": -10.0
@@ -440,7 +445,8 @@
       "max": 1200,
       "n_ch": 3,
       "last_ch": "2026-11-12",
-      "d_ch": 0
+      "d_ch": 0,
+      "at_min": false
      }
     },
     "indice": -5.0
@@ -521,7 +527,8 @@
       "max": 1000,
       "n_ch": 0,
       "last_ch": null,
-      "d_ch": null
+      "d_ch": null,
+      "at_min": false
      }
     },
     "indice": 0.0
@@ -590,7 +597,8 @@
       "max": 1000,
       "n_ch": 0,
       "last_ch": null,
-      "d_ch": null
+      "d_ch": null,
+      "at_min": false
      }
     },
     "indice": 0.0
@@ -663,9 +671,10 @@
       "observed_at": "2026-11-12",
       "min": 900,
       "max": 1000,
-      "n_ch": 2,
+      "n_ch": 0,
       "last_ch": "2026-11-12",
-      "d_ch": 0
+      "d_ch": 0,
+      "at_min": false
      }
     },
     "indice": null
@@ -732,9 +741,10 @@
       "observed_at": "2026-11-12",
       "min": 1000,
       "max": 1000,
-      "n_ch": 1,
+      "n_ch": 0,
       "last_ch": "2026-11-12",
-      "d_ch": 0
+      "d_ch": 0,
+      "at_min": false
      }
     },
     "indice": null
@@ -809,7 +819,8 @@
       "max": 1000,
       "n_ch": 2,
       "last_ch": "2026-11-12",
-      "d_ch": 0
+      "d_ch": 0,
+      "at_min": true
      }
     },
     "indice": null
@@ -911,7 +922,8 @@
       "max": 1000,
       "n_ch": 6,
       "last_ch": "2026-11-12",
-      "d_ch": 0
+      "d_ch": 0,
+      "at_min": false
      }
     },
     "indice": 25.0
@@ -986,7 +998,8 @@
       "max": 1000,
       "n_ch": 1,
       "last_ch": "2026-11-10",
-      "d_ch": 2
+      "d_ch": 2,
+      "at_min": true
      }
     },
     "indice": 0.0
@@ -1067,7 +1080,8 @@
       "max": 1000,
       "n_ch": 0,
       "last_ch": null,
-      "d_ch": null
+      "d_ch": null,
+      "at_min": false
      }
     },
     "indice": 0.0
@@ -1132,7 +1146,8 @@
       "max": 700,
       "n_ch": 0,
       "last_ch": null,
-      "d_ch": null
+      "d_ch": null,
+      "at_min": false
      }
     },
     "indice": 0.0
@@ -1203,7 +1218,8 @@
       "max": 800,
       "n_ch": 1,
       "last_ch": "2026-09-01",
-      "d_ch": 72
+      "d_ch": 72,
+      "at_min": false
      }
     },
     "indice": 0.0
@@ -1278,7 +1294,8 @@
       "max": 1200,
       "n_ch": 1,
       "last_ch": "2026-10-03",
-      "d_ch": 40
+      "d_ch": 40,
+      "at_min": false
      }
     },
     "indice": 0.0
@@ -1347,7 +1364,8 @@
       "max": 1000,
       "n_ch": 1,
       "last_ch": "2026-11-10",
-      "d_ch": 2
+      "d_ch": 2,
+      "at_min": false
      }
     },
     "indice": -10.0

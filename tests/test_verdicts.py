@@ -65,6 +65,26 @@ def test_catalog_state_missing_db(monkeypatch):
     assert notify.catalog_state() == ({}, None)
 
 
+def test_catalog_state_at_min_parity(tmp_path, monkeypatch):
+    """at_min del digest = price_verdict sobre la historia COMPLETA;
+    el front evalua la misma regla sobre la serie exportada a 90d —
+    divergencia aceptada: notify ve mas filas."""
+    monkeypatch.setattr(notify, "TODAY", GOLDEN["meta"]["today"])
+    for name, c in _cases():
+        db = str(tmp_path / ("p-" + name + ".db"))
+        _prices_db(db, c)
+        monkeypatch.setattr(notify, "DB", db)
+        state, _ = notify.catalog_state()
+        agg = verdicts.compute_agg(c["series"], c["latest"])
+        for sku in c["series"]:
+            a = agg.get(sku)
+            rows = [r + [0] * (4 - len(r)) for r in c["series"][sku]]
+            v = verdicts.price_verdict(a, rows, GOLDEN["meta"]["today"]) \
+                if a else None
+            assert state[sku]["at_min"] == bool(v and v.get("at_min")), \
+                name + "/" + sku
+
+
 # ---------- price_verdict: el veredicto estatico que viaja en agg ----------
 
 ROWS = [["2026-11-10", 2000, 1, 0],

@@ -47,7 +47,7 @@ from common import (
     today_sv,
 )
 from data_health import atomic_json
-from verdicts import series_stats
+from verdicts import compute_agg, price_verdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -68,7 +68,6 @@ TODAY = today_sv()
 # una sola sesion HTTP: keep-alive TLS + gzip automatico (urllib abria
 # una conexion nueva y bajaba sin comprimir en cada request)
 SESSION = requests.Session()
-FRESH_DAYS = 30          # ganga "al minimo" vence a los 30d sin moverse
 BIG_DROP = -30.0         # rebaja silenciosa >=30% amerita push
 DELIVERY = {c: {"sent": 0, "skipped": 0, "failed": 0}
             for c in ("email", "push")}
@@ -150,28 +149,34 @@ def catalog_state():
         return {}, None
     finally:
         con.close()
+    # estadisticas de precio delegadas a compute_agg (divergencias #1
+    # y #2 de fase 1 cerradas: n_ch solo cuenta cambios entre precios
+    # validos y last_ch es la ultima transicion cualquiera)
+    fmt = {s: [[r["date"], r["price"], r["in_stock"], r["saving"] or 0]
+               for r in rows] for s, rows in series.items()}
+    latest = {s: {"sku": s} for s in fmt}   # solo alimenta el flag temp
+    agg = compute_agg(fmt, latest)
     out = {}
     for sku, rows in series.items():
-        raw_prices, changes = series_stats(
-            (r["date"], r["price"]) for r in rows)
-        # notify filtra falsy: el 0 no es min valido (el sitio si lo toma)
-        prices = [p for p in raw_prices if p]
+        a = agg.get(sku) or {}
         last = rows[-1]
-        d_last = (datetime.strptime(changes[-1][0], "%Y-%m-%d").date()
-                  if changes else None)
+        d_last = (datetime.strptime(a["last_ch"], "%Y-%m-%d").date()
+                  if a.get("last_ch") else None)
         pr = prods.get(sku) or {}
+        # at_min sobre la historia COMPLETA; el front lo evalua sobre
+        # la serie exportada (90d) — misma regla, mas filas visibles
+        v = price_verdict(a, fmt[sku], TODAY) if a else None
         out[sku] = {
             "title": pr.get("title", sku), "image": pr.get("image") or "",
             "price": last["price"],
             "saving": last["saving"] or 0,
             "in_stock": bool(last["in_stock"] and last["date"] == TODAY),
             "observed_at": last["date"],
-            "min": min(prices) if prices else None,
-            "max": max(prices) if prices else None,
-            "n_ch": len(changes),
-            "last_ch": changes[-1][0] if changes else None,
+            "min": a.get("min"), "max": a.get("max"),
+            "n_ch": a.get("n_ch", 0), "last_ch": a.get("last_ch"),
             "d_ch": (date.fromisoformat(TODAY) - d_last).days
                     if d_last else None,
+            "at_min": bool(v and v.get("at_min")),
         }
     # indice del dia: mediana del % de cambio entre las 2 ultimas
     # observaciones por sku — el mismo "indice" del sitio
@@ -543,6 +548,22 @@ def at_min(e, c):
             and to <= c["min"])
 
 
+def silent_gangas(cat):
+    """gangas silenciosas vigentes: el at_min compartido ya exige
+    >=3 lecturas y ultimo cambio <=30d; aqui solo se pide lectura de
+    hoy con stock, sin letrero de ahorro y precio valido."""
+    out = []
+    for sku, c in cat.items():
+        if (c["in_stock"] and not c["saving"] and c["price"]
+                and c.get("at_min")):
+            drop = (c["max"] - c["price"]) / c["max"] * 100
+            out.append({"sku": sku, "title": c["title"],
+                        "from": c["max"], "to": c["price"],
+                        "pct": round(-drop, 1)})
+    out.sort(key=lambda e: e["pct"])
+    return out
+
+
 def drop_row(e, cat, drain=None, bold=False):
     """bajada/oferta/rebaja: titulo + tags + meta, precio a la derecha."""
     c = cat.get(str(e.get("sku") or "")) or {}
@@ -776,17 +797,9 @@ def main():
                 if s in cat and cat[s]["in_stock"] and cat[s]["price"]
                 and t < cat[s]["price"] <= t * 1.05]
 
-    # gangas silenciosas vigentes (espejo de atMin del frontend)
-    silent = []
-    for sku, c in cat.items():
-        if (c["in_stock"] and not c["saving"] and c["price"]
-                and c["price"] == c["min"] and c["n_ch"] >= 1
-                and c["d_ch"] is not None and c["d_ch"] <= FRESH_DAYS):
-            drop = (c["max"] - c["price"]) / c["max"] * 100
-            silent.append({"sku": sku, "title": c["title"],
-                           "from": c["max"], "to": c["price"],
-                           "pct": round(-drop, 1)})
-    silent.sort(key=lambda e: e["pct"])
+    # gangas silenciosas vigentes (espejo del veredicto estatico del
+    # frontend: agg.at_min ya incluye >=3 observaciones y cambio <=30d)
+    silent = silent_gangas(cat)
 
     counts = {}
     for e in events:

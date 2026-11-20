@@ -172,6 +172,51 @@ def test_catalog_state_sin_db_devuelve_vacio(tmp_path, monkeypatch):
     assert notify.catalog_state() == ({}, None)
 
 
+def test_silent_gangas_veredicto_compartido(tmp_path, monkeypatch):
+    """silent usa agg.at_min (>=3 lecturas + cambio <=30d + stock hoy,
+    sin letrero): no reevalua price==min a mano."""
+    monkeypatch.setattr(notify, "TODAY", "2026-11-12")
+
+    n = [0]
+
+    def cat_for(rows):
+        n[0] += 1
+        d = tmp_path / f"s{n[0]}"
+        d.mkdir()
+        db = _prices_db(d, rows, prods=[("A", "prod A", "")])
+        monkeypatch.setattr(notify, "DB", db)
+        return notify.catalog_state()[0]
+
+    # en su minimo: 3 lecturas, cambio reciente, sin saving -> entra
+    cat = cat_for([
+        ("A", "2026-11-01", 1200, 1200, 0, 1),
+        ("A", "2026-11-05", 1000, 1000, 0, 1),
+        ("A", "2026-11-12", 900, 900, 0, 1)])
+    assert notify.silent_gangas(cat) == [
+        {"sku": "A", "title": "prod A", "from": 1200, "to": 900,
+         "pct": -25.0}]
+
+    # misma bajada con solo 2 lecturas: la regla compartida pide >=3
+    cat = cat_for([
+        ("A", "2026-11-05", 1200, 1200, 0, 1),
+        ("A", "2026-11-12", 900, 900, 0, 1)])
+    assert notify.silent_gangas(cat) == []
+
+    # agotado hoy: at_min es estatico pero in_stock lo descarta
+    cat = cat_for([
+        ("A", "2026-11-01", 1200, 1200, 0, 1),
+        ("A", "2026-11-05", 1000, 1000, 0, 1),
+        ("A", "2026-11-12", 900, 900, 0, 0)])
+    assert notify.silent_gangas(cat) == []
+
+    # lectura de AYER con stock: in_stock exige fecha == TODAY
+    cat = cat_for([
+        ("A", "2026-11-01", 1200, 1200, 0, 1),
+        ("A", "2026-11-05", 1000, 1000, 0, 1),
+        ("A", "2026-11-11", 900, 900, 0, 1)])
+    assert notify.silent_gangas(cat) == []
+
+
 def test_catalog_state_db_sin_tablas_no_explota(tmp_path, monkeypatch):
     db = tmp_path / "vacia.db"
     sqlite3.connect(db).close()   # existe pero sin tablas
