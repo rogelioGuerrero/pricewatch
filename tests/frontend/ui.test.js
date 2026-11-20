@@ -357,6 +357,57 @@ test("siman: alertas viejas no se muestran como vigentes", () => {
     /2020-01-01/, "procedencia visible");
 });
 
+test("siman: la nota de privacidad solo sale al editar", () => {
+  const ctx = startup({ stored: { "pw-tab": "siman" } });
+  const doc = ctx.__doc;
+  const note = doc.getElementById("sw-note");
+  const q = doc.getElementById("sw-q");
+  assert.equal(note.hidden, true, "oculta al arrancar");
+  q._fire("focusin");
+  assert.equal(note.hidden, false, "visible con foco en la busqueda");
+  q._fire("focusout", { relatedTarget: null });
+  assert.equal(note.hidden, true, "oculta al salir sin texto");
+  q.value = "adidas";
+  q._fire("focusin");
+  q._fire("focusout", { relatedTarget: null });
+  assert.equal(note.hidden, false, "sigue con texto escrito");
+});
+
+test("siman: chips de vigilancia confiesan coincidencias vigentes", () => {
+  const TODAY = new Date(Date.now() - 6 * 3600e3)
+    .toISOString().slice(0, 10);
+  const mk = (i, w, ta) => ({ pid: "s"+i, iid: "i"+i, t: w+" "+i, b: "M",
+    w, ta, p: 50, lp: 80, ok: true, avail: true, last: TODAY,
+    current: true });
+  const items = [mk(1, "adidas", "11"), mk(2, "adidas", "11")];
+  for (let i = 0; i < 151; i++) items.push(mk(100 + i, "nike", null));
+  const ctx = startup({
+    data: { ...DEMO_D, siman: { generated: TODAY, items, events: [],
+                                watches: [], n_items: 153 } },
+    stored: { "pw-tab": "siman",
+      "pw-siman-watch": JSON.stringify(
+        [{ q: "adidas", talla: "11" }, { q: "nike" }]) } });
+  const doc = ctx.__doc;
+  const chips = doc.querySelectorAll("#siman-watches .chip.on");
+  assert.equal(chips.length, 2);
+  const txt = c => c.textContent.replace(/\s+/g, " ").trim();
+  assert.match(txt(chips[0]), /adidas · 11 · 2/);
+  assert.ok(!chips[0].querySelector(".warn"),
+    "2 coincidencias vigentes no es 'muy amplia'");
+  assert.match(txt(chips[1]), /nike · 151/);
+  const warn = chips[1].querySelector(".warn");
+  assert.ok(warn && /muy amplia/.test(warn.textContent),
+    "151 vigentes marca la busqueda como muy amplia");
+  assert.equal(warn.title, "Agrega talla o tipo para afinar la búsqueda");
+  // una sola linea de resumen: gangas de hoy sobre las busquedas
+  assert.match(doc.getElementById("siman-sum").textContent,
+    /Sin gangas hoy en tus 2 búsquedas/);
+  // sin vigilancias: la linea invita a crear la primera
+  const c2 = startup({ stored: { "pw-tab": "siman" } });
+  assert.match(c2.__doc.getElementById("siman-sum").textContent,
+    /Aún no vigilas nada/);
+});
+
 test("estado corrupto: sync congelado + recuperar + export", async () => {
   const ctx = startup({ stored: { "pw-outbox": "{basura rota" } });
   const doc = ctx.__doc;

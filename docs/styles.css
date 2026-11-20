@@ -125,6 +125,7 @@
   #datastrip { display:flex; align-items:center; gap:8px; flex-wrap:wrap;
     font-size:11px; color:var(--mut); padding:2px 0 0; min-height:22px }
   #datastrip .warn { color:var(--warn) }
+  .chip .warn { color:var(--warn) }
   #toast { position:fixed; left:50%; transform:translateX(-50%) translateY(20px);
     bottom:72px; z-index:80; background:var(--card);
     border:1px solid var(--line); border-radius:99px; padding:8px 14px;

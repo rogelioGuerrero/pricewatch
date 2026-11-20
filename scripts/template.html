@@ -12,23 +12,23 @@
      de que data.json llega, asi que ya estaran evaluados -->
 <!-- vendor local: mismas versiones que el CDN (NOTICE en vendor/),
      la app no depende de jsdelivr para arrancar -->
-<script defer src="vendor/echarts.min.js?v=30"></script>
-<script defer src="vendor/appwrite-sdk.js?v=30"></script>
+<script defer src="vendor/echarts.min.js?v=31"></script>
+<script defer src="vendor/appwrite-sdk.js?v=31"></script>
 <!-- themes.css de Perspective se carga bajo demanda en loadExplorer()
      (movil nunca abre el explorador: ~60KB ahorrados) -->
-<link rel="stylesheet" href="styles.css?v=30">
+<link rel="stylesheet" href="styles.css?v=31">
 <!-- preload de los modulos: el scanner del navegador los baja en
      paralelo con data.json usando destination "script" — un fetch()
      manual tendria destination "" y el SW revalidaria cada archivo
      dos veces (10 requests en vez de 5). Los ?v=NN son inmutables
      por release: coinciden con el CORE del service worker -->
-<link rel="preload" as="script" href="js/storage.js?v=30">
-<link rel="preload" as="script" href="js/freshness.js?v=30">
-<link rel="preload" as="script" href="js/state.js?v=30">
-<link rel="preload" as="script" href="js/siman.js?v=30">
-<link rel="preload" as="script" href="js/sync.js?v=30">
-<link rel="preload" as="script" href="js/render.js?v=30">
-<link rel="preload" as="script" href="js/app.js?v=30">
+<link rel="preload" as="script" href="js/storage.js?v=31">
+<link rel="preload" as="script" href="js/freshness.js?v=31">
+<link rel="preload" as="script" href="js/state.js?v=31">
+<link rel="preload" as="script" href="js/siman.js?v=31">
+<link rel="preload" as="script" href="js/sync.js?v=31">
+<link rel="preload" as="script" href="js/render.js?v=31">
+<link rel="preload" as="script" href="js/app.js?v=31">
 </head>
 <body>
 <div class="wrap">
@@ -120,9 +120,8 @@
       <button type="button" class="chip on" id="sw-add"
         style="flex:none">+ vigilar</button>
     </div>
-    <p class="meta" id="sw-note">Los términos vigilados se guardan en tu
-      cuenta para que el barrido los revise — no pongas datos
-      personales ni información sensible en la búsqueda.</p>
+    <p class="meta" id="sw-note" hidden>Se guardan en tu cuenta.
+      No escribas datos personales.</p>
     <div class="meta" id="siman-sort" style="margin:8px 0">
       ordenar:
       <button type="button" class="chip" data-ss="count">más alertas</button>
@@ -315,10 +314,10 @@
     boot.appendChild(p); boot.appendChild(b);
   };
   try {
-    const MODS = ["js/storage.js?v=30", "js/freshness.js?v=30",
-                  "js/state.js?v=30", "js/siman.js?v=30",
-                  "js/sync.js?v=30", "js/render.js?v=30",
-                  "js/app.js?v=30"];
+    const MODS = ["js/storage.js?v=31", "js/freshness.js?v=31",
+                  "js/state.js?v=31", "js/siman.js?v=31",
+                  "js/sync.js?v=31", "js/render.js?v=31",
+                  "js/app.js?v=31"];
     // los modulos ya vienen precargados via <link rel="preload"> en el
     // head; aqui solo baja data.json y luego se EJECUTAN en orden —
     // los modulos leen window.D al evaluarse
@@ -331,7 +330,7 @@
         const names = (await caches.keys())
           .filter(k => k.startsWith("pricewatch-"));
         names.sort((a, b) =>
-          (b === "pricewatch-v30") - (a === "pricewatch-v30"));
+          (b === "pricewatch-v31") - (a === "pricewatch-v31"));
         for (const n of names) {
           const hit = await caches.open(n)
             .then(c => c.match("data.json")).catch(() => null);

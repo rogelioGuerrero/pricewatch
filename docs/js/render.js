@@ -431,13 +431,17 @@ function render(){
           <div class="grid">${items.map(sCard).join("")}</div>
         </details>`;
       }).join("")
-        || (q ? `<p class='meta'>Sin coincidencias en Siman</p>`
-            : `<p class='meta'>Sin alertas hoy — ${SIMAN.n_items||0} variantes `
-            + `bajo vigilancia.</p>`);
+        || (q ? `<p class='meta'>Sin coincidencias en Siman</p>` : "");
       document.querySelectorAll("#siman-sort .chip").forEach(c =>
         c.classList.toggle("on", c.dataset.ss === SSORT));
-      $("#siman-sum").textContent =
-        `vigilando ${SWATCH.length} artículos · ${nSiman} alertan`;
+      // una sola linea de resumen: gangas de hoy sobre las busquedas
+      // vigiladas (sin estado = invitacion a crear la primera)
+      const nW = SWATCH.length;
+      $("#siman-sum").textContent = nW === 0
+        ? "Aún no vigilas nada: agrega una marca o artículo."
+        : (nSiman ? `${nSiman} ganga${nSiman>1?"s":""} en `
+                  : "Sin gangas hoy en ")
+          + (nW > 1 ? `tus ${nW} búsquedas` : "tu búsqueda");
       // procedencia honesta: de cuando es la ultima lectura Siman y si
       // ya hay items cuya observacion caduco (excluidos de las alertas)
       const sfEl = document.getElementById("siman-fresh");
@@ -449,12 +453,20 @@ function render(){
           ? `lectura ${sd}${nOld ? ` · ${nOld} ya no vigente${nOld>1?"s":""}` : ""}`
           : "";
       }
-      $("#siman-watches").innerHTML = SWATCH.map(w =>
-        `<span class="chip on">${esc(w.q)}${w.talla?` · ${esc(w.talla)}`:""}
+      // cada chip confiesa cuantas coincidencias vigentes tiene su
+      // busqueda; >150 es demasiado amplia para ser util
+      $("#siman-watches").innerHTML = SWATCH.map(w => {
+        const nM = SIMAN.items.filter(p => p.w === w.q
+          && (p.ta || "") === (w.talla || "")
+          && PWData.siman(p).state === "available").length;
+        return `<span class="chip on">${esc(w.q)}${w.talla?` · ${esc(w.talla)}`:""}
+         · <span class="meta">${nM}</span>${nM > 150
+           ? ` <span class="warn" title="Agrega talla o tipo para afinar`
+           + ` la búsqueda">· muy amplia</span>` : ""}
          <button type="button" class="chip" style="padding:0 6px;color:var(--up)"
             aria-label="dejar de vigilar ${esc(w.q)}"
-            data-wq="${esc(w.q)}|${esc(w.talla||"")}">✕</button></span>`
-      ).join(" ")
+            data-wq="${esc(w.q)}|${esc(w.talla||"")}">✕</button></span>`;
+      }).join(" ")
         + (AW.user ? "" :
            " <span class='meta'>sin sesión: cambios solo locales</span>");
       // silenciados (👎): restaurables; cada regla "pid|tkey" muestra

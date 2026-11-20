@@ -298,6 +298,16 @@ for (const el of ["#sw-q", "#sw-t"])
       $("#sw-add").click();
     }
   });
+// la nota de privacidad solo sale mientras se edita la vigilancia
+// (foco en un input o texto ya escrito) — nunca texto fijo
+const swNote = on => { $("#sw-note").hidden = !on; };
+swNote(!!$("#sw-q").value.trim());
+for (const el of ["#sw-q", "#sw-t"]) {
+  $(el).addEventListener("focusin", () => swNote(true));
+  $(el).addEventListener("focusout", e => swNote(
+    e.relatedTarget === $("#sw-q") || e.relatedTarget === $("#sw-t")
+    || !!$("#sw-q").value.trim()));
+}
 document.addEventListener("click", e => {
   if (!e.target.closest("#sw-sug") && e.target.id !== "sw-q")
     $("#sw-sug").style.display = "none";
