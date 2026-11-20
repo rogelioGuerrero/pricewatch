@@ -3,7 +3,7 @@
 // scripts/template.html (el loader de data.json + módulos).
 // Regresión: los módulos podían agregarse antes de que ejecutaran los
 // CDN defer (echarts/appwrite) → AW.ok quedaba false para siempre.
-// v29: el fallback offline itera SOLO caches pricewatch-* preferiendo
+// v30: el fallback offline itera SOLO caches pricewatch-* preferiendo
 // el release vigente, valida el cuerpo con el mismo predicado del SW
 // y confiesa X-PriceWatch-Cache cuando el SW sirvio la copia.
 const { test } = require("node:test");
@@ -14,9 +14,9 @@ const { makeCtx, DEMO_D } = require("./harness.js");
 const HTML = fs.readFileSync(
   path.join(__dirname, "..", "..", "scripts", "template.html"), "utf8");
 const INLINE = /<script>([\s\S]*?)<\/script>/.exec(HTML)[1];
-const MODS = ["js/storage.js?v=29", "js/freshness.js?v=29",
-              "js/state.js?v=29", "js/siman.js?v=29", "js/sync.js?v=29",
-              "js/render.js?v=29", "js/app.js?v=29"];
+const MODS = ["js/storage.js?v=30", "js/freshness.js?v=30",
+              "js/state.js?v=30", "js/siman.js?v=30", "js/sync.js?v=30",
+              "js/render.js?v=30", "js/app.js?v=30"];
 const tick = () => new Promise(r => setImmediate(r));
 const resp = (d, hdrs = {}) => ({ ok: true,
   json: () => Promise.resolve(d),
@@ -107,7 +107,7 @@ test("offline: fallback valida caches propios, salta copias invalidas", async ()
   const opened = [];
   const store = {
     // la copia mas nueva esta truncada: NO tapa la buena mas vieja
-    "pricewatch-v29": new Map([["data.json",
+    "pricewatch-v30": new Map([["data.json",
       { json: () => Promise.reject(new SyntaxError("truncado")) }]]),
     "pricewatch-v20": new Map([["data.json",
       { json: () => Promise.resolve({ ...DEMO_D,
@@ -130,7 +130,7 @@ test("offline: fallback valida caches propios, salta copias invalidas", async ()
 test("offline: esquema invalido en caches propios no se acepta", async () => {
   const opened = [];
   const store = {
-    "pricewatch-v29": new Map([["data.json",
+    "pricewatch-v30": new Map([["data.json",
       { json: () => Promise.resolve({ html: "<b>error proxy</b>" }) }]]),
     "otro-proyecto": new Map([["data.json",
       { json: () => Promise.resolve({ ...DEMO_D,

@@ -106,11 +106,9 @@ test("tab invalido/malicioso cae a Inicio sin SyntaxError", () => {
 test("pantalla angosta: 'explorar' no existe y cae a inicio", () => {
   const ctx = startup({ mobile: true, stored: { "pw-tab": "explorar" } });
   assert.deepEqual(panesOn(ctx.__doc), ["inicio"]);
-  // el tab tampoco esta en la barra, y el bottom-nav marca Inicio
+  // el tab tampoco esta en la barra, y el FAB rotula la seccion activa
   assert.ok(!ctx.__doc.querySelector('.tab[data-t="explorar"]'));
-  const bn = ctx.__doc.querySelectorAll("#bnav button");
-  assert.equal(bn.length, 4);
-  assert.equal(bn.find(b => b.classSet.has("on")).dataset.t, "inicio");
+  assert.equal(ctx.__doc.getElementById("fab-label").textContent, "Inicio");
 });
 
 test("hora del build en GMT-6 junto a la fecha del dataset", () => {

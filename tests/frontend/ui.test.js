@@ -41,26 +41,33 @@ test("inicio renderiza secciones resumen y acceso a mas secciones", () => {
     || ini.textContent.includes("Todo al día"),
     "resumen accionable o estado 'al dia' presente");
   // el fab 'secciones' abre el sheet con todos los destinos
-  doc.getElementById("moresec").click();
+  doc.getElementById("fab").click();
   assert.equal(doc.getElementById("dlg-nav").open, true);
   const stock = doc.querySelector('#dlg-nav .navitem[data-t="stock"]');
-  assert.ok(stock, "stock alcanzable via mas secciones");
+  assert.ok(stock, "stock alcanzable via el FAB");
   doc.getElementById("dlg-nav")
     .onclick({ target: stock, preventDefault() {}, stopPropagation() {} });
   assert.deepEqual(panesOn(doc), ["stock"], "navitem navega a stock");
 });
 
-test("bottom nav: 4 destinos, navega y marca el activo", () => {
+test("movil: el FAB es la unica navegacion — sin bnav ni moresec", () => {
   const ctx = startup({ mobile: true });
   const doc = ctx.__doc;
-  const btns = doc.querySelectorAll("#bnav button");
-  assert.deepEqual(btns.map(b => b.dataset.t),
-    ["inicio", "favs", "ofertas", "siman"]);
-  const siman = btns.find(b => b.dataset.t === "siman");
-  siman.click();
+  // regresion: la barra inferior y el boton del header no existen
+  assert.equal(doc.getElementById("bnav"), null);
+  assert.equal(doc.getElementById("moresec"), null);
+  doc.getElementById("fab").click();
+  assert.equal(doc.getElementById("dlg-nav").open, true);
+  const dest = doc.querySelectorAll("#dlg-nav .navitem")
+    .map(b => b.dataset.t);
+  for (const t of ["inicio", "favs", "ofertas", "siman"])
+    assert.ok(dest.includes(t), `destino ${t} en la hoja`);
+  const siman = doc.querySelector('#dlg-nav .navitem[data-t="siman"]');
+  doc.getElementById("dlg-nav")
+    .onclick({ target: siman, preventDefault() {}, stopPropagation() {} });
   assert.deepEqual(panesOn(doc), ["siman"]);
-  assert.ok(siman.classSet.has("on"));
-  assert.ok(!btns[0].classSet.has("on"), "inicio ya no activo");
+  // el FAB rotula la seccion activa
+  assert.equal(doc.getElementById("fab-label").textContent, "Siman");
 });
 
 test("paginacion progresiva: 24 por pagina, contador y boton", () => {

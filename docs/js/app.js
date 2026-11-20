@@ -33,17 +33,6 @@ $("#tabs").innerHTML = TABS.map(([id,n,nr]) =>
 // "[" rompia querySelector y un tab inexistente dejaba la app sin pane
 const tabEl = id => [...document.querySelectorAll(".tab")]
   .find(t => t.dataset.t === id);
-// barra inferior movil: los 4 destinos primarios reusan la MISMA
-// activacion de tabs — nada de handlers paralelos
-const bnavSync = id => document.querySelectorAll("#bnav button")
-  .forEach(b => {
-    const on = b.dataset.t === id;
-    b.classList.toggle("on", on);
-    on ? b.setAttribute("aria-current", "page")
-       : b.removeAttribute("aria-current");
-  });
-document.querySelectorAll("#bnav button")
-  .forEach(b => b.onclick = () => goTab(b.dataset.t));
 // el alcance del buscador cambia por tab: catalogo PriceSmart vs
 // filtro de alertas Siman — el placeholder lo dice siempre
 const qScope = t => {
@@ -72,7 +61,6 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   PWStore.set("pw-tab", t.dataset.t);
   const lbl = TABS.find(x=>x[0]===t.dataset.t);
   $("#fab-label").textContent = lbl ? lbl[1] : "";
-  bnavSync(t.dataset.t);
   qScope(t.dataset.t);
   if (t.dataset.t==="favs" && favFilter!=="all") favFilter = "all";
   // render perezoso: rellena solo el pane entrante y pinta sus sparks
@@ -109,8 +97,8 @@ document.querySelectorAll("#f-ofertas .chip")
     render(); });
 // FAB + hoja movil: arriba el Resumen accionable, abajo las secciones
 const dlgNav = document.getElementById("dlg-nav");
-// la misma hoja de secciones la abre el FAB (legado, oculto) y el
-// boton "☰ secciones" del header en movil
+// en movil el FAB es la unica entrada de navegacion: abre la hoja
+// de secciones con el Resumen accionable arriba
 const openNav = () => {
   stampFormOwner(dlgNav);
   $("#navres").innerHTML = RESUMEN.length
@@ -129,7 +117,6 @@ const openNav = () => {
   dlgNav.showModal();
 };
 $("#fab").onclick = openNav;
-$("#moresec").onclick = openNav;
 $("#dlg-nav").onclick = e => {
   const it = e.target.closest(".navitem"); if (!it) return;
   dlgNav.close();

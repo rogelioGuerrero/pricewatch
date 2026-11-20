@@ -1,6 +1,6 @@
 "use strict";
 // sw.test.js — ejecuta docs/sw.js real contra caches/clients falsos.
-// v29: assets ?v=NN inmutables (sin revalidacion en background),
+// v30: assets ?v=NN inmutables (sin revalidacion en background),
 // data.json valida el CUERPO antes de pisar el cache y la copia
 // guardada se sirve marcada con X-PriceWatch-Cache; la instalacion
 // valida el dataset precacheado y jamas borra caches ajenos/viejos.
@@ -122,7 +122,7 @@ test("install precarga el shell completo y valida el dataset", async () => {
   await fire("install", waitEv());
   assert.equal(store[CACHE].size, CORE.length);
   assert.ok(store[CACHE].has(keyOf("./data.json")));
-  assert.ok(store[CACHE].has(keyOf("./js/app.js?v=29")));
+  assert.ok(store[CACHE].has(keyOf("./js/app.js?v=30")));
   assert.ok(log.includes("skipWaiting"), "clama tras validar todo");
 });
 
@@ -241,10 +241,10 @@ test("install: dataset invalido aborta y solo limpia el cache nuevo", async () =
     "otro-proyecto": new Map([["./data.json", dataResp()]]) } });
   ctx.__installData = { generated: "ayer", products: "mal" };
   await assert.rejects(fire("install", waitEv()));
-  assert.ok(!store[CACHE], "el cache v29 fallido se borra");
+  assert.ok(!store[CACHE], "el cache v30 fallido se borra");
   assert.ok(store["pricewatch-v20"], "release viejo preservado");
   assert.ok(store["otro-proyecto"], "cache ajeno preservado");
-  assert.ok(log.includes("del:" + CACHE), "solo se borro v29");
+  assert.ok(log.includes("del:" + CACHE), "solo se borro v30");
   assert.ok(!log.includes("skipWaiting"), "nunca clamo el control");
 });
 
@@ -262,12 +262,12 @@ test("asset versionado: hit inmutable, cero revalidacion", async () => {
   let calls = 0;
   const { fire } = makeSW({
     store: { [CACHE]: new Map(
-      [["http://pw.test/js/app.js?v=29", new Response("/* v29 */")]]) },
+      [["http://pw.test/js/app.js?v=30", new Response("/* v30 */")]]) },
     net: () => { calls++;
                  return Promise.resolve(new Response("/* red */")); } });
   const r = await fire("fetch", fetchEv({ method: "GET",
-    url: "http://pw.test/js/app.js?v=29", mode: "cors" }));
-  assert.equal(await r.text(), "/* v29 */");
+    url: "http://pw.test/js/app.js?v=30", mode: "cors" }));
+  assert.equal(await r.text(), "/* v30 */");
   await tick();
   assert.equal(calls, 0, "un hit versionado nunca toca la red");
 });
@@ -276,23 +276,23 @@ test("asset versionado: miss baja de red y cachea para el release", async () => 
   const { store, fire } = makeSW({
     net: () => Promise.resolve(new Response("/* nuevo */")) });
   const ev = fetchEv({ method: "GET",
-    url: "http://pw.test/js/app.js?v=29", mode: "cors" });
+    url: "http://pw.test/js/app.js?v=30", mode: "cors" });
   const r = await fire("fetch", ev);
   assert.equal(await r.text(), "/* nuevo */");
-  const cached = store[CACHE].get(keyOf("./js/app.js?v=29"));
-  assert.ok(cached, "la bajada queda cacheada en v29");
+  const cached = store[CACHE].get(keyOf("./js/app.js?v=30"));
+  assert.ok(cached, "la bajada queda cacheada en v30");
 });
 
-test("legacy: worker viejo sirve bare viejo; ?v=29 no colisiona", async () => {
+test("legacy: worker viejo sirve bare viejo; ?v=30 no colisiona", async () => {
   // el bug real era con el worker VIEJO activo: un HTML nuevo pedia
   // las MISMAS URLs bare y el cache-first generico del v20 devolvia
   // los assets viejos (HTML nuevo + JS/CSS viejos = mezcla rota).
   // Este mock corre el MISMO fuente del SW con el release renombrado
   // a v20: el handler cache-first generico no cambio entre releases.
-  const LEGACY = SW.replace('const CACHE = "pricewatch-v29"',
+  const LEGACY = SW.replace('const CACHE = "pricewatch-v30"',
       'const CACHE = "pricewatch-v20"')
-    .replace('const VER = "29"', 'const VER = "20"')
-    .replaceAll("?v=29", "?v=20");
+    .replace('const VER = "30"', 'const VER = "20"')
+    .replaceAll("?v=30", "?v=20");
   const { fire } = makeSW({ source: LEGACY,
     store: { "pricewatch-v20": new Map([
       ["./js/app.js", new Response("JS-VIEJO")],
@@ -308,10 +308,10 @@ test("legacy: worker viejo sirve bare viejo; ?v=29 no colisiona", async () => {
     assert.equal(await r.text(), want,
       `bare ${u}: reproduce el mezclado bajo el worker v20`);
   }
-  // el fix: el HTML nuevo pide ?v=29 — llave que NO existe en el
+  // el fix: el HTML nuevo pide ?v=30 — llave que NO existe en el
   // cache v20, asi que el mismo handler generico baja de la red
-  for (const u of ["http://pw.test/js/app.js?v=29",
-                   "http://pw.test/styles.css?v=29"]) {
+  for (const u of ["http://pw.test/js/app.js?v=30",
+                   "http://pw.test/styles.css?v=30"]) {
     const r = await fire("fetch", fetchEv(
       { method: "GET", url: u, mode: "cors" }));
     assert.equal(await r.text(), "/* NUEVO */",
@@ -362,7 +362,7 @@ test("nada de red durante install/activate ni requests ajenos", async () => {
   assert.equal(netCalls, 0, "ningún fetch real debió dispararse");
 });
 
-test("release 29: toda URL local js/css del template esta en CORE", () => {
+test("release 30: toda URL local js/css del template esta en CORE", () => {
   const TPL = fs.readFileSync(path.join(__dirname, "..", "..",
     "scripts", "template.html"), "utf8");
   const head = /<head>([\s\S]*?)<\/head>/.exec(TPL)[1];
@@ -373,10 +373,10 @@ test("release 29: toda URL local js/css del template esta en CORE", () => {
   assert.ok(urls.length >= 10, `paridad: ${urls.length} urls locales`);
   assert.ok(mods.length >= 7, `loader: ${mods.length} modulos`);
   for (const u of [...urls, ...mods]) {
-    assert.ok(u.includes("?v=29"), `sin version de release: ${u}`);
+    assert.ok(u.includes("?v=30"), `sin version de release: ${u}`);
     assert.ok(CORE.includes("./" + u), `${u} falta en CORE del SW`);
   }
   for (const c of CORE.filter(x => /\.(?:js|css)(?:\?|$)/.test(x)))
-    assert.ok(c.includes("?v=29"), `CORE sin version: ${c}`);
-  assert.equal(CACHE, "pricewatch-v29");
+    assert.ok(c.includes("?v=30"), `CORE sin version: ${c}`);
+  assert.equal(CACHE, "pricewatch-v30");
 });

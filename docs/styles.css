@@ -113,15 +113,18 @@
   .alert { background:var(--card); border:1px solid var(--warn); color:var(--txt);
            border-radius:10px; padding:8px 12px; font-size:12px; cursor:pointer }
   .alert.new { border-color:var(--info) }
-  /* el FAB ya no es navegacion primaria: movil usa la barra inferior
-     y "☰ secciones" en el header; el elemento queda oculto (su
-     handler abre la misma hoja dlg-nav) */
-  .fab { display:none !important }
-  #moresec { display:none }
+  /* el FAB es la UNICA navegacion en movil: abre la hoja de
+     secciones; el safe-area lo saca de la barra de gestos Android */
+  .fab { display:none; position:fixed; right:16px;
+         bottom:calc(18px + env(safe-area-inset-bottom,0px)); z-index:60;
+         height:46px; padding:0 16px; border-radius:99px;
+         background:var(--info); color:#fff; border:0; font-size:13px;
+         font-weight:600; box-shadow:0 4px 14px #0008; cursor:pointer;
+         align-items:center; gap:8px }
+  .fab svg { flex:none }
   #datastrip { display:flex; align-items:center; gap:8px; flex-wrap:wrap;
     font-size:11px; color:var(--mut); padding:2px 0 0; min-height:22px }
   #datastrip .warn { color:var(--warn) }
-  #bnav { display:none }
   #toast { position:fixed; left:50%; transform:translateX(-50%) translateY(20px);
     bottom:72px; z-index:80; background:var(--card);
     border:1px solid var(--line); border-radius:99px; padding:8px 14px;
@@ -171,32 +174,23 @@
   .cartcheck { width:22px; height:22px; position:absolute; top:8px; right:10px;
                accent-color:var(--info); cursor:pointer }
   .card.incart { opacity:.55 }
-  body.shop .fab { bottom:70px }
+  body.shop .fab { bottom:calc(70px + env(safe-area-inset-bottom,0px)) }
   body.shop .wrap { padding-bottom:70px }
   @media (max-width:700px) {
-    .tabs { display:none } #moresec { display:inline-flex }
-    /* navegacion primaria: 4 destinos fijos abajo, targets >=44px y
-       padding de safe-area para telefonos con barra de gestos */
-    #bnav { display:flex; position:fixed; left:0; right:0; bottom:0;
-      z-index:56; background:var(--card);
-      border-top:1px solid var(--line);
-      padding-bottom:env(safe-area-inset-bottom,0px) }
-    #bnav button { flex:1; min-height:48px; background:none; border:0;
-      border-top:2px solid transparent; color:var(--mut);
-      font-size:12px; padding:8px 4px; font-family:inherit }
-    #bnav button.on { color:var(--txt); border-top-color:var(--info);
-      font-weight:600 }
-    /* la barra fija no debe tapar el final del feed */
-    .wrap { padding-bottom:96px }
+    .tabs { display:none } .fab { display:flex }
+    /* el FAB fijo no debe tapar el final del feed */
+    .wrap { padding-bottom:84px }
     /* va DESPUES del base body.shop 70px: misma especificidad,
        si queda antes gana la regla de escritorio */
-    body.shop .wrap { padding-bottom:150px }
+    body.shop .wrap { padding-bottom:140px }
     #q { width:100% }
     .header-actions { float:none; margin:10px 0 0; max-width:100%;
                       justify-content:flex-start }
-    /* el carrito fijo va ENCIMA de la barra de navegacion */
-    #shopbar { flex-wrap:wrap; row-gap:6px; bottom:56px }
-    #toast { bottom:120px }
+    /* el carrito fijo puede envolver en angosto */
+    #shopbar { flex-wrap:wrap; row-gap:6px }
+    /* el toast queda sobre el FAB (shopbar + FAB en modo compra) */
+    #toast { bottom:80px }
+    body.shop #toast { bottom:130px }
     /* Chrome Android hace zoom al enfocar inputs con fuente <16px */
     input { font-size:16px }
     /* targets >=36px para el pulgar: estrella y chips del header */

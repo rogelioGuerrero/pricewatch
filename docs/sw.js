@@ -1,7 +1,7 @@
 // PriceWatch SV — navegación network-first (abrir la app trae la
 // versión fresca); sin señal cae al último snapshot cacheado.
-const CACHE = "pricewatch-v29";
-const VER = "29";
+const CACHE = "pricewatch-v30";
+const VER = "30";
 // shell completa precacheada: si el SW se actualiza y el usuario abre
 // offline antes de navegar online, los js/css ya estan en el cache
 // nuevo (antes solo sobrevivian si ya se habian pedido). Los assets
@@ -12,13 +12,13 @@ const VER = "29";
 // archivo ACTUAL para cualquier ?v= — una llave versionada no
 // retiene contenido historico por release
 const CORE = ["./", "./index.html", "./manifest.webmanifest",
-             "./data.json", "./styles.css?v=29",
-             "./vendor/echarts.min.js?v=29",
-             "./vendor/appwrite-sdk.js?v=29",
-             "./js/storage.js?v=29", "./js/freshness.js?v=29",
-             "./js/state.js?v=29", "./js/siman.js?v=29",
-             "./js/sync.js?v=29", "./js/render.js?v=29",
-             "./js/app.js?v=29"];
+             "./data.json", "./styles.css?v=30",
+             "./vendor/echarts.min.js?v=30",
+             "./vendor/appwrite-sdk.js?v=30",
+             "./js/storage.js?v=30", "./js/freshness.js?v=30",
+             "./js/state.js?v=30", "./js/siman.js?v=30",
+             "./js/sync.js?v=30", "./js/render.js?v=30",
+             "./js/app.js?v=30"];
 
 // esquema del dataset compartido con el bootstrap inline: un payload
 // que no lo pasa jamas entra al cache ni reemplaza una copia buena.
@@ -66,7 +66,7 @@ self.addEventListener("install", e => {
   // el SW viejo (con su cache completa) sigue activo en vez de
   // quedar un cache nuevo a medias. El data.json precacheado tambien
   // se valida antes de clamar: una build con dataset roto no debe
-  // tomar el control. Si algo falla se borra SOLO el cache v29 en
+  // tomar el control. Si algo falla se borra SOLO el cache v30 en
   // instalacion — los releases viejos quedan intactos
   e.waitUntil(
     caches.open(CACHE).then(c => c.addAll(CORE)
@@ -157,7 +157,7 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // assets versionados (?v=29): un hit se sirve tal cual SIN
+  // assets versionados (?v=30): un hit se sirve tal cual SIN
   // revalidacion en background — reescribir la entrada meteria el
   // archivo actual bajo una llave que el HTML que la pidio cree
   // inmutable. Un miss siempre resuelve a la red
