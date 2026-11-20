@@ -450,7 +450,7 @@ function render(){
         const nOld = SIMAN.items
           .filter(p => PWData.siman(p).state !== "available").length;
         sfEl.textContent = sd
-          ? `lectura ${sd}${nOld ? ` · ${nOld} ya no vigente${nOld>1?"s":""}` : ""}`
+          ? ` · lectura ${sd}${nOld ? ` · ${nOld} ya no vigente${nOld>1?"s":""}` : ""}`
           : "";
       }
       // cada chip confiesa cuantas coincidencias vigentes tiene su
@@ -459,16 +459,13 @@ function render(){
         const nM = SIMAN.items.filter(p => p.w === w.q
           && (p.ta || "") === (w.talla || "")
           && PWData.siman(p).state === "available").length;
-        return `<span class="chip on">${esc(w.q)}${w.talla?` · ${esc(w.talla)}`:""}
-         · <span class="meta">${nM}</span>${nM > 150
+        return `<span class="chip watch on">${esc(w.q)}${w.talla?` · ${esc(w.talla)}`:""} · <span class="meta">${nM}</span>${nM > 150
            ? ` <span class="warn" title="Agrega talla o tipo para afinar`
-           + ` la búsqueda">· muy amplia</span>` : ""}
-         <button type="button" class="chip" style="padding:0 6px;color:var(--up)"
+           + ` la búsqueda">· muy amplia</span>` : ""}<button type="button"
+            class="chip" style="padding:0 6px;color:var(--up)"
             aria-label="dejar de vigilar ${esc(w.q)}"
             data-wq="${esc(w.q)}|${esc(w.talla||"")}">✕</button></span>`;
-      }).join(" ")
-        + (AW.user ? "" :
-           " <span class='meta'>sin sesión: cambios solo locales</span>");
+      }).join(" ");
       // silenciados (👎): restaurables; cada regla "pid|tkey" muestra
       // el titulo
       $("#siman-muted").innerHTML = SMUTE.size

@@ -126,6 +126,9 @@
     font-size:11px; color:var(--mut); padding:2px 0 0; min-height:22px }
   #datastrip .warn { color:var(--warn) }
   .chip .warn { color:var(--warn) }
+  /* chips de vigilancia Siman: contador y ✕ con aire (target >=28px) */
+  .chip.watch { display:inline-flex; align-items:center; gap:6px }
+  .chip.watch button { min-width:28px; min-height:28px }
   #toast { position:fixed; left:50%; transform:translateX(-50%) translateY(20px);
     bottom:72px; z-index:80; background:var(--card);
     border:1px solid var(--line); border-radius:99px; padding:8px 14px;

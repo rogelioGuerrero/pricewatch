@@ -858,8 +858,8 @@ const syncLine = () => {
   if (!PWStore.status().persisted)
     return "Tus datos no se guardarán al cerrar la app";
   if (!AW.user)
-    return AW.ok && FAV.size
-      ? "Sin sesión: tus favoritos solo están en este teléfono" : "";
+    return AW.ok && (FAV.size || SWATCH.length)
+      ? "Sin sesión: tus datos solo están en este teléfono" : "";
   const p = OUTBOX.length;
   if (SYNC.state === "syncing") return "sincronizando…";
   if (p) return `${p} cambio${p > 1 ? "s" : ""} pendiente${p > 1 ? "s" : ""}`

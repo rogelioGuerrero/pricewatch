@@ -292,11 +292,22 @@ test("datastrip: solo excepciones; oculto cuando todo va bien", () => {
   run(ctx, "render()");
   assert.match(doc.getElementById("ds-text").textContent,
     /Sin conexión/);
-  // guest con favoritos y Appwrite configurado: aviso de local-only
+  // guest con datos propios y Appwrite configurado: aviso local-only
   const ctx2 = startup({ appwrite: APPWRITE_STUB,
                          stored: { "pw-favs": '["111"]' } });
   assert.match(ctx2.__doc.getElementById("ds-text").textContent,
-    /Sin sesión: tus favoritos solo están en este teléfono/);
+    /Sin sesión: tus datos solo están en este teléfono/);
+  // solo vigilancias (sin favoritos): el aviso tambien cubre watches
+  const ctx3 = startup({ appwrite: APPWRITE_STUB,
+                         stored: { "pw-siman-watch": '[{"q":"zapato"}]' } });
+  assert.match(ctx3.__doc.getElementById("ds-text").textContent,
+    /Sin sesión: tus datos solo están en este teléfono/);
+  // guest sin datos propios: el strip queda vacio (quality explicita:
+  // el ctx de arriba le escribe .stale al DEMO_D compartido)
+  const ctx4 = startup({ appwrite: APPWRITE_STUB,
+    data: { ...DEMO_D, quality: { sources:
+      { siman: { ok: true, stale: false } } } } });
+  assert.equal(ctx4.__doc.getElementById("ds-text").textContent, "");
 });
 
 test("ficha movil: el dlg abre como modal y bloquea el fondo", () => {
