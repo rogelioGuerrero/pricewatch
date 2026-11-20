@@ -12,6 +12,7 @@ from types import SimpleNamespace
 import pytest
 import requests
 import sweep_siman as sm
+from common import AppwriteReadError
 
 
 class Resp:
@@ -123,3 +124,60 @@ def test_main_falla_no_toca_snapshot_db_ni_log(monkeypatch, tmp_path):
     assert log.read_bytes() == log_before, "log intacto"
     assert db.read_bytes() == db_before, "db existente intacta"
     assert touched == [], "ni hashes ni historia ni eventos"
+
+
+# ---------- watches_remote: reintento acotado + razon visible ----------
+
+
+def test_watches_appwrite_falla_dos_veces_y_logra(monkeypatch):
+    monkeypatch.setattr(sm, "aw_env", lambda: ("e", "p", "k"))
+    calls = []
+
+    def rows(table, *a, **k):
+        calls.append(table)
+        if len(calls) < 3:
+            raise AppwriteReadError("siman_watch: HTTP 500/invalid rows")
+        return [{"q": "zapato"}]
+    monkeypatch.setattr(sm, "aw_rows", rows)
+    assert sm.watches_remote() == [{"q": "zapato"}]
+    assert len(calls) == 3
+
+
+def test_watches_appwrite_muerto_confiesa_razon(monkeypatch):
+    monkeypatch.setattr(sm, "aw_env", lambda: ("e", "p", "k"))
+    calls = []
+
+    def rows(table, *a, **k):
+        calls.append(table)
+        raise AppwriteReadError("siman_watch: HTTP 403/invalid rows")
+    monkeypatch.setattr(sm, "aw_rows", rows)
+    with pytest.raises(RuntimeError, match="HTTP 403"):
+        sm.watches_remote()
+    assert len(calls) == 3, "tres intentos antes del RuntimeError"
+
+
+# ---------- gh_error / run_cli: la falla debe ser annotation publica ----------
+
+
+def test_gh_error_escapa_comandos_workflow(capsys):
+    msg = "100%" + chr(10) + "segunda" + chr(10) + "linea"
+    sm.gh_error("T", msg)
+    out = capsys.readouterr().out.strip()
+    assert out == "::error title=T::100%25%0Asegunda%0Alinea"
+
+
+def test_gh_error_trunca_a_300(capsys):
+    sm.gh_error("T", "x" * 400)
+    out = capsys.readouterr().out.strip()
+    assert out == "::error title=T::" + "x" * 300
+
+
+def test_run_cli_anota_error_y_devuelve_1(capsys):
+    def boom():
+        raise ValueError("estallo" + chr(10) + "con salto")
+    assert sm.run_cli(boom) == 1
+    out = capsys.readouterr().out
+    line = next(x for x in out.splitlines()
+                if x.startswith("::error title=Siman sweep::"))
+    assert "ValueError" in line and "con salto" in line
+    assert sm.run_cli(lambda: None) == 0

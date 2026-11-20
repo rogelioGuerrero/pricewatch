@@ -20,11 +20,12 @@ import os
 import sqlite3
 import sys
 import time
+import traceback
 from datetime import datetime, timedelta
 from urllib.parse import quote
 
 import requests
-from common import aw_env, aw_rows, hamming, norm, prune_jsonl, tkey, today_sv
+from common import aw_env, aw_rows, gh_error, hamming, norm, prune_jsonl, tkey, today_sv
 from common import talla_hit as talla_hit  # re-export: tests la importan
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -151,21 +152,32 @@ def watches_remote():
     """Valid empty is []; unavailable/unconfigured is None."""
     if not all(aw_env()):
         return None
-    try:
-        out = []
-        for r in aw_rows("siman_watch", strict=True):
-            w = {"q": r.get("q")}
-            if r.get("talla"):
-                w["talla"] = r["talla"]
-            if r.get("filtro"):
-                w["solo"] = [t.strip() for t in str(r["filtro"]).split(",")
-                             if t.strip()]
-            if w["q"]:
-                out.append(w)
-        return out
-    except Exception as e:
-        print(f"  (watches remotos no disponibles: {e})")
-        raise RuntimeError("Appwrite watchlist unavailable; keeping prior data") from e
+    last = None
+    for attempt in range(3):
+        try:
+            out = []
+            for r in aw_rows("siman_watch", strict=True):
+                w = {"q": r.get("q")}
+                if r.get("talla"):
+                    w["talla"] = r["talla"]
+                if r.get("filtro"):
+                    w["solo"] = [t.strip()
+                                 for t in str(r["filtro"]).split(",")
+                                 if t.strip()]
+                if w["q"]:
+                    out.append(w)
+            return out
+        except Exception as e:
+            last = e
+            print(f"  (watches remotos no disponibles: {e})")
+            if attempt < 2:
+                # arranques con Appwrite aun no listo (run #36): espera
+                # corta creciente antes de declararlo caido
+                time.sleep(2 if attempt == 0 else 6)
+    # nunca caer al watch file local: una lista vieja no puede pisar
+    # el estado remoto solo porque la red/Appwrite titubeo
+    raise RuntimeError("Appwrite watchlist unavailable; keeping prior data"
+                       f" ({last})") from last
 
 
 def load_watches():
@@ -479,5 +491,17 @@ def main():
         append_events(events, today)
 
 
+def run_cli(fn):
+    """Cualquier excepcion sale tambien como annotation ::error:: —
+    los logs del run piden login, la annotation es publica."""
+    try:
+        fn()
+    except Exception as e:
+        traceback.print_exc()
+        gh_error("Siman sweep", f"{type(e).__name__}: {e}")
+        return 1
+    return 0
+
+
 if __name__ == "__main__":
-    main()
+    sys.exit(run_cli(main))

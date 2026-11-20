@@ -15,10 +15,11 @@ import os
 import sqlite3
 import sys
 import time
+import traceback
 from datetime import datetime, timedelta
 
 import requests
-from common import aw_env, aw_rows, prune_jsonl, today_sv
+from common import aw_env, aw_rows, gh_error, prune_jsonl, today_sv
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "data")
@@ -651,4 +652,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        # annotation publica: los logs del run piden login (run #36)
+        traceback.print_exc()
+        gh_error("PriceSmart sweep", f"{type(e).__name__}: {e}")
+        sys.exit(1)

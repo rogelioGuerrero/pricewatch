@@ -160,6 +160,14 @@ jobs:
         with:
           path: docs
 
+      # upload vuelve antes de que el API de artifacts propague el
+      # artefacto (run #36: deploy lo busco 1s despues y encontro 0).
+      # Esperar a que aparezca; si nunca llega, fallar aqui, ruidoso.
+      - name: Esperar a que GitHub vea el artefacto
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/wait_artifact.py --name github-pages --timeout 180
+
       # deploy-pages a veces no ve el artefacto recien subido (metadata
       # de la API aun no propagada: run #36). Un segundo intento tras una
       # pausa lo resuelve; si ambos fallan, el job falla de verdad.

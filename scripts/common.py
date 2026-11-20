@@ -119,6 +119,15 @@ def prune_jsonl(path, keep_days=45):
     return len(lines) - len(keep)
 
 
+def gh_error(title, msg):
+    """::error:: workflow command: annotation PUBLICA del run (los logs
+    piden login para leerse). Escapes oficiales: % -> %25, CR -> %0D,
+    LF -> %0A; el mensaje se recorta a 300 chars."""
+    msg = (str(msg)[:300].replace("%", "%25")
+           .replace(chr(13), "%0D").replace(chr(10), "%0A"))
+    print(f"::error title={title}::{msg}")
+
+
 # ---------------- Appwrite (REST server-side, API key) ----------------
 
 AW_DB = "pricewatch"

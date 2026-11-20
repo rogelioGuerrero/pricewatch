@@ -17,7 +17,7 @@ from datetime import date
 from pathlib import Path
 
 import requests
-from common import today_sv
+from common import gh_error, today_sv
 
 FILES = ("prices.db", "siman.db", "events.jsonl", "siman_events.jsonl",
          "quality.json", "notifications.json")
@@ -338,6 +338,10 @@ def main():
             atomic_json(args.output, health)
         print(json.dumps(health))
         if not health["ok"]:
+            bad = "; ".join(
+                f"{src}: {', '.join(s['problems'])}"
+                for src, s in health["sources"].items() if not s["ok"])
+            gh_error("Salud de datos", bad or "datos invalidos")
             raise SystemExit(1)
     elif args.command == "backup":
         if not args.output:
