@@ -1,24 +1,25 @@
 // PriceWatch SV — navegación network-first (abrir la app trae la
 // versión fresca); sin señal cae al último snapshot cacheado.
-const CACHE = "pricewatch-v32";
-const VER = "32";
+const CACHE = "pricewatch-__ASSET_V__";
+const VER = "__ASSET_V__";
 // shell completa precacheada: si el SW se actualiza y el usuario abre
 // offline antes de navegar online, los js/css ya estan en el cache
 // nuevo (antes solo sobrevivian si ya se habian pedido). Los assets
-// llevan ?v=NN del release: el HTML nuevo pide URLs ?v=NN que NO
+// llevan ?v=<hash> del build (build_site deriva __ASSET_V__ del
+// contenido de los assets): el HTML nuevo pide URLs ?v=<hash> que NO
 // colisionan con las llaves bare que un cache viejo pudo dejar —
-// publicar un asset cambiado exige subir el numero de shell (CACHE),
-// nunca pisar ?v=NN en caliente. OJO: el servidor estatico sirve el
+// un asset cambiado cambia todas las llaves de golpe; nunca pisar
+// ?v=<hash> en caliente. OJO: el servidor estatico sirve el
 // archivo ACTUAL para cualquier ?v= — una llave versionada no
 // retiene contenido historico por release
 const CORE = ["./", "./index.html", "./manifest.webmanifest",
-             "./data.json", "./styles.css?v=32",
-             "./vendor/echarts.min.js?v=32",
-             "./vendor/appwrite-sdk.js?v=32",
-             "./js/storage.js?v=32", "./js/freshness.js?v=32",
-             "./js/state.js?v=32", "./js/siman.js?v=32",
-             "./js/sync.js?v=32", "./js/render.js?v=32",
-             "./js/app.js?v=32"];
+             "./data.json", "./styles.css?v=__ASSET_V__",
+             "./vendor/echarts.min.js?v=__ASSET_V__",
+             "./vendor/appwrite-sdk.js?v=__ASSET_V__",
+             "./js/storage.js?v=__ASSET_V__", "./js/freshness.js?v=__ASSET_V__",
+             "./js/state.js?v=__ASSET_V__", "./js/siman.js?v=__ASSET_V__",
+             "./js/sync.js?v=__ASSET_V__", "./js/render.js?v=__ASSET_V__",
+             "./js/app.js?v=__ASSET_V__"];
 
 // esquema del dataset compartido con el bootstrap inline: un payload
 // que no lo pasa jamas entra al cache ni reemplaza una copia buena.
@@ -66,7 +67,7 @@ self.addEventListener("install", e => {
   // el SW viejo (con su cache completa) sigue activo en vez de
   // quedar un cache nuevo a medias. El data.json precacheado tambien
   // se valida antes de clamar: una build con dataset roto no debe
-  // tomar el control. Si algo falla se borra SOLO el cache v32 en
+  // tomar el control. Si algo falla se borra SOLO el cache nuevo en
   // instalacion — los releases viejos quedan intactos
   e.waitUntil(
     caches.open(CACHE).then(c => c.addAll(CORE)
@@ -157,7 +158,7 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // assets versionados (?v=32): un hit se sirve tal cual SIN
+  // assets versionados (?v=__ASSET_V__): un hit se sirve tal cual SIN
   // revalidacion en background — reescribir la entrada meteria el
   // archivo actual bajo una llave que el HTML que la pidio cree
   // inmutable. Un miss siempre resuelve a la red

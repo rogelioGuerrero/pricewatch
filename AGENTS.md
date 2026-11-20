@@ -6,18 +6,19 @@ SQLite en cache + GitHub Pages + Appwrite (solo datos de usuario).
 ## Comandos
 
 ```powershell
-python scripts/build_site.py          # regenera docs/index.html + docs/data.json
+python scripts/build_site.py          # regenera docs/index.html + docs/data.json + docs/sw.js
 python -m pytest tests                # tests (lógica de diff, logs, notify)
 node --test tests/frontend/*.test.js  # tests JS del front (arranque, sync)
 python -m ruff check scripts tests    # lint (config en ruff.toml)
-python -m http.server -d docs 8080    # preview local del PWA
+python -m http.server -d docs 8080    # preview local del PWA (exige correr build_site antes)
 ```
 
 ## Layout
 
 - `scripts/` — sweeps, notify, build_site (todo stdlib excepto pywebpush/Pillow)
 - `docs/` — PWA: `scripts/template.html` es la fuente de `index.html`
-  (generado); `js/` es fuente directa. `data.json` se genera en el build.
+  y `scripts/sw.template.js` la de `sw.js` (ambos generados);
+  `js/` es fuente directa. `data.json` se genera en el build.
 - `data/` — runtime: dbs/snapshots/jsonl viven en Actions cache, no en git
 - `tests/` — pytest + `frontend/` (node:test); `conftest.py` pone
   `scripts/` en sys.path
@@ -29,9 +30,9 @@ python -m http.server -d docs 8080    # preview local del PWA
   externos, `open()` sin `with` — no "arreglar" por estilo
 - `ruff.toml` restringe las reglas a E/F/W/I por lo anterior
 - Nada se commitea desde CI: los workflows solo leen el repo
-- Los assets llevan `?v=NN`: publicar JS/CSS cambiados exige subir el
-  número de shell en `scripts/template.html` + `docs/sw.js` (CACHE,
-  VER, CORE) — si no, el cache del SW sirve la versión vieja
+- Los `?v=` de los assets, el `VER` y el `CACHE` del SW los deriva
+  `build_site` de un hash del contenido (`asset_version`, placeholder
+  `__ASSET_V__`) — no hay número de shell que subir a mano
 
 ## Memoria MCP
 

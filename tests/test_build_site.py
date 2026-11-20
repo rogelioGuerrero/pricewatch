@@ -1,6 +1,7 @@
-"""Tests de build_site.py — compute_agg y el build end-to-end sobre
-un root_dir temporal (modularizado: antes todo corria al importar)."""
+"""Tests de build_site.py — compute_agg, versionado de assets por
+hash y el build end-to-end sobre un root_dir temporal."""
 
+import re
 import sqlite3
 
 import build_site as bs
@@ -76,6 +77,7 @@ def _root(tmp_path):
     (tmp_path / "docs").mkdir()
     (tmp_path / "scripts").mkdir()
     (tmp_path / "scripts" / "template.html").write_text("<html>PW</html>")
+    (tmp_path / "scripts" / "sw.template.js").write_text("// SW __ASSET_V__")
     return tmp_path
 
 
@@ -143,6 +145,62 @@ def test_build_site_end_to_end(tmp_path):
     assert (tmp_path / "docs" / "data.json").exists()
     assert (tmp_path / "docs" / "index.html").read_text() == "<html>PW</html>"
     assert (tmp_path / "docs" / "version.json").exists()
+
+
+# ---------- versionado de assets por hash ----------
+
+def _root_versionado(tmp_path):
+    """Root con assets reales y templates con el placeholder."""
+    root = _root(tmp_path)
+    (root / "scripts" / "template.html").write_text(
+        '<html><link href="styles.css?v=__ASSET_V__">'
+        '<script src="js/app.js?v=__ASSET_V__"></html>')
+    (root / "scripts" / "sw.template.js").write_text(
+        'const CACHE = "pricewatch-__ASSET_V__";'
+        'const VER = "__ASSET_V__";'
+        'const CORE = ["./styles.css?v=__ASSET_V__"];')
+    (root / "docs" / "js").mkdir()
+    (root / "docs" / "vendor").mkdir()
+    (root / "docs" / "styles.css").write_text("body{}")
+    (root / "docs" / "js" / "app.js").write_text("// app")
+    (root / "docs" / "vendor" / "v.js").write_text("// vendor")
+    return root
+
+
+def test_asset_version_determinista(tmp_path):
+    root = _root_versionado(tmp_path)
+    v1 = bs.asset_version(str(root))
+    assert v1 == bs.asset_version(str(root))
+    assert re.fullmatch(r"[0-9a-f]{10}", v1)
+
+
+def test_asset_version_cambia_al_tocar_un_js(tmp_path):
+    root = _root_versionado(tmp_path)
+    v1 = bs.asset_version(str(root))
+    (root / "docs" / "js" / "app.js").write_text("// app cambiado")
+    assert bs.asset_version(str(root)) != v1
+
+
+def test_asset_version_cambia_al_tocar_vendor(tmp_path):
+    root = _root_versionado(tmp_path)
+    v1 = bs.asset_version(str(root))
+    (root / "docs" / "vendor" / "v.js").write_text("// vendor cambiado")
+    assert bs.asset_version(str(root)) != v1
+
+
+def test_build_sustituye_placeholder_en_index_y_sw(tmp_path):
+    root = _root_versionado(tmp_path)
+    bs.build_site(str(root))
+    ver = bs.asset_version(str(root))
+    html = (root / "docs" / "index.html").read_text()
+    sw = (root / "docs" / "sw.js").read_text()
+    assert "__ASSET_V__" not in html and "__ASSET_V__" not in sw
+    # los ?v= de index.html y sw.js salen del MISMO hash
+    vs_html = set(re.findall(r"\?v=([0-9a-f]{10})", html))
+    vs_sw = set(re.findall(r"\?v=([0-9a-f]{10})", sw))
+    assert vs_html == vs_sw == {ver}
+    assert f'CACHE = "pricewatch-{ver}"' in sw
+    assert f'VER = "{ver}"' in sw
 
 
 def test_build_site_sin_dbs_no_explota(tmp_path):

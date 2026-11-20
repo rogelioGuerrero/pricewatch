@@ -91,6 +91,23 @@ def read_events(path):
     return out
 
 
+def snapshot_is_synthetic(path):
+    """¿El snapshot es del demo? Lee solo la cabecera (~1 KB): los
+    escritores emiten las claves meta ANTES de "products", asi el flag
+    cabe ahi y no hace falta parsear varios MB por archivo. Si la
+    cabecera no trae la clave "products" (orden legacy) se parsea el
+    archivo completo como antes."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            head = f.read(1024)
+        if '"products"' not in head:
+            with open(path, encoding="utf-8") as f:
+                return bool(json.load(f).get("synthetic"))
+        return bool(re.search(r'"synthetic"\s*:\s*true', head))
+    except Exception:
+        return False
+
+
 def prune_jsonl(path, keep_days=45):
     """Recorta un log JSONL a los ultimos `keep_days` dias (fecha SV):
     el sitio solo muestra los ultimos 200 eventos y el digest solo lee

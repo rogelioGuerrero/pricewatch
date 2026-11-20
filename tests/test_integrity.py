@@ -147,10 +147,10 @@ def test_build_mis_sin_precios_tampoco_filtra_nada(tmp_path):
 def _copy_template(tmp_path):
     scripts = tmp_path / "scripts"
     scripts.mkdir(exist_ok=True)
-    src = os.path.join(os.path.dirname(build_site.__file__),
-                       "template.html")
-    with open(src, encoding="utf-8") as f:
-        (scripts / "template.html").write_text(f.read(), encoding="utf-8")
+    for name in ("template.html", "sw.template.js"):
+        src = os.path.join(os.path.dirname(build_site.__file__), name)
+        with open(src, encoding="utf-8") as f:
+            (scripts / name).write_text(f.read(), encoding="utf-8")
 
 
 def test_build_log_corrupto_siguiendo_devolviendo_validos(tmp_path):

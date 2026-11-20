@@ -21,6 +21,7 @@ backup/
 # sitio se publica como artefacto de Pages — no viven en git.
 docs/index.html
 docs/data.json
+docs/sw.js
 docs/version.json
 
 # Memoria MCP local (grafo de conocimiento del agente)

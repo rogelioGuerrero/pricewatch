@@ -19,7 +19,15 @@ import traceback
 from datetime import datetime, timedelta
 
 import requests
-from common import aw_env, aw_rows, gh_error, prune_jsonl, today_sv
+from common import (
+    aw_env,
+    aw_rows,
+    gh_error,
+    prune_jsonl,
+    read_events,
+    snapshot_is_synthetic,
+    today_sv,
+)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "data")
@@ -141,14 +149,6 @@ def sweep():
     return products, failed
 
 
-def _is_synthetic(path):
-    try:
-        with open(path, encoding="utf-8") as f:
-            return bool(json.load(f).get("synthetic"))
-    except Exception:
-        return False
-
-
 def load_previous_snapshot():
     """Devuelve el snapshot mas reciente, prefiriendo uno real
     (los sinteticos del demo no deben contaminar el diff de produccion)."""
@@ -157,7 +157,8 @@ def load_previous_snapshot():
     snaps = sorted(os.listdir(SNAP_DIR))
     if not snaps:
         return None, None
-    real = [s for s in snaps if not _is_synthetic(os.path.join(SNAP_DIR, s))]
+    real = [s for s in snaps
+            if not snapshot_is_synthetic(os.path.join(SNAP_DIR, s))]
     last = real[-1] if real else snaps[-1]
     with open(os.path.join(SNAP_DIR, last), encoding="utf-8") as f:
         return last[:-5], json.load(f)
@@ -178,7 +179,7 @@ def cleanup_synthetic():
     real, synt = [], []
     for s in snaps:
         path = os.path.join(SNAP_DIR, s)
-        (synt if _is_synthetic(path) else real).append(s)
+        (synt if snapshot_is_synthetic(path) else real).append(s)
     if len(real) < 5:
         return
     first_real = real[0][:-5]
@@ -372,10 +373,11 @@ def club_stock_diff(date, skus, products):
 
 def fetch_club_stock(skus, date):
     """Nivel 2: stock por club SV para los skus dados (batch de 50).
-    Guarda en club_stock(sku,date,club,nombre,en_stock,qty)."""
+    Guarda en club_stock(sku,date,club,nombre,en_stock,qty).
+    Devuelve cuantos lotes fallaron (0 = todos respondieron)."""
     skus = sorted(skus)
     if not skus:
-        return
+        return 0
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""CREATE TABLE IF NOT EXISTS club_stock (
         sku TEXT, date TEXT, club TEXT, club_name TEXT,
@@ -383,6 +385,8 @@ def fetch_club_stock(skus, date):
     conn.execute("CREATE INDEX IF NOT EXISTS idx_club_stock_date "
                  "ON club_stock(date)")
     rows = []
+    n_batches = (len(skus) + 49) // 50
+    n_failed = 0
     for i in range(0, len(skus), 50):
         batch = skus[i:i + 50]
         body = [{"skus": batch},
@@ -392,6 +396,7 @@ def fetch_club_stock(skus, date):
             res = SESSION.post(API_PRODUCT, json=body, headers=PS_HEADERS,
                                timeout=60).json()["data"]["products"]["results"]
         except Exception as e:
+            n_failed += 1
             print(f"  ! club_stock batch {i}: fallo ({e})")
             continue
         for prod in res:
@@ -422,6 +427,12 @@ def fetch_club_stock(skus, date):
         (cutoff,))
     conn.commit()
     conn.close()
+    if n_failed:
+        # annotation publica del run: lotes caidos = huecos mudos en el
+        # stock por club (antes el 'continue' los tragaba en silencio)
+        print(f"::warning::club_stock: {n_failed}/{n_batches} "
+              "lotes fallidos")
+    return n_failed
 
 
 def record_history(products, date, skip=None):
@@ -475,9 +486,11 @@ def _priority_watch(pri, rest, cap):
                + [s for s in sorted(rest) if s not in pri][:cap])
 
 
-def stock_candidates(today, products, favs=None):
+def stock_candidates(today, products, favs=None, events=None):
     """SKUs a vigilar diario: ofertas activas + lista del usuario +
-    cualquier producto con evento en los ultimos 14 dias."""
+    cualquier producto con evento en los ultimos 14 dias. `events`
+    (lista ya leida del log) evita releer el archivo entero; None lo
+    lee como siempre."""
     pri = {s for s, p in products.items()
            if (p.get("saving_usd") or 0) > 0}
     pri |= favs or set()
@@ -486,14 +499,11 @@ def stock_candidates(today, products, favs=None):
         from datetime import timedelta
         lim = (datetime.strptime(today, "%Y-%m-%d")
                - timedelta(days=14)).strftime("%Y-%m-%d")
-        if os.path.exists(EVENTS_LOG):
-            for line in open(EVENTS_LOG, encoding="utf-8"):
-                try:
-                    e = json.loads(line)
-                except Exception:
-                    continue
-                if e.get("date", "") >= lim and e.get("sku"):
-                    rest.add(e["sku"])
+        if events is None:
+            events = read_events(EVENTS_LOG)
+        for e in events:
+            if e.get("date", "") >= lim and e.get("sku"):
+                rest.add(e["sku"])
     except Exception:
         pass
     return _priority_watch(pri, rest, 400)
@@ -587,16 +597,6 @@ def main():
         snap_file = os.path.join(SNAP_DIR, f"{today}.json")
         # indice de historia ANTES de grabar hoy (last = ultimo estado previo)
         hist_idx = history_index()
-        record_history(cur, today, skip=set(inherited))
-        print(f"Historia actualizada en {DB_PATH}")
-        with open(snap_file + ".tmp", "w", encoding="utf-8") as f:
-            json.dump({"date": today, "products": cur,
-                       "failed_categories": sorted(failed),
-                       "inherited_count": len(inherited)}, f)
-        os.replace(snap_file + ".tmp", snap_file)
-        print(f"Snapshot: {snap_file}")
-        cleanup_synthetic()
-        prune_snapshots()
     else:
         snaps = sorted(os.listdir(SNAP_DIR))
         with open(os.path.join(SNAP_DIR, snaps[-1]), encoding="utf-8") as f:
@@ -629,17 +629,36 @@ def main():
     if len(events) > 15:
         print(f"  ... y {len(events)-15} mas")
 
-    # Los eventos del catalogo entran al log ANTES de calcular
-    # candidatos: stock_candidates lee los eventos de los ultimos 14d
-    # del log, y los de hoy deben estar incluidos
+    # Los eventos del catalogo entran al log ANTES de grabar historia
+    # y snapshot: append_events dedupea (date+sku+type+club), asi un
+    # reintento tras una caida a mitad de run no duplica eventos
     if events and "--dry" not in sys.argv:
         append_events(events, today)
+
+    if "--dry" not in sys.argv:
+        record_history(cur, today, skip=set(inherited))
+        print(f"Historia actualizada en {DB_PATH}")
+        # el snapshot se escribe AL FINAL: su existencia = corrida
+        # completa. Las claves meta van ANTES de "products" para que
+        # snapshot_is_synthetic las vea en la cabecera (~1 KB)
+        with open(snap_file + ".tmp", "w", encoding="utf-8") as f:
+            json.dump({"date": today, "synthetic": False,
+                       "failed_categories": sorted(failed),
+                       "inherited_count": len(inherited),
+                       "products": cur}, f)
+        os.replace(snap_file + ".tmp", snap_file)
+        print(f"Snapshot: {snap_file}")
+        cleanup_synthetic()
+        prune_snapshots()
 
     # Nivel 2: stock por club de los candidatos (ofertas + lista +
     # eventos de 14 dias). Un solo fetch: antes el --stock-check de la
     # tarde repetia esta misma descarga contra la misma fecha base
     if "--dry" not in sys.argv:
-        cands = stock_candidates(today, cur, favs_remote()) \
+        # stock_candidates debe ver los eventos de HOY ya anexados:
+        # una sola lectura del log, post-append
+        cands = stock_candidates(today, cur, favs_remote(),
+                                 events=read_events(EVENTS_LOG)) \
             - set(inherited)
         if cands:
             print(f"Detalle por club para {len(cands)} productos "

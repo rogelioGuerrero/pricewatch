@@ -81,7 +81,11 @@ for d in days[-3:-1]:
             p2["price_SV"] = pp[idx]
             p2["inventory_SV"] = "in stock" if sp[idx] else "x"
         snap_products[sku] = p2
-    json.dump({"date": d.isoformat(), "products": snap_products}, open(f, "w"))
+    # claves meta ANTES de "products": snapshot_is_synthetic solo lee
+    # la cabecera (~1 KB) del archivo
+    json.dump({"date": d.isoformat(), "synthetic": True,
+               "failed_categories": [], "inherited_count": 0,
+               "products": snap_products}, open(f, "w"))
 
 conn.commit()
 print(f"Seed: {len(demo_skus)} productos x 46 dias en {DB}")

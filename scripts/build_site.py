@@ -6,6 +6,8 @@ Modular: compute_agg / build_siman_payload / build_site son testeables
 sin tocar el filesystem del repo; main() solo corre bajo __main__.
 """
 
+import glob
+import hashlib
 import json
 import math
 import os
@@ -14,7 +16,7 @@ import statistics
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 
-from common import SV_TZ, read_events, talla_hit
+from common import SV_TZ, read_events, snapshot_is_synthetic, talla_hit
 from data_health import inspect_data
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -236,6 +238,24 @@ def build_siman_payload(siman_db, siman_events, watchlist, gen_date):
     return siman
 
 
+def asset_version(root_dir):
+    """Version del shell: primeros 10 hex de sha256 sobre (ruta
+    relativa + contenido) de los assets versionados (?v=). Un asset
+    cambiado cambia el hash -> todas las llaves de cache rotan juntas;
+    mismo contenido -> mismo hash (determinista)."""
+    docs = os.path.join(root_dir, "docs")
+    files = [os.path.join(docs, "styles.css")]
+    files += glob.glob(os.path.join(docs, "js", "*.js"))
+    files += glob.glob(os.path.join(docs, "vendor", "*.js"))
+    h = hashlib.sha256()
+    for f in sorted(p for p in files if os.path.isfile(p)):
+        h.update(os.path.relpath(f, root_dir)
+                 .replace(os.sep, "/").encode())
+        with open(f, "rb") as fh:
+            h.update(fh.read())
+    return h.hexdigest()[:10]
+
+
 def _valid_price(value):
     return (isinstance(value, (int, float)) and not isinstance(value, bool)
             and math.isfinite(value) and value > 0)
@@ -382,14 +402,9 @@ def build_site(root_dir=ROOT):
     demo = False
     if os.path.isdir(snap_dir):
         for f in os.listdir(snap_dir):
-            try:
-                with open(os.path.join(snap_dir, f),
-                          encoding="utf-8") as fh:
-                    if json.load(fh).get("synthetic"):
-                        demo = True
-                        break
-            except Exception:
-                pass
+            if snapshot_is_synthetic(os.path.join(snap_dir, f)):
+                demo = True
+                break
 
     data = {
         "schema_version": 2,
@@ -418,11 +433,21 @@ def build_site(root_dir=ROOT):
     with open(os.path.join(docs_dir, "data.json"), "w",
               encoding="utf-8") as f:
         f.write(payload)
+    # version de assets por hash de contenido: un cambio en cualquier
+    # js/css rota ?v=, el CORE y el CACHE del service worker de golpe
+    ver = asset_version(root_dir)
     with open(os.path.join(root_dir, "scripts", "template.html"),
               encoding="utf-8") as f:
-        html = f.read()
+        html = f.read().replace("__ASSET_V__", ver)
     with open(out, "w", encoding="utf-8") as f:
         f.write(html)
+    # docs/sw.js es GENERADO desde scripts/sw.template.js (fuente):
+    # CACHE = pricewatch-<hash> y VER = <hash> salen del mismo ver
+    with open(os.path.join(root_dir, "scripts", "sw.template.js"),
+              encoding="utf-8") as f:
+        sw = f.read().replace("__ASSET_V__", ver)
+    with open(os.path.join(docs_dir, "sw.js"), "w", encoding="utf-8") as f:
+        f.write(sw)
     # version.json: ~50 bytes que el PWA consulta (sin pasar por el cache
     # del service worker) para detectar que hay un build mas nuevo
     with open(os.path.join(docs_dir, "version.json"), "w",

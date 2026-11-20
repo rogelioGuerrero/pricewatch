@@ -34,6 +34,11 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment2.outputs.page_url || steps.deployment.outputs.page_url }}
+    env:
+      APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
+      APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
+      APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+      SITE_URL: https://rogelioguerrero.github.io/pricewatch/
     steps:
       - uses: actions/checkout@v5
         with:
@@ -97,11 +102,8 @@ jobs:
           done
 
       - name: PriceSmart sweep + diff + historia
+        id: sweep
         if: github.event_name == 'schedule' || inputs.mode == 'full'
-        env:
-          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
-          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
-          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
         run: python scripts/sweep.py
 
       # continue-on-error: un Siman caido no puede tumbar el run —
@@ -111,10 +113,6 @@ jobs:
         id: siman
         continue-on-error: true
         if: github.event_name == 'schedule' || inputs.mode == 'full'
-        env:
-          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
-          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
-          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
         run: python scripts/sweep_siman.py
 
       # un 500 de Siman suele durar minutos: segundo intento tras una
@@ -124,10 +122,6 @@ jobs:
         id: siman2
         continue-on-error: true
         if: steps.siman.outcome == 'failure'
-        env:
-          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
-          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
-          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
         run: |
           echo "::warning::Siman fallo en el primer intento; reintentando en 5 min"
           sleep 300
@@ -190,7 +184,7 @@ jobs:
       - name: Confirmar que la version nueva esta publicada
         run: >-
           python scripts/data_health.py verify-site
-          --url https://rogelioguerrero.github.io/pricewatch/
+          --url "${{ env.SITE_URL }}"
 
       - name: Digest email + push alerts (solo si hay novedades)
         # consolida los 3 sweeps del run; notify.py decide los umbrales.
@@ -201,15 +195,11 @@ jobs:
           success() && (github.event_name == 'schedule' ||
           (inputs.mode == 'full' && inputs.send_notifications))
         env:
-          APPWRITE_ENDPOINT: https://sfo.cloud.appwrite.io/v1
-          APPWRITE_PROJECT_ID: 6ab1922d00020f5a2e99
-          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM: PriceWatch <info@agtisa.com>
           RESEND_TO: ${{ vars.RESEND_TO }}
           VAPID_PUBLIC: BCe97olK0g7PDhtvuC4BknYtgjzkzSlXv8MJ_Ve-9tMwnagCAU-lQmI1JtSgrSNrQZQE2pBr0O4H-vruxep4H6c
           VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
-          SITE_URL: https://rogelioguerrero.github.io/pricewatch/
         run: python scripts/notify.py
 
       - name: Crear respaldo validado de datos
@@ -249,3 +239,16 @@ jobs:
             data/events.jsonl
             data/siman_events.jsonl
           key: pwdata-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Resumen del run
+        if: always()
+        run: |
+          {
+            echo "## PriceWatch daily"
+            echo "- modo: ${{ github.event_name == 'schedule' && 'schedule' || inputs.mode }}"
+            echo "- sweep pricesmart: ${{ steps.sweep.outcome || 'no corrio' }}"
+            echo "- sweep siman: ${{ steps.siman.outcome || 'no corrio' }}${{ steps.siman2.outcome && format(' (reintento: {0})', steps.siman2.outcome) || '' }}"
+            echo "- health: ${{ steps.health.outcome || 'no corrio' }}"
+            echo "- deploy: ${{ steps.deployment.outcome || 'no corrio' }}${{ steps.deployment2.outcome && format(' (reintento: {0})', steps.deployment2.outcome) || '' }}"
+            echo "- backup: ${{ steps.backup.outcome || 'no corrio' }}"
+          } >> "$GITHUB_STEP_SUMMARY"

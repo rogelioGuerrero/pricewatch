@@ -258,6 +258,20 @@ def test_stock_candidates_ignora_eventos_viejos(tmp_path, monkeypatch):
     assert "OLD" not in cands
 
 
+def test_stock_candidates_acepta_eventos_ya_leidos(tmp_path, monkeypatch):
+    """events=<lista> evita releer el log; main() la pasa post-append
+    para que los eventos de HOY cuenten como candidatos."""
+    log = tmp_path / "events.jsonl"
+    monkeypatch.setattr(sweep, "EVENTS_LOG", str(log))
+    sweep.append_events([{"sku": "H1", "type": "bajo", "title": "X"}],
+                        "2026-10-14")
+    cands = sweep.stock_candidates(
+        "2026-10-14", {}, events=sweep.read_events(str(log)))
+    assert "H1" in cands
+    # y con la lectura por defecto tambien (mismo archivo)
+    assert "H1" in sweep.stock_candidates("2026-10-14", {})
+
+
 # ---------- record_history: skip de categorias heredadas ----------
 
 def test_record_history_respeta_skip_inherited(tmp_path, monkeypatch):
@@ -273,3 +287,97 @@ def test_record_history_respeta_skip_inherited(tmp_path, monkeypatch):
     prods = {r[0] for r in con.execute("select sku from products")}
     con.close()
     assert skus == {"A"} and prods == {"A"}
+
+
+# ---------- main(): orden atomico del run (no --dry) ----------
+
+def _main_env(tmp_path, monkeypatch, cur_products, prev_products=None):
+    """Aísla main() en dirs temporales: snapshots/events/db falsos,
+    sweep() y la red mockeados. Devuelve las rutas relevantes."""
+    snap_dir = tmp_path / "snapshots"
+    snap_dir.mkdir()
+    log = tmp_path / "events.jsonl"
+    db = tmp_path / "prices.db"
+    if prev_products is not None:
+        (snap_dir / "2026-10-13.json").write_text(json.dumps(
+            {"date": "2026-10-13", "synthetic": False,
+             "failed_categories": [], "inherited_count": 0,
+             "products": prev_products}), encoding="utf-8")
+    monkeypatch.setattr(sweep, "SNAP_DIR", str(snap_dir))
+    monkeypatch.setattr(sweep, "EVENTS_LOG", str(log))
+    monkeypatch.setattr(sweep, "DB_PATH", str(db))
+    monkeypatch.setattr(sweep, "today_sv", lambda: "2026-10-14")
+    monkeypatch.setattr(sweep, "sweep", lambda: (dict(cur_products), set()))
+    monkeypatch.setattr(sweep, "favs_remote", lambda: set())
+    monkeypatch.setattr(sweep, "fetch_club_stock", lambda *a: 0)
+    monkeypatch.setattr(sweep.sys, "argv", ["sweep.py"])
+    return {"snap": snap_dir / "2026-10-14.json", "log": log, "db": db}
+
+
+def _log_events(log):
+    return [json.loads(line)
+            for line in log.read_text(encoding="utf-8").splitlines()]
+
+
+def test_main_eventos_anexados_antes_de_historia(tmp_path, monkeypatch):
+    """Si record_history falla, los eventos YA quedaron en el log y
+    NO existe snapshot de hoy (su existencia = corrida completa)."""
+    env = _main_env(tmp_path, monkeypatch,
+                    {"A": prod(800)},
+                    prev_products={"A": prod(1000)})
+    def boom(*a, **kw):
+        raise RuntimeError("db rota")
+    monkeypatch.setattr(sweep, "record_history", boom)
+    import pytest
+    with pytest.raises(RuntimeError):
+        sweep.main()
+    ev = _log_events(env["log"])
+    assert [e["type"] for e in ev] == ["rebaja"]
+    assert not env["snap"].exists(), "sin snapshot: el run quedo incompleto"
+
+
+def test_main_reintento_no_duplica_eventos(tmp_path, monkeypatch):
+    """Segundo intento tras la caida: append_events dedupea, la
+    corrida termina con snapshot y la historia queda grabada."""
+    env = _main_env(tmp_path, monkeypatch,
+                    {"A": prod(800)},
+                    prev_products={"A": prod(1000)})
+    calls = {"n": 0}
+    real_rh = sweep.record_history
+    def flaky(*a, **kw):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("db rota")
+        return real_rh(*a, **kw)
+    monkeypatch.setattr(sweep, "record_history", flaky)
+    import pytest
+    with pytest.raises(RuntimeError):
+        sweep.main()
+    sweep.main()   # reintento con el mismo prev
+    ev = _log_events(env["log"])
+    assert [(e["date"], e["sku"], e["type"]) for e in ev] == [
+        ("2026-10-14", "A", "rebaja")], "sin duplicados tras reintento"
+    assert env["snap"].exists()
+    snap = json.loads(env["snap"].read_text(encoding="utf-8"))
+    assert list(snap)[:4] == ["date", "synthetic",
+                              "failed_categories", "inherited_count"]
+    import sqlite3
+    con = sqlite3.connect(str(env["db"]))
+    assert con.execute("select count(*) from prices "
+                       "where date='2026-10-14'").fetchone()[0] == 1
+    con.close()
+
+
+def test_main_corrida_normal_mismos_eventos_que_diff(tmp_path, monkeypatch):
+    """El reorden no cambia lo que termina en el log: mismos eventos
+    que sweep.diff(prev, cur) directo, con date de hoy."""
+    prev = {"A": prod(1000), "B": prod(500, inv="in stock")}
+    cur = {"A": prod(700), "B": prod(500, inv="out of stock")}
+    env = _main_env(tmp_path, monkeypatch, cur, prev_products=prev)
+    sweep.main()
+    esperado = sweep.diff(prev, cur, "2026-10-14")
+    got = [(e["type"], e["sku"]) for e in _log_events(env["log"])]
+    want = [(e["type"], e["sku"]) for e in esperado]
+    assert sorted(got) == sorted(want) and got
+    assert all(e["date"] == "2026-10-14" for e in _log_events(env["log"]))
+    assert env["snap"].exists()
