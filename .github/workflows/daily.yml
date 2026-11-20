@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment2.outputs.page_url || steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -160,8 +160,23 @@ jobs:
         with:
           path: docs
 
+      # deploy-pages a veces no ve el artefacto recien subido (metadata
+      # de la API aun no propagada: run #36). Un segundo intento tras una
+      # pausa lo resuelve; si ambos fallan, el job falla de verdad.
       - name: Publicar a GitHub Pages
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+
+      - name: Pausa antes de reintentar la publicacion
+        if: steps.deployment.outcome == 'failure'
+        run: |
+          echo "::warning::deploy-pages fallo; reintentando en 60 s"
+          sleep 60
+
+      - name: Publicar a GitHub Pages (reintento)
+        id: deployment2
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
 
       - name: Confirmar que la version nueva esta publicada
