@@ -1,0 +1,1357 @@
+{
+ "meta": {
+  "today": "2026-11-12",
+  "note": "volcado pre-extraccion (verdicts.py fase 1). compute_agg con el signature actual; catalog_state con notify.TODAY/monkeypatch fijado a meta.today"
+ },
+ "cases": [
+  {
+   "name": "una_sola_lectura",
+   "series": {
+    "A": [
+     [
+      "2026-11-12",
+      500,
+      1,
+      0
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 500,
+     "max": 500,
+     "med": 500,
+     "pct_min": 0.0,
+     "vs_med": 0.0,
+     "n_ch": 0,
+     "last_ch": null,
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 500,
+      "saving": 0,
+      "in_stock": true,
+      "observed_at": "2026-11-12",
+      "min": 500,
+      "max": 500,
+      "n_ch": 0,
+      "last_ch": null,
+      "d_ch": null
+     }
+    },
+    "indice": null
+   }
+  },
+  {
+   "name": "historia_corta_2_lecturas",
+   "series": {
+    "A": [
+     [
+      "2026-11-11",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-12",
+      900,
+      1,
+      0
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 900,
+     "max": 1000,
+     "med": 950,
+     "pct_min": 0.0,
+     "vs_med": -5.3,
+     "n_ch": 1,
+     "last_ch": "2026-11-12",
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 900,
+      "saving": 0,
+      "in_stock": true,
+      "observed_at": "2026-11-12",
+      "min": 900,
+      "max": 1000,
+      "n_ch": 1,
+      "last_ch": "2026-11-12",
+      "d_ch": 0
+     }
+    },
+    "indice": -10.0
+   }
+  },
+  {
+   "name": "tres_columnas_sin_ahorro",
+   "series": {
+    "A": [
+     [
+      "2026-11-01",
+      1000,
+      1
+     ],
+     [
+      "2026-11-12",
+      800,
+      1
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 800,
+     "max": 1000,
+     "med": 900,
+     "pct_min": 0.0,
+     "vs_med": -11.1,
+     "n_ch": 1,
+     "last_ch": "2026-11-12",
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 800,
+      "saving": 0,
+      "in_stock": true,
+      "observed_at": "2026-11-12",
+      "min": 800,
+      "max": 1000,
+      "n_ch": 1,
+      "last_ch": "2026-11-12",
+      "d_ch": 0
+     }
+    },
+    "indice": -20.0
+   }
+  },
+  {
+   "name": "sin_cambios_nunca",
+   "series": {
+    "A": [
+     [
+      "2026-10-01",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-10-10",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-10-20",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-01",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-12",
+      1000,
+      1,
+      0
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 1000,
+     "max": 1000,
+     "med": 1000,
+     "pct_min": 0.0,
+     "vs_med": 0.0,
+     "n_ch": 0,
+     "last_ch": null,
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 1000,
+      "saving": 0,
+      "in_stock": true,
+      "observed_at": "2026-11-12",
+      "min": 1000,
+      "max": 1000,
+      "n_ch": 0,
+      "last_ch": null,
+      "d_ch": null
+     }
+    },
+    "indice": 0.0
+   }
+  },
+  {
+   "name": "en_su_minimo",
+   "series": {
+    "A": [
+     [
+      "2026-10-20",
+      1200,
+      1,
+      0
+     ],
+     [
+      "2026-10-25",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-12",
+      900,
+      1,
+      0
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 900,
+     "max": 1200,
+     "med": 1000,
+     "pct_min": 0.0,
+     "vs_med": -10.0,
+     "n_ch": 2,
+     "last_ch": "2026-11-12",
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 900,
+      "saving": 0,
+      "in_stock": true,
+      "observed_at": "2026-11-12",
+      "min": 900,
+      "max": 1200,
+      "n_ch": 2,
+      "last_ch": "2026-11-12",
+      "d_ch": 0
+     }
+    },
+    "indice": -10.0
+   }
+  },
+  {
+   "name": "vs_med_negativo",
+   "series": {
+    "A": [
+     [
+      "2026-10-10",
+      900,
+      1,
+      0
+     ],
+     [
+      "2026-10-20",
+      1200,
+      1,
+      0
+     ],
+     [
+      "2026-11-01",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-12",
+      950,
+      1,
+      0
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 900,
+     "max": 1200,
+     "med": 975,
+     "pct_min": 5.6,
+     "vs_med": -2.6,
+     "n_ch": 3,
+     "last_ch": "2026-11-12",
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 950,
+      "saving": 0,
+      "in_stock": true,
+      "observed_at": "2026-11-12",
+      "min": 900,
+      "max": 1200,
+      "n_ch": 3,
+      "last_ch": "2026-11-12",
+      "d_ch": 0
+     }
+    },
+    "indice": -5.0
+   }
+  },
+  {
+   "name": "racha_agotado",
+   "series": {
+    "A": [
+     [
+      "2026-11-01",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-05",
+      1000,
+      0,
+      0
+     ],
+     [
+      "2026-11-08",
+      1000,
+      0,
+      0
+     ],
+     [
+      "2026-11-12",
+      1000,
+      0,
+      0
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 1000,
+     "max": 1000,
+     "med": 1000,
+     "pct_min": 0.0,
+     "vs_med": 0.0,
+     "n_ch": 0,
+     "last_ch": null,
+     "d_out": 3,
+     "pct_stock": 25,
+     "n_out": 1,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 1000,
+      "saving": 0,
+      "in_stock": false,
+      "observed_at": "2026-11-12",
+      "min": 1000,
+      "max": 1000,
+      "n_ch": 0,
+      "last_ch": null,
+      "d_ch": null
+     }
+    },
+    "indice": 0.0
+   }
+  },
+  {
+   "name": "agotado_hoy",
+   "series": {
+    "A": [
+     [
+      "2026-11-05",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-12",
+      1000,
+      0,
+      0
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 1000,
+     "max": 1000,
+     "med": 1000,
+     "pct_min": 0.0,
+     "vs_med": 0.0,
+     "n_ch": 0,
+     "last_ch": null,
+     "d_out": 1,
+     "pct_stock": 50,
+     "n_out": 1,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 1000,
+      "saving": 0,
+      "in_stock": false,
+      "observed_at": "2026-11-12",
+      "min": 1000,
+      "max": 1000,
+      "n_ch": 0,
+      "last_ch": null,
+      "d_ch": null
+     }
+    },
+    "indice": 0.0
+   }
+  },
+  {
+   "name": "precio_none_en_medio",
+   "series": {
+    "A": [
+     [
+      "2026-11-01",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-05",
+      null,
+      1,
+      0
+     ],
+     [
+      "2026-11-12",
+      900,
+      1,
+      0
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 900,
+     "max": 1000,
+     "med": 950,
+     "pct_min": 0.0,
+     "vs_med": -5.3,
+     "n_ch": 0,
+     "last_ch": "2026-11-12",
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 900,
+      "saving": 0,
+      "in_stock": true,
+      "observed_at": "2026-11-12",
+      "min": 900,
+      "max": 1000,
+      "n_ch": 2,
+      "last_ch": "2026-11-12",
+      "d_ch": 0
+     }
+    },
+    "indice": null
+   }
+  },
+  {
+   "name": "precio_none_al_final",
+   "series": {
+    "A": [
+     [
+      "2026-11-01",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-12",
+      null,
+      0,
+      0
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 1000,
+     "max": 1000,
+     "med": 1000,
+     "pct_min": 0.0,
+     "vs_med": 0.0,
+     "n_ch": 0,
+     "last_ch": "2026-11-12",
+     "d_out": 1,
+     "pct_stock": 50,
+     "n_out": 1,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": null,
+      "saving": 0,
+      "in_stock": false,
+      "observed_at": "2026-11-12",
+      "min": 1000,
+      "max": 1000,
+      "n_ch": 1,
+      "last_ch": "2026-11-12",
+      "d_ch": 0
+     }
+    },
+    "indice": null
+   }
+  },
+  {
+   "name": "precio_cero",
+   "series": {
+    "A": [
+     [
+      "2026-11-01",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-05",
+      0,
+      1,
+      0
+     ],
+     [
+      "2026-11-12",
+      900,
+      1,
+      0
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 0,
+     "max": 1000,
+     "med": 900,
+     "pct_min": null,
+     "vs_med": 0.0,
+     "n_ch": 2,
+     "last_ch": "2026-11-12",
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 900,
+      "saving": 0,
+      "in_stock": true,
+      "observed_at": "2026-11-12",
+      "min": 900,
+      "max": 1000,
+      "n_ch": 2,
+      "last_ch": "2026-11-12",
+      "d_ch": 0
+     }
+    },
+    "indice": null
+   }
+  },
+  {
+   "name": "ofertas_3_episodios",
+   "series": {
+    "A": [
+     [
+      "2026-08-01",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-08-10",
+      800,
+      1,
+      1.0
+     ],
+     [
+      "2026-08-12",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-08-25",
+      800,
+      1,
+      1.0
+     ],
+     [
+      "2026-08-27",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-09-10",
+      800,
+      1,
+      1.0
+     ],
+     [
+      "2026-11-12",
+      1000,
+      1,
+      0
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 800,
+     "max": 1000,
+     "med": 1000,
+     "pct_min": 25.0,
+     "vs_med": 0.0,
+     "n_ch": 6,
+     "last_ch": "2026-11-12",
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 3,
+     "of_every": 16,
+     "of_last": 63,
+     "of_save": 1.0,
+     "of_cur": null,
+     "of_end": [
+      "2026-09-10",
+      "2026-09-10"
+     ],
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 1000,
+      "saving": 0,
+      "in_stock": true,
+      "observed_at": "2026-11-12",
+      "min": 800,
+      "max": 1000,
+      "n_ch": 6,
+      "last_ch": "2026-11-12",
+      "d_ch": 0
+     }
+    },
+    "indice": 25.0
+   }
+  },
+  {
+   "name": "oferta_activa",
+   "series": {
+    "A": [
+     [
+      "2026-11-01",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-10",
+      800,
+      1,
+      2.5
+     ],
+     [
+      "2026-11-12",
+      800,
+      1,
+      2.5
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 800,
+     "max": 1000,
+     "med": 800,
+     "pct_min": 0.0,
+     "vs_med": 0.0,
+     "n_ch": 1,
+     "last_ch": "2026-11-10",
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 1,
+     "of_every": null,
+     "of_last": 0,
+     "of_save": 2.5,
+     "of_cur": "2026-11-10",
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 800,
+      "saving": 2.5,
+      "in_stock": true,
+      "observed_at": "2026-11-12",
+      "min": 800,
+      "max": 1000,
+      "n_ch": 1,
+      "last_ch": "2026-11-10",
+      "d_ch": 2
+     }
+    },
+    "indice": 0.0
+   }
+  },
+  {
+   "name": "oferta_mengua",
+   "series": {
+    "A": [
+     [
+      "2026-11-01",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-05",
+      1000,
+      1,
+      2.0
+     ],
+     [
+      "2026-11-10",
+      1000,
+      1,
+      0.5
+     ],
+     [
+      "2026-11-12",
+      1000,
+      1,
+      0.5
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 1000,
+     "max": 1000,
+     "med": 1000,
+     "pct_min": 0.0,
+     "vs_med": 0.0,
+     "n_ch": 0,
+     "last_ch": null,
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 1,
+     "of_every": null,
+     "of_last": 0,
+     "of_save": 0.5,
+     "of_cur": "2026-11-05",
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 1000,
+      "saving": 0.5,
+      "in_stock": true,
+      "observed_at": "2026-11-12",
+      "min": 1000,
+      "max": 1000,
+      "n_ch": 0,
+      "last_ch": null,
+      "d_ch": null
+     }
+    },
+    "indice": 0.0
+   }
+  },
+  {
+   "name": "temporada",
+   "series": {
+    "T": [
+     [
+      "2026-10-20",
+      700,
+      1,
+      0
+     ],
+     [
+      "2026-11-05",
+      700,
+      1,
+      0
+     ]
+    ]
+   },
+   "latest": {},
+   "products": {
+    "T": {
+     "title": "Prod T",
+     "image": "img-T"
+    }
+   },
+   "compute_agg": {
+    "T": {
+     "min": 700,
+     "max": 700,
+     "med": 700,
+     "pct_min": 0.0,
+     "vs_med": 0.0,
+     "n_ch": 0,
+     "last_ch": null,
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": true
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "T": {
+      "title": "Prod T",
+      "image": "img-T",
+      "price": 700,
+      "saving": 0,
+      "in_stock": false,
+      "observed_at": "2026-11-05",
+      "min": 700,
+      "max": 700,
+      "n_ch": 0,
+      "last_ch": null,
+      "d_ch": null
+     }
+    },
+    "indice": 0.0
+   }
+  },
+  {
+   "name": "ausente_latest_viejo",
+   "series": {
+    "V": [
+     [
+      "2026-08-01",
+      700,
+      1,
+      0
+     ],
+     [
+      "2026-09-01",
+      800,
+      1,
+      0
+     ],
+     [
+      "2026-11-05",
+      800,
+      1,
+      0
+     ]
+    ]
+   },
+   "latest": {},
+   "products": {
+    "V": {
+     "title": "Prod V",
+     "image": "img-V"
+    }
+   },
+   "compute_agg": {
+    "V": {
+     "min": 700,
+     "max": 800,
+     "med": 800,
+     "pct_min": 14.3,
+     "vs_med": 0.0,
+     "n_ch": 1,
+     "last_ch": "2026-09-01",
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "V": {
+      "title": "Prod V",
+      "image": "img-V",
+      "price": 800,
+      "saving": 0,
+      "in_stock": false,
+      "observed_at": "2026-11-05",
+      "min": 700,
+      "max": 800,
+      "n_ch": 1,
+      "last_ch": "2026-09-01",
+      "d_ch": 72
+     }
+    },
+    "indice": 0.0
+   }
+  },
+  {
+   "name": "ultimo_cambio_hace_40d",
+   "series": {
+    "A": [
+     [
+      "2026-09-01",
+      1200,
+      1,
+      0
+     ],
+     [
+      "2026-10-03",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-12",
+      1000,
+      1,
+      0
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 1000,
+     "max": 1200,
+     "med": 1000,
+     "pct_min": 0.0,
+     "vs_med": 0.0,
+     "n_ch": 1,
+     "last_ch": "2026-10-03",
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 1000,
+      "saving": 0,
+      "in_stock": true,
+      "observed_at": "2026-11-12",
+      "min": 1000,
+      "max": 1200,
+      "n_ch": 1,
+      "last_ch": "2026-10-03",
+      "d_ch": 40
+     }
+    },
+    "indice": 0.0
+   }
+  },
+  {
+   "name": "lectura_vieja_con_stock",
+   "series": {
+    "A": [
+     [
+      "2026-11-01",
+      1000,
+      1,
+      0
+     ],
+     [
+      "2026-11-10",
+      900,
+      1,
+      0
+     ]
+    ]
+   },
+   "latest": {
+    "A": {
+     "sku": "A"
+    }
+   },
+   "products": {
+    "A": {
+     "title": "Prod A",
+     "image": "img-A"
+    }
+   },
+   "compute_agg": {
+    "A": {
+     "min": 900,
+     "max": 1000,
+     "med": 950,
+     "pct_min": 0.0,
+     "vs_med": -5.3,
+     "n_ch": 1,
+     "last_ch": "2026-11-10",
+     "d_out": 0,
+     "pct_stock": 100,
+     "n_out": 0,
+     "n_of": 0,
+     "of_every": null,
+     "of_last": null,
+     "of_save": null,
+     "of_cur": null,
+     "of_end": null,
+     "temp": null
+    }
+   },
+   "catalog_state": {
+    "state": {
+     "A": {
+      "title": "Prod A",
+      "image": "img-A",
+      "price": 900,
+      "saving": 0,
+      "in_stock": false,
+      "observed_at": "2026-11-10",
+      "min": 900,
+      "max": 1000,
+      "n_ch": 1,
+      "last_ch": "2026-11-10",
+      "d_ch": 2
+     }
+    },
+    "indice": -10.0
+   }
+  }
+ ]
+}

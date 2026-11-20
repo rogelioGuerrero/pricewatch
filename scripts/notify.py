@@ -47,6 +47,7 @@ from common import (
     today_sv,
 )
 from data_health import atomic_json
+from verdicts import series_stats
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -130,8 +131,9 @@ def load_events(path, today=True):
 
 
 def catalog_state():
-    """{sku: {price, saving, in_stock, min, max, med, n_ch, last_ch,
-    title}} desde prices.db — espejo del agg del frontend."""
+    """{sku: {title, image, price, saving, in_stock, observed_at,
+    min, max, n_ch, last_ch, d_ch}} desde prices.db — espejo del agg
+    del frontend (NO identico: ver tests/fixtures/verdicts_golden)."""
     if not os.path.exists(DB):
         return {}, None
     con = sqlite3.connect(DB)
@@ -150,12 +152,13 @@ def catalog_state():
         con.close()
     out = {}
     for sku, rows in series.items():
-        prices = [r["price"] for r in rows if r["price"]]
+        raw_prices, changes = series_stats(
+            (r["date"], r["price"]) for r in rows)
+        # notify filtra falsy: el 0 no es min valido (el sitio si lo toma)
+        prices = [p for p in raw_prices if p]
         last = rows[-1]
-        ch = [r for i, r in enumerate(rows[1:], 1)
-              if r["price"] != rows[i - 1]["price"]]
-        d_last = (datetime.strptime(ch[-1]["date"], "%Y-%m-%d").date()
-                  if ch else None)
+        d_last = (datetime.strptime(changes[-1][0], "%Y-%m-%d").date()
+                  if changes else None)
         pr = prods.get(sku) or {}
         out[sku] = {
             "title": pr.get("title", sku), "image": pr.get("image") or "",
@@ -165,7 +168,8 @@ def catalog_state():
             "observed_at": last["date"],
             "min": min(prices) if prices else None,
             "max": max(prices) if prices else None,
-            "n_ch": len(ch), "last_ch": ch[-1]["date"] if ch else None,
+            "n_ch": len(changes),
+            "last_ch": changes[-1][0] if changes else None,
             "d_ch": (date.fromisoformat(TODAY) - d_last).days
                     if d_last else None,
         }
