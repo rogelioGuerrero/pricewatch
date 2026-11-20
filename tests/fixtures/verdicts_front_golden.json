@@ -1,12 +1,13 @@
 {
  "meta": {
-  "note": "volcado post-paso-B (frescura estricta a fecha SV). now = epoch ms de Date.now congelado antes del boot; expected = salidas reales de PWData/state.js"
+  "note": "volcado post-fase-2 (frescura estricta + veredicto estatico en agg, schema 3). now = epoch ms de Date.now congelado antes del boot; expected = salidas reales de PWData/state.js; agg calculado por verdicts.py"
  },
  "cases": [
   {
    "name": "fresco_con_oferta",
    "now": 1794492000000,
    "data": {
+    "schema_version": 3,
     "generated": "2026-11-12",
     "built": "b-fx",
     "n_products": 1,
@@ -52,12 +53,23 @@
      "111": {
       "min": 1000,
       "max": 2000,
+      "med": 1500,
       "pct_min": 0,
+      "vs_med": -33.3,
       "n_ch": 2,
       "last_ch": "2026-11-12",
-      "vs_med": -33,
       "d_out": 0,
-      "n_out": 0
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true,
+      "score": 0.5
      }
     },
     "events": [],
@@ -115,6 +127,7 @@
    "name": "vencido_1_dia_en_gracia",
    "now": 1794484799000,
    "data": {
+    "schema_version": 3,
     "generated": "2026-11-11",
     "built": "b-fx",
     "n_products": 1,
@@ -160,12 +173,23 @@
      "111": {
       "min": 1000,
       "max": 2000,
+      "med": 1500,
       "pct_min": 0,
+      "vs_med": -33.3,
       "n_ch": 2,
       "last_ch": "2026-11-11",
-      "vs_med": -33,
       "d_out": 0,
-      "n_out": 0
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true,
+      "score": 0.5
      }
     },
     "events": [],
@@ -221,6 +245,7 @@
    "name": "vencido_1_dia_post_corte",
    "now": 1794492000000,
    "data": {
+    "schema_version": 3,
     "generated": "2026-11-11",
     "built": "b-fx",
     "n_products": 1,
@@ -266,12 +291,23 @@
      "111": {
       "min": 1000,
       "max": 2000,
+      "med": 1500,
       "pct_min": 0,
+      "vs_med": -33.3,
       "n_ch": 2,
       "last_ch": "2026-11-11",
-      "vs_med": -33,
       "d_out": 0,
-      "n_out": 0
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true,
+      "score": 0.5
      }
     },
     "events": [],
@@ -319,6 +355,7 @@
    "name": "vencido_2_dias",
    "now": 1794484799000,
    "data": {
+    "schema_version": 3,
     "generated": "2026-11-10",
     "built": "b-fx",
     "n_products": 1,
@@ -364,12 +401,23 @@
      "111": {
       "min": 1000,
       "max": 2000,
+      "med": 1500,
       "pct_min": 0,
+      "vs_med": -33.3,
       "n_ch": 2,
       "last_ch": "2026-11-10",
-      "vs_med": -33,
       "d_out": 0,
-      "n_out": 0
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true,
+      "score": 0.5
      }
     },
     "events": [],
@@ -417,6 +465,7 @@
    "name": "fuente_fallida",
    "now": 1794492000000,
    "data": {
+    "schema_version": 3,
     "generated": "2026-11-12",
     "built": "b-fx",
     "n_products": 1,
@@ -463,12 +512,23 @@
      "111": {
       "min": 1000,
       "max": 2000,
+      "med": 1500,
       "pct_min": 0,
+      "vs_med": -33.3,
       "n_ch": 2,
       "last_ch": "2026-11-12",
-      "vs_med": -33,
       "d_out": 0,
-      "n_out": 0
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true,
+      "score": 0.5
      }
     },
     "events": [],
@@ -516,6 +576,7 @@
    "name": "current_false",
    "now": 1794492000000,
    "data": {
+    "schema_version": 3,
     "generated": "2026-11-12",
     "built": "b-fx",
     "n_products": 1,
@@ -562,12 +623,23 @@
      "111": {
       "min": 1000,
       "max": 2000,
+      "med": 1500,
       "pct_min": 0,
+      "vs_med": -33.3,
       "n_ch": 2,
       "last_ch": "2026-11-12",
-      "vs_med": -33,
       "d_out": 0,
-      "n_out": 0
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true,
+      "score": 0.5
      }
     },
     "events": [],
@@ -615,6 +687,7 @@
    "name": "sin_stock",
    "now": 1794492000000,
    "data": {
+    "schema_version": 3,
     "generated": "2026-11-12",
     "built": "b-fx",
     "n_products": 1,
@@ -660,12 +733,23 @@
      "111": {
       "min": 1000,
       "max": 2000,
+      "med": 1500,
       "pct_min": 0,
+      "vs_med": -33.3,
       "n_ch": 2,
       "last_ch": "2026-11-12",
-      "vs_med": -33,
-      "d_out": 0,
-      "n_out": 0
+      "d_out": 1,
+      "pct_stock": 67,
+      "n_out": 1,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true,
+      "score": 0.5
      }
     },
     "events": [],
@@ -713,6 +797,7 @@
    "name": "precio_none",
    "now": 1794492000000,
    "data": {
+    "schema_version": 3,
     "generated": "2026-11-12",
     "built": "b-fx",
     "n_products": 1,
@@ -756,14 +841,24 @@
     },
     "agg": {
      "111": {
-      "min": 1000,
+      "min": 1500,
       "max": 2000,
+      "med": 1750,
       "pct_min": 0,
-      "n_ch": 2,
+      "vs_med": -14.3,
+      "n_ch": 1,
       "last_ch": "2026-11-12",
-      "vs_med": -33,
       "d_out": 0,
-      "n_out": 0
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true
      }
     },
     "events": [],
@@ -811,6 +906,7 @@
    "name": "precio_cero",
    "now": 1794492000000,
    "data": {
+    "schema_version": 3,
     "generated": "2026-11-12",
     "built": "b-fx",
     "n_products": 1,
@@ -854,14 +950,24 @@
     },
     "agg": {
      "111": {
-      "min": 1000,
+      "min": 1500,
       "max": 2000,
+      "med": 1750,
       "pct_min": 0,
+      "vs_med": -14.3,
       "n_ch": 2,
       "last_ch": "2026-11-12",
-      "vs_med": -33,
       "d_out": 0,
-      "n_out": 0
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true
      }
     },
     "events": [],
@@ -906,9 +1012,122 @@
    }
   },
   {
+   "name": "precio_cero_en_medio",
+   "now": 1794492000000,
+   "data": {
+    "schema_version": 3,
+    "generated": "2026-11-12",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-12"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-12"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-10",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-11",
+       0,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1500,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1500,
+      "max": 2000,
+      "med": 1750,
+      "pct_min": 0,
+      "vs_med": -14.3,
+      "n_ch": 2,
+      "last_ch": "2026-11-12",
+      "d_out": 0,
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true,
+      "score": 0.25
+     }
+    },
+    "events": [],
+    "ofertas": [],
+    "clubs": {},
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "available",
+     "observedAt": "2026-11-12",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1500
+    },
+    "product_club": {
+     "state": "unknown",
+     "observedAt": "",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1500
+    },
+    "buyable": true,
+    "buyable_club": false,
+    "score": 0.25,
+    "atMin": true,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": true,
+     "real": false,
+     "min": true,
+     "bajo": true,
+     "all": true
+    },
+    "DEALS": [
+     "111"
+    ]
+   }
+  },
+  {
    "name": "observacion_vieja_fuente_fresca",
    "now": 1794492000000,
    "data": {
+    "schema_version": 3,
     "generated": "2026-11-12",
     "built": "b-fx",
     "n_products": 1,
@@ -954,12 +1173,23 @@
      "111": {
       "min": 1000,
       "max": 2000,
+      "med": 1500,
       "pct_min": 0,
+      "vs_med": -33.3,
       "n_ch": 2,
       "last_ch": "2026-11-04",
-      "vs_med": -33,
       "d_out": 0,
-      "n_out": 0
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true,
+      "score": 0.5
      }
     },
     "events": [],
@@ -1007,6 +1237,7 @@
    "name": "observacion_futura",
    "now": 1794492000000,
    "data": {
+    "schema_version": 3,
     "generated": "2026-11-13",
     "built": "b-fx",
     "n_products": 1,
@@ -1052,12 +1283,23 @@
      "111": {
       "min": 1000,
       "max": 2000,
+      "med": 1500,
       "pct_min": 0,
+      "vs_med": -33.3,
       "n_ch": 2,
       "last_ch": "2026-11-13",
-      "vs_med": -33,
       "d_out": 0,
-      "n_out": 0
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true,
+      "score": 0.5
      }
     },
     "events": [],
@@ -1105,6 +1347,7 @@
    "name": "club_observado_hoy",
    "now": 1794492000000,
    "data": {
+    "schema_version": 3,
     "generated": "2026-11-12",
     "built": "b-fx",
     "n_products": 1,
@@ -1150,12 +1393,23 @@
      "111": {
       "min": 1000,
       "max": 2000,
+      "med": 1500,
       "pct_min": 0,
+      "vs_med": -33.3,
       "n_ch": 2,
       "last_ch": "2026-11-12",
-      "vs_med": -33,
       "d_out": 0,
-      "n_out": 0
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true,
+      "score": 0.5
      }
     },
     "events": [],
@@ -1213,6 +1467,7 @@
    "name": "club_observado_ayer",
    "now": 1794492000000,
    "data": {
+    "schema_version": 3,
     "generated": "2026-11-12",
     "built": "b-fx",
     "n_products": 1,
@@ -1258,12 +1513,23 @@
      "111": {
       "min": 1000,
       "max": 2000,
+      "med": 1500,
       "pct_min": 0,
+      "vs_med": -33.3,
       "n_ch": 2,
       "last_ch": "2026-11-12",
-      "vs_med": -33,
       "d_out": 0,
-      "n_out": 0
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null,
+      "at_min": true,
+      "score": 0.5
      }
     },
     "events": [],
@@ -1315,6 +1581,114 @@
     "DEALS": [
      "111"
     ]
+   }
+  },
+  {
+   "name": "schema_v2_sin_veredicto",
+   "now": 1794492000000,
+   "data": {
+    "schema_version": 2,
+    "generated": "2026-11-12",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-12"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-12"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-10",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-11",
+       1600,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1500,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1500,
+      "max": 1600,
+      "med": 1500,
+      "pct_min": 0,
+      "vs_med": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-12",
+      "d_out": 0,
+      "pct_stock": 100,
+      "n_out": 0,
+      "n_of": 0,
+      "of_every": null,
+      "of_last": null,
+      "of_save": null,
+      "of_cur": null,
+      "of_end": null,
+      "temp": null
+     }
+    },
+    "events": [],
+    "ofertas": [],
+    "clubs": {},
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "available",
+     "observedAt": "2026-11-12",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1500
+    },
+    "product_club": {
+     "state": "unknown",
+     "observedAt": "",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1500
+    },
+    "buyable": true,
+    "buyable_club": false,
+    "score": 0,
+    "atMin": false,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": false,
+     "real": false,
+     "min": false,
+     "bajo": false,
+     "all": true
+    },
+    "DEALS": []
    }
   }
  ]

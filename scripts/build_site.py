@@ -18,7 +18,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from common import SV_TZ, read_events, snapshot_is_synthetic, talla_hit
 from data_health import inspect_data
-from verdicts import compute_agg
+from verdicts import compute_agg, price_verdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -321,6 +321,14 @@ def build_site(root_dir=ROOT):
     series = {s: [r[:3] if not r[3] else r for r in v]
               for s, v in series.items()}
 
+    # veredicto estatico (schema 3): el front ya no recalcula
+    # atMin/score — viajan en agg y el cliente solo aplica la
+    # vigencia; sobre la serie EXPORTADA (recorte 90d) como D.series
+    for s, a in agg.items():
+        v = price_verdict(a, series.get(s) or [], gen)
+        if v:
+            a.update(v)
+
     # ¿aun hay datos sinteticos del demo? (snapshot marcado o fechas
     # pre-inicio)
     demo = False
@@ -331,7 +339,7 @@ def build_site(root_dir=ROOT):
                 break
 
     data = {
-        "schema_version": 2,
+        "schema_version": 3,
         # expected_date = gen (la fecha propia del dataset): pricesmart
         # siempre cuadra y siman confiesa stale cuando su ultima
         # observacion quedo atras (sweep caido) — el front la anuncia

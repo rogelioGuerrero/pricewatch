@@ -16,9 +16,9 @@ def series_stats(rows):
     """Primitivas sobre una serie [(date, price), ...] asc por fecha.
 
     Devuelve (prices, changes):
-    - prices: los valores tal cual. Cada consumidor filtra distinto:
-      el agg del sitio descarta solo None, catalog_state de notify
-      tambien el 0 (falsy) — divergencia deliberada, ver golden.
+    - prices: los valores tal cual; los consumidores descartan
+      precios no positivos (decision de fase 2: 0/None no es lectura
+      valida, la regla que notify ya aplicaba con falsy).
     - changes: [(date, prev, cur)] por cada transicion cur != prev
       entre filas consecutivas, INCLUIDOS los saltos a/desde None.
       El 'n_ch' del sitio cuenta solo cambios entre precios validos;
@@ -43,8 +43,10 @@ def compute_agg(series, latest):
     agg = {}
     for sku, s in series.items():
         raw_prices, changes = series_stats((r[0], r[1]) for r in s)
-        # el sitio filtra SOLO None: un 0 entra al min (y tumba pct_min)
-        prices = [p for p in raw_prices if p is not None]
+        # <=0 o ausente no es precio observado (misma regla que
+        # catalog_state: era la divergencia #1, resuelta a favor de
+        # notify — un 0 de parseo no puede ser el minimo)
+        prices = [p for p in raw_prices if p is not None and p > 0]
         if not prices:
             continue
         min_p, max_p = min(prices), max(prices)
@@ -105,3 +107,40 @@ def compute_agg(series, latest):
                     or None,
         }
     return agg
+
+
+def price_verdict(agg_entry, series_rows, generated):
+    """Veredicto estatico de precio (schema 3): lo que el front ya no
+    recalcula. Replica EXACTA de atMin()/PWData.score SIN sus gates de
+    cliente (buyable/vigencia los aplica el front al leer):
+    - at_min: en el piso, se movio alguna vez, serie exportada >=3
+      filas y ultimo cambio a <=30d de `generated` — misma regla que
+      atMin() sobre D.agg/D.series/D.generated.
+    - score: max(0, ahorro_declarado%, vs_max%, -vs_med/100) con los
+      mismos numeros que PWData.score, redondeado a 4 decimales.
+    Devuelve dict solo con las claves verdaderas (omitidas ahorran
+    bytes) o None si no hay nada que publicar."""
+    a = agg_entry or {}
+    out = {}
+    last_ch = a.get("last_ch")
+    fresh = bool(last_ch) and bool(generated) and (
+        date.fromisoformat(generated)
+        - date.fromisoformat(last_ch)).days <= 30
+    pct_min = a.get("pct_min")
+    if (pct_min is not None and pct_min <= 0
+            and (a.get("n_ch") or 0) >= 1
+            and len(series_rows) >= 3 and fresh):
+        out["at_min"] = True
+    last = series_rows[-1] if series_rows else []
+    price = last[1] if len(last) > 1 else None
+    # mismo criterio que cents(): entero positivo o no hay score
+    if isinstance(price, int) and not isinstance(price, bool) \
+            and price > 0:
+        saved = max(0, last[3] or 0) * 100 if len(last) > 3 else 0
+        advertised = saved / (price + saved)
+        mx = a.get("max")
+        from_max = (mx - price) / mx if mx and mx > 0 else 0
+        sc = max(0, advertised, from_max, -(a.get("vs_med") or 0) / 100)
+        if sc:
+            out["score"] = round(sc, 4)
+    return out or None

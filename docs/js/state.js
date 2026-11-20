@@ -53,18 +53,14 @@ const NEWEV = LASTSEEN && LASTSEEN < D.generated
 const NEWSET = new Set(NEWEV);
 PWStore.set("pw-lastseen", D.generated);
 // Ofertas+Mejores unidos: letrero de la tienda O stats que dicen "barato hoy"
-// "en su minimo" solo informa si el precio se movio alguna vez: un producto
-// que nunca cambio esta trivialmente en su min (ruido con historia corta).
-// Y vence a los 30d sin moverse (~ciclo de pasaporte): pasado eso el precio
-// bajo ya ES su precio habitual, no una ganga vigente
-const atMin = s => {
-  if (!PWData.buyable(s)) return false;
-  const a = D.agg[s]||{};
-  const fresh = a.last_ch
-    && (Date.parse(D.generated) - Date.parse(a.last_ch)) / 864e5 <= 30;
-  return a.pct_min != null && a.pct_min <= 0 && (a.n_ch||0) >= 1
-         && (D.series[s]||[]).length >= 3 && fresh;
-};
+// "en su minimo" lo calcula el build (agg.at_min, schema 3): en el piso,
+// se movio alguna vez y el ultimo cambio tiene <=30d (~ciclo de pasaporte:
+// vencido, el precio bajo ya ES su precio habitual). El cliente solo aplica
+// la vigencia (buyable); schema viejo sin el campo = sin veredicto, nunca
+// se recalcula localmente
+const atMin = s => PWData.buyable(s)
+  && (D.schema_version || 0) >= 3
+  && !!(D.agg[s] || {}).at_min;
 const DEALS = (() => {
   const m = new Set(D.ofertas.map(o => o.sku));
   // comprable Y verificado: una observacion vencida o una fuente

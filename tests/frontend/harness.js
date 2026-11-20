@@ -277,6 +277,7 @@ function buildDom() {
 
 // payload minimo pero realista (misma forma que scripts/build_site.py)
 const DEMO_D = {
+  schema_version: 3,
   generated: "2026-09-29", built: "b-test", n_products: 1,
   products: { "111": { title: "Prod Uno", brand: "Marca",
                        category: "Cat", slug: "prod-uno" } },
@@ -285,7 +286,7 @@ const DEMO_D = {
                     ["2026-09-29", 2300, 1, 3]] },
   agg: { "111": { min: 2300, max: 2500, med: 2400, pct_min: 0,
                   vs_med: -4, n_ch: 2, last_ch: "2026-09-29",
-                  d_out: 0, n_out: 0 } },
+                  d_out: 0, n_out: 0, at_min: true, score: 0.1154 } },
   events: [{ type: "bajo", sku: "111", date: "2026-09-29",
              from: 2500, to: 2300, pct: -8, title: "Prod Uno" }],
   ofertas: [], clubs: {}, clubh: {},

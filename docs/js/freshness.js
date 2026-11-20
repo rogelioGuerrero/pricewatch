@@ -55,13 +55,12 @@ const PWData = (() => {
     return p.state === "available" && p.priceCents != null;
   };
   const score = (sku, now = today()) => {
-    const p = product(sku, null, now), a = D.agg?.[sku] || {};
+    const p = product(sku, null, now);
     if (p.state !== "available" || p.priceCents == null) return 0;
-    const last = D.series[sku].at(-1), saved = Math.max(0, last[3] || 0) * 100;
-    // Declared savings use the original price, not the reduced price.
-    const advertised = saved / (p.priceCents + saved);
-    const fromMax = a.max > 0 ? (a.max - p.priceCents) / a.max : 0;
-    return Math.max(0, advertised, fromMax, -(a.vs_med || 0) / 100);
+    // fuerza de la ganga la calcula el build (agg.score, schema 3);
+    // payload viejo sin el campo = 0, nunca se recalcula localmente
+    return (D.schema_version || 0) >= 3
+      ? (D.agg?.[sku] || {}).score || 0 : 0;
   };
   const nextSweep = (now = Date.now()) => {
     const d = new Date(now);

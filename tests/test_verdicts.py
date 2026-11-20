@@ -63,3 +63,77 @@ def test_catalog_state_golden(tmp_path, monkeypatch):
 def test_catalog_state_missing_db(monkeypatch):
     monkeypatch.setattr(notify, "DB", "nope/prices.db")
     assert notify.catalog_state() == ({}, None)
+
+
+# ---------- price_verdict: el veredicto estatico que viaja en agg ----------
+
+ROWS = [["2026-11-10", 2000, 1, 0],
+        ["2026-11-11", 1500, 1, 0],
+        ["2026-11-12", 1000, 1, 0]]
+GEN = "2026-11-12"
+
+
+def test_price_verdict_at_min_y_score():
+    # en el piso, 2 cambios, ultimo cambio hoy -> at_min; el score es
+    # el max de ahorro declarado / vs max / -vs_med (misma formula que
+    # tenia PWData.score): from_max = (2000-1000)/2000 = 0.5
+    a = {"pct_min": 0, "n_ch": 2, "last_ch": GEN, "max": 2000,
+         "vs_med": -33}
+    assert verdicts.price_verdict(a, ROWS, GEN) == \
+        {"at_min": True, "score": 0.5}
+
+
+def test_price_verdict_cambio_vencido_30d():
+    a = {"pct_min": 0, "n_ch": 2, "last_ch": "2026-10-10",
+         "max": 2000, "vs_med": -33}
+    v = verdicts.price_verdict(a, ROWS, GEN)
+    assert v == {"score": 0.5}          # sin at_min: 33d > 30d
+
+
+def test_price_verdict_serie_corta_no_at_min():
+    a = {"pct_min": 0, "n_ch": 1, "last_ch": GEN, "max": 2000}
+    v = verdicts.price_verdict(a, ROWS[:2], GEN)
+    assert "at_min" not in v            # <3 filas como exige el front
+
+
+def test_price_verdict_sin_movimiento_no_at_min():
+    a = {"pct_min": 0, "n_ch": 0, "last_ch": None, "max": 2000}
+    v = verdicts.price_verdict(a, ROWS, GEN)
+    assert v is None or "at_min" not in v
+
+
+def test_price_verdict_score_ahorro_declarado():
+    # saving en la ultima fila: advertised = saved/(price+saved) con
+    # saved en centavos: 250/(1000+250) = 0.2 > from_max 0
+    a = {"pct_min": 33, "n_ch": 2, "last_ch": GEN, "max": 1000,
+         "vs_med": 0}
+    rows = ROWS[:2] + [["2026-11-12", 1000, 1, 2.5]]
+    assert verdicts.price_verdict(a, rows, GEN) == {"score": 0.2}
+
+
+def test_price_verdict_score_vs_med():
+    # sin ahorro y price == max: solo queda -vs_med/100 = 0.33
+    a = {"pct_min": 0, "n_ch": 2, "last_ch": GEN, "max": 1000,
+         "vs_med": -33}
+    rows = ROWS[:2] + [["2026-11-12", 1000, 1, 0]]
+    v = verdicts.price_verdict(a, rows, GEN)
+    assert v["score"] == 0.33
+
+
+def test_price_verdict_precio_invalido_sin_score():
+    # 0 o None en la ultima fila = sin lectura de precio -> sin score
+    a = {"pct_min": 0, "n_ch": 2, "last_ch": GEN, "max": 2000}
+    for bad in (0, None):
+        rows = ROWS[:2] + [["2026-11-12", bad, 1, 0]]
+        v = verdicts.price_verdict(a, rows, GEN)
+        assert v == {"at_min": True}, bad
+
+
+def test_price_verdict_vacio_es_none():
+    # precio en su max y encima de la mediana: sin ahorro, sin margen
+    # vs max, -vs_med negativo -> score 0 omitido y sin at_min -> None
+    a = {"pct_min": 50, "n_ch": 2, "last_ch": GEN, "max": 2000,
+         "vs_med": 10}
+    rows = ROWS[:2] + [["2026-11-12", 2000, 1, 0]]
+    assert verdicts.price_verdict(a, rows, GEN) is None
+    assert verdicts.price_verdict(a, [], GEN) is None

@@ -777,11 +777,11 @@
    },
    "compute_agg": {
     "A": {
-     "min": 0,
+     "min": 900,
      "max": 1000,
-     "med": 900,
-     "pct_min": null,
-     "vs_med": 0.0,
+     "med": 950,
+     "pct_min": 0.0,
+     "vs_med": -5.3,
      "n_ch": 2,
      "last_ch": "2026-11-12",
      "d_out": 0,

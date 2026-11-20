@@ -136,6 +136,14 @@ def test_build_site_end_to_end(tmp_path):
     assert d["series"]["A"][0] == ["2026-10-13", 1000, 1]
     assert d["series"]["A"][1] == ["2026-10-14", 800, 1, 2.0]
     assert d["agg"]["A"]["n_ch"] == 1
+    # schema 3: el veredicto estatico viaja en agg — sin serie >=3 no
+    # hay at_min; el score si se publica (0.2 por ahorro 2.0/1000)
+    assert d["schema_version"] == 3
+    assert "at_min" not in d["agg"]["A"]
+    assert d["agg"]["A"]["score"] == 0.2
+    # Z: precio plano sin ahorro -> score 0 omitido, sin veredicto
+    assert "at_min" not in d["agg"]["Z"]
+    assert "score" not in d["agg"]["Z"]
     assert d["ofertas"][0]["sku"] == "A" and d["ofertas"][0]["saving"] == 2.0
     # siman: item vivo con rompimiento de minimo historico
     assert d["siman"]["n_items"] == 1

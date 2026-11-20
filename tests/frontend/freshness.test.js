@@ -26,6 +26,7 @@ const startup = (opts = {}, now = FREEZE) => {
 const fx = ({ gen = OBS, obs = OBS, price = 1000, stock = 1,
               saving = 0, quality, clubs, clubh, siman,
               ofertas } = {}) => ({
+  schema_version: 3,
   generated: gen, built: "b-fx", n_products: 1,
   quality: quality
     || { sources: { pricesmart: { observed_at: gen } } },
@@ -34,7 +35,8 @@ const fx = ({ gen = OBS, obs = OBS, price = 1000, stock = 1,
   series: { "111": [[obs, 2000, 1, 0], [obs, 1500, 1, 0],
                     [obs, price, stock, saving]] },
   agg: { "111": { min: 1000, max: 2000, pct_min: 0, n_ch: 2,
-                  last_ch: obs, vs_med: -33, d_out: 0, n_out: 0 } },
+                  last_ch: obs, vs_med: -33, d_out: 0, n_out: 0,
+                  at_min: true, score: 0.5 } },
   events: [], ofertas: ofertas || [], clubs: clubs || {},
   clubh: clubh || {},
   siman: siman || { items: [], events: [], watches: [] },

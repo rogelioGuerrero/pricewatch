@@ -157,7 +157,7 @@ def main():
     dst = os.path.join(os.path.dirname(__file__),
                        "fixtures", "verdicts_golden.json")
     os.makedirs(os.path.dirname(dst), exist_ok=True)
-    with open(dst, "w", encoding="utf-8") as f:
+    with open(dst, "w", encoding="utf-8", newline="\n") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)
         f.write("\n")
     print(f"-> {dst} ({len(out['cases'])} casos)")
