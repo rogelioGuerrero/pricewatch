@@ -1,0 +1,1321 @@
+{
+ "meta": {
+  "note": "volcado post-paso-B (frescura estricta a fecha SV). now = epoch ms de Date.now congelado antes del boot; expected = salidas reales de PWData/state.js"
+ },
+ "cases": [
+  {
+   "name": "fresco_con_oferta",
+   "now": 1794492000000,
+   "data": {
+    "generated": "2026-11-12",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-12"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-12"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-12",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1000,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1000,
+      "max": 2000,
+      "pct_min": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-12",
+      "vs_med": -33,
+      "d_out": 0,
+      "n_out": 0
+     }
+    },
+    "events": [],
+    "ofertas": [
+     {
+      "sku": "111",
+      "price": 1000,
+      "saving": 500,
+      "date": "2026-11-12",
+      "title": "Prod Uno"
+     }
+    ],
+    "clubs": {},
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "available",
+     "observedAt": "2026-11-12",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "product_club": {
+     "state": "unknown",
+     "observedAt": "",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "buyable": true,
+    "buyable_club": false,
+    "score": 0.5,
+    "atMin": true,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": true,
+     "real": false,
+     "min": true,
+     "bajo": true,
+     "all": true
+    },
+    "DEALS": [
+     "111"
+    ]
+   }
+  },
+  {
+   "name": "vencido_1_dia_en_gracia",
+   "now": 1794484799000,
+   "data": {
+    "generated": "2026-11-11",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-11"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-11"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-11",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-11",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-11",
+       1000,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1000,
+      "max": 2000,
+      "pct_min": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-11",
+      "vs_med": -33,
+      "d_out": 0,
+      "n_out": 0
+     }
+    },
+    "events": [],
+    "ofertas": [
+     {
+      "sku": "111",
+      "price": 1000,
+      "saving": 500,
+      "date": "2026-11-11",
+      "title": "Prod Uno"
+     }
+    ],
+    "clubs": {},
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "stale",
+     "observedAt": "2026-11-11",
+     "sourceDate": "2026-11-11",
+     "priceCents": 1000
+    },
+    "product_club": {
+     "state": "unknown",
+     "observedAt": "",
+     "sourceDate": "2026-11-11",
+     "priceCents": 1000
+    },
+    "buyable": false,
+    "buyable_club": false,
+    "score": 0,
+    "atMin": false,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": false,
+     "real": false,
+     "min": false,
+     "bajo": false,
+     "all": false
+    },
+    "DEALS": []
+   }
+  },
+  {
+   "name": "vencido_1_dia_post_corte",
+   "now": 1794492000000,
+   "data": {
+    "generated": "2026-11-11",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-11"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-11"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-11",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-11",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-11",
+       1000,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1000,
+      "max": 2000,
+      "pct_min": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-11",
+      "vs_med": -33,
+      "d_out": 0,
+      "n_out": 0
+     }
+    },
+    "events": [],
+    "ofertas": [],
+    "clubs": {},
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "stale",
+     "observedAt": "2026-11-11",
+     "sourceDate": "2026-11-11",
+     "priceCents": 1000
+    },
+    "product_club": {
+     "state": "unknown",
+     "observedAt": "",
+     "sourceDate": "2026-11-11",
+     "priceCents": 1000
+    },
+    "buyable": false,
+    "buyable_club": false,
+    "score": 0,
+    "atMin": false,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": false,
+     "real": false,
+     "min": false,
+     "bajo": false,
+     "all": false
+    },
+    "DEALS": []
+   }
+  },
+  {
+   "name": "vencido_2_dias",
+   "now": 1794484799000,
+   "data": {
+    "generated": "2026-11-10",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-10"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-10"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-10",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-10",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-10",
+       1000,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1000,
+      "max": 2000,
+      "pct_min": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-10",
+      "vs_med": -33,
+      "d_out": 0,
+      "n_out": 0
+     }
+    },
+    "events": [],
+    "ofertas": [],
+    "clubs": {},
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "stale",
+     "observedAt": "2026-11-10",
+     "sourceDate": "2026-11-10",
+     "priceCents": 1000
+    },
+    "product_club": {
+     "state": "unknown",
+     "observedAt": "",
+     "sourceDate": "2026-11-10",
+     "priceCents": 1000
+    },
+    "buyable": false,
+    "buyable_club": false,
+    "score": 0,
+    "atMin": false,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": false,
+     "real": false,
+     "min": false,
+     "bajo": false,
+     "all": false
+    },
+    "DEALS": []
+   }
+  },
+  {
+   "name": "fuente_fallida",
+   "now": 1794492000000,
+   "data": {
+    "generated": "2026-11-12",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-12",
+       "ok": false
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-12"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-12",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1000,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1000,
+      "max": 2000,
+      "pct_min": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-12",
+      "vs_med": -33,
+      "d_out": 0,
+      "n_out": 0
+     }
+    },
+    "events": [],
+    "ofertas": [],
+    "clubs": {},
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "unknown",
+     "observedAt": "2026-11-12",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "product_club": {
+     "state": "unknown",
+     "observedAt": "",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "buyable": false,
+    "buyable_club": false,
+    "score": 0,
+    "atMin": false,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": false,
+     "real": false,
+     "min": false,
+     "bajo": false,
+     "all": false
+    },
+    "DEALS": []
+   }
+  },
+  {
+   "name": "current_false",
+   "now": 1794492000000,
+   "data": {
+    "generated": "2026-11-12",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-12"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-12",
+      "current": false
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-12",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1000,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1000,
+      "max": 2000,
+      "pct_min": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-12",
+      "vs_med": -33,
+      "d_out": 0,
+      "n_out": 0
+     }
+    },
+    "events": [],
+    "ofertas": [],
+    "clubs": {},
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "stale",
+     "observedAt": "2026-11-12",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "product_club": {
+     "state": "unknown",
+     "observedAt": "",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "buyable": false,
+    "buyable_club": false,
+    "score": 0,
+    "atMin": false,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": false,
+     "real": false,
+     "min": false,
+     "bajo": false,
+     "all": false
+    },
+    "DEALS": []
+   }
+  },
+  {
+   "name": "sin_stock",
+   "now": 1794492000000,
+   "data": {
+    "generated": "2026-11-12",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-12"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-12"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-12",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1000,
+       0,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1000,
+      "max": 2000,
+      "pct_min": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-12",
+      "vs_med": -33,
+      "d_out": 0,
+      "n_out": 0
+     }
+    },
+    "events": [],
+    "ofertas": [],
+    "clubs": {},
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "unavailable",
+     "observedAt": "2026-11-12",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "product_club": {
+     "state": "unknown",
+     "observedAt": "",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "buyable": false,
+    "buyable_club": false,
+    "score": 0,
+    "atMin": false,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": false,
+     "real": false,
+     "min": false,
+     "bajo": false,
+     "all": false
+    },
+    "DEALS": []
+   }
+  },
+  {
+   "name": "precio_none",
+   "now": 1794492000000,
+   "data": {
+    "generated": "2026-11-12",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-12"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-12"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-12",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       null,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1000,
+      "max": 2000,
+      "pct_min": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-12",
+      "vs_med": -33,
+      "d_out": 0,
+      "n_out": 0
+     }
+    },
+    "events": [],
+    "ofertas": [],
+    "clubs": {},
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "available",
+     "observedAt": "2026-11-12",
+     "sourceDate": "2026-11-12",
+     "priceCents": null
+    },
+    "product_club": {
+     "state": "unknown",
+     "observedAt": "",
+     "sourceDate": "2026-11-12",
+     "priceCents": null
+    },
+    "buyable": false,
+    "buyable_club": false,
+    "score": 0,
+    "atMin": false,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": false,
+     "real": false,
+     "min": false,
+     "bajo": false,
+     "all": false
+    },
+    "DEALS": []
+   }
+  },
+  {
+   "name": "precio_cero",
+   "now": 1794492000000,
+   "data": {
+    "generated": "2026-11-12",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-12"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-12"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-12",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       0,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1000,
+      "max": 2000,
+      "pct_min": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-12",
+      "vs_med": -33,
+      "d_out": 0,
+      "n_out": 0
+     }
+    },
+    "events": [],
+    "ofertas": [],
+    "clubs": {},
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "available",
+     "observedAt": "2026-11-12",
+     "sourceDate": "2026-11-12",
+     "priceCents": null
+    },
+    "product_club": {
+     "state": "unknown",
+     "observedAt": "",
+     "sourceDate": "2026-11-12",
+     "priceCents": null
+    },
+    "buyable": false,
+    "buyable_club": false,
+    "score": 0,
+    "atMin": false,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": false,
+     "real": false,
+     "min": false,
+     "bajo": false,
+     "all": false
+    },
+    "DEALS": []
+   }
+  },
+  {
+   "name": "observacion_vieja_fuente_fresca",
+   "now": 1794492000000,
+   "data": {
+    "generated": "2026-11-12",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-12"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-04"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-04",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-04",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-04",
+       1000,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1000,
+      "max": 2000,
+      "pct_min": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-04",
+      "vs_med": -33,
+      "d_out": 0,
+      "n_out": 0
+     }
+    },
+    "events": [],
+    "ofertas": [],
+    "clubs": {},
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "stale",
+     "observedAt": "2026-11-04",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "product_club": {
+     "state": "unknown",
+     "observedAt": "",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "buyable": false,
+    "buyable_club": false,
+    "score": 0,
+    "atMin": false,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": false,
+     "real": false,
+     "min": false,
+     "bajo": false,
+     "all": false
+    },
+    "DEALS": []
+   }
+  },
+  {
+   "name": "observacion_futura",
+   "now": 1794492000000,
+   "data": {
+    "generated": "2026-11-13",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-13"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-13"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-13",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-13",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-13",
+       1000,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1000,
+      "max": 2000,
+      "pct_min": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-13",
+      "vs_med": -33,
+      "d_out": 0,
+      "n_out": 0
+     }
+    },
+    "events": [],
+    "ofertas": [],
+    "clubs": {},
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "unknown",
+     "observedAt": "2026-11-13",
+     "sourceDate": "2026-11-13",
+     "priceCents": 1000
+    },
+    "product_club": {
+     "state": "unknown",
+     "observedAt": "",
+     "sourceDate": "2026-11-13",
+     "priceCents": 1000
+    },
+    "buyable": false,
+    "buyable_club": false,
+    "score": 0,
+    "atMin": false,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": false,
+     "real": false,
+     "min": false,
+     "bajo": false,
+     "all": false
+    },
+    "DEALS": []
+   }
+  },
+  {
+   "name": "club_observado_hoy",
+   "now": 1794492000000,
+   "data": {
+    "generated": "2026-11-12",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-12"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-12"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-12",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1000,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1000,
+      "max": 2000,
+      "pct_min": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-12",
+      "vs_med": -33,
+      "d_out": 0,
+      "n_out": 0
+     }
+    },
+    "events": [],
+    "ofertas": [],
+    "clubs": {
+     "111": {
+      "Club X": {
+       "in_stock": true,
+       "observed_at": "2026-11-12",
+       "qty": 3
+      }
+     }
+    },
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "available",
+     "observedAt": "2026-11-12",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "product_club": {
+     "state": "available",
+     "observedAt": "2026-11-12",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "buyable": true,
+    "buyable_club": true,
+    "score": 0.5,
+    "atMin": true,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": true,
+     "real": false,
+     "min": true,
+     "bajo": true,
+     "all": true
+    },
+    "DEALS": [
+     "111"
+    ]
+   }
+  },
+  {
+   "name": "club_observado_ayer",
+   "now": 1794492000000,
+   "data": {
+    "generated": "2026-11-12",
+    "built": "b-fx",
+    "n_products": 1,
+    "quality": {
+     "sources": {
+      "pricesmart": {
+       "observed_at": "2026-11-12"
+      }
+     }
+    },
+    "products": {
+     "111": {
+      "title": "Prod Uno",
+      "brand": "M",
+      "category": "C",
+      "slug": "p1",
+      "observed_at": "2026-11-12"
+     }
+    },
+    "series": {
+     "111": [
+      [
+       "2026-11-12",
+       2000,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1500,
+       1,
+       0
+      ],
+      [
+       "2026-11-12",
+       1000,
+       1,
+       0
+      ]
+     ]
+    },
+    "agg": {
+     "111": {
+      "min": 1000,
+      "max": 2000,
+      "pct_min": 0,
+      "n_ch": 2,
+      "last_ch": "2026-11-12",
+      "vs_med": -33,
+      "d_out": 0,
+      "n_out": 0
+     }
+    },
+    "events": [],
+    "ofertas": [],
+    "clubs": {
+     "111": {
+      "Club X": {
+       "in_stock": true,
+       "observed_at": "2026-11-11",
+       "qty": 3
+      }
+     }
+    },
+    "clubh": {},
+    "siman": {
+     "items": [],
+     "events": [],
+     "watches": []
+    },
+    "mis": [],
+    "demo": false
+   },
+   "stored": {},
+   "expected": {
+    "product": {
+     "state": "available",
+     "observedAt": "2026-11-12",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "product_club": {
+     "state": "stale",
+     "observedAt": "2026-11-11",
+     "sourceDate": "2026-11-12",
+     "priceCents": 1000
+    },
+    "buyable": true,
+    "buyable_club": false,
+    "score": 0.5,
+    "atMin": true,
+    "dealOK": {
+     "letrero": false,
+     "silenciosa": true,
+     "real": false,
+     "min": true,
+     "bajo": true,
+     "all": true
+    },
+    "DEALS": [
+     "111"
+    ]
+   }
+  }
+ ]
+}

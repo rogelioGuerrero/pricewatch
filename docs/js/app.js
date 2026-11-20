@@ -1005,9 +1005,10 @@ function refreshOpenProduct(){
 document.addEventListener("visibilitychange",
   () => { if (!document.hidden) { render(); refreshOpenProduct(); checkVer(); } });
 setInterval(checkVer, 30 * 60 * 1000);
-// re-render exacto en el corte 06:00 SV (PWData.nextSweep): lo que era
-// "fresco" vence aunque nadie toque la pagina — un solo timeout que se
-// reprograma, sin intervalo extra ni polling
+// re-render exacto en el corte del barrido 06:00 SV (PWData.nextSweep):
+// con fecha estricta la lectura vieja ya vencio a medianoche SV; este
+// timeout reevalua y absorbe el dato fresco tras el sweep — un solo
+// timeout que se reprograma, sin intervalo extra ni polling
 const refreshFreshness = () => {
   render();
   refreshOpenProduct();

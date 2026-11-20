@@ -1,7 +1,7 @@
 "use strict";
 // freshness.test.js — fase 2: las etiquetas de accion dependen de la
 // observacion vigente (PWData). Reloj congelado por contexto via
-// Date.now ANTES de boot: el corte 06:00 SV, las fuentes con fecha
+// Date.now ANTES de boot: el corte estricto a medianoche SV, las fuentes con fecha
 // propia y el precio valido mandan; un dato viejo/invalido/futuro
 // confiesa en vez de proclamar stock, ganga, objetivo o resurtido.
 const { test } = require("node:test");
@@ -210,34 +210,38 @@ test("frescura: alertas Siman exigen metadata propia vigente + precio", () => {
   assert.equal(run(bad, "simanAlerts().length"), 0, "quality false");
 });
 
-test("frescura: el corte es a las 06:00 SV, no a medianoche UTC", () => {
-  // 05:59:59 SV del 12 => ayer 11 todavia es lectura vigente (gracia)
+test("frescura: el corte es medianoche SV — fecha estricta, sin gracia", () => {
+  // 05:59:59 SV del 12: ayer 11 ya vencio (sin gracia pre-sweep)
   const pre = startup({ data: fx({ gen: YEST, obs: YEST }) },
                       Date.parse("2026-11-12T11:59:59Z"));
-  assert.equal(run(pre, 'PWData.product("111").state'), "available");
-  // 06:00:00 SV exacto => ayer ya vencio
+  assert.equal(run(pre, 'PWData.product("111").state'), "stale");
+  // 06:00:00 SV del 12 => ayer sigue vencido
   const post = startup({ data: fx({ gen: YEST, obs: YEST }) },
                        Date.parse("2026-11-12T12:00:00Z"));
   assert.equal(run(post, 'PWData.product("111").state'), "stale");
-  // 05:59 UTC del 12 = 23:59 SV del 11: no hay gracia post-corte;
-  // una observacion del 10 ya es stale aunque la hora UTC sea <12
-  const utcTrick = startup({ data: fx({ gen: "2026-11-10",
-                                        obs: "2026-11-10" }) },
-                           Date.parse("2026-11-12T05:59:00Z"));
-  assert.equal(run(utcTrick, 'PWData.product("111").state'), "stale");
+  // 23:59:59 SV del 11 = 05:59:59 UTC del 12: ultimo segundo en que
+  // la lectura del 11 aun es de su dia SV => vigente
+  const lastSec = startup({ data: fx({ gen: YEST, obs: YEST }) },
+                          Date.parse("2026-11-12T05:59:59Z"));
+  assert.equal(run(lastSec, 'PWData.product("111").state'),
+               "available");
+  // 00:00:00 SV del 12 = 06:00 UTC: medianoche SV vence la lectura
+  const midnight = startup({ data: fx({ gen: YEST, obs: YEST }) },
+                           Date.parse("2026-11-12T06:00:00Z"));
+  assert.equal(run(midnight, 'PWData.product("111").state'), "stale");
   // observacion futura => desconocida, no fresca
   const fut = startup({ data: fx({ gen: "2026-11-13",
                                    obs: "2026-11-13" }) });
   assert.equal(run(fut, 'PWData.product("111").state'), "unknown");
 });
 
-test("frescura: cruzar las 06:00 SV re-evalua y el timer del corte repinta", () => {
-  // boot justo antes del corte: ayer aun tiene gracia
+test("frescura: el timer del corte repinta lo que medianoche SV vencio", () => {
+  // boot 23:59:59 SV del 11: la lectura del 11 aun es de su dia
   const ctx = makeCtx({ data: fx({ gen: YEST, obs: YEST,
                                    ofertas: OF_SEED }),
                         stored: STORED });
   vm.runInContext("Date.now = () => "
-    + Date.parse("2026-11-12T11:59:59Z"), ctx);
+    + Date.parse("2026-11-12T05:59:59Z"), ctx);
   // captura los timeouts ANTES de boot para ubicar el del corte
   const timers = [];
   ctx.setTimeout = (fn, ms) => { timers.push({ fn, ms });
@@ -255,7 +259,8 @@ test("frescura: cruzar las 06:00 SV re-evalua y el timer del corte repinta", () 
   const want = run(ctx, "Date.parse(PWData.nextSweep()) - Date.now() + 1");
   const cutoff = timers.find(t => t.ms === want);
   assert.ok(cutoff, "timeout del corte de frescura registrado");
-  // avanza el reloj a 06:00:00 SV: la gracia vencio
+  // avanza el reloj a 06:00:00 SV del 12: hace horas que medianoche
+  // SV vencio la lectura; el timer del barrido es quien repinta
   vm.runInContext("Date.now = () => "
     + Date.parse("2026-11-12T12:00:00Z"), ctx);
   // disparar el timer repinta SOLO — ningun render manual
@@ -271,14 +276,15 @@ test("frescura: cruzar las 06:00 SV re-evalua y el timer del corte repinta", () 
 });
 
 test("frescura: ficha abierta se repinta al corte sin pisar inputs", () => {
-  // ficha abierta sobre lectura de ayer aun vigente (gracia), con club
-  // propio observado ayer — el corte la vence SIN reabrir el dialogo
+  // ficha abierta 23:59:59 SV con lectura del mismo dia SV (el 11),
+  // club propio observado el 11 — al repintar ya vencio todo, SIN
+  // reabrir el dialogo
   const ctx = makeCtx({ data: fx({ gen: YEST, obs: YEST,
       clubs: { "111": { "Club X": { in_stock: true,
                                      observed_at: YEST, qty: 3 } } } }),
     stored: { "pw-club": "Club X" } });
   vm.runInContext("Date.now = () => "
-    + Date.parse("2026-11-12T11:59:59Z"), ctx);
+    + Date.parse("2026-11-12T05:59:59Z"), ctx);
   const timers = [];
   ctx.setTimeout = (fn, ms) => { timers.push({ fn, ms });
                                 return timers.length; };
@@ -290,7 +296,7 @@ test("frescura: ficha abierta se repinta al corte sin pisar inputs", () => {
   assert.ok(doc.getElementById("dlg").open, "ficha abierta");
   assert.ok(clubCell().textContent.includes("✓"), "club vigente ✓");
   assert.ok(!doc.getElementById("dobs").textContent.includes("vencido"),
-    "lectura en gracia no dice vencida");
+    "lectura de su dia SV no dice vencida");
   // objetivo a medio escribir: nunca guardado, no debe perderse
   doc.getElementById("dtgt").value = "12.34";
   const want = run(ctx, "Date.parse(PWData.nextSweep()) - Date.now() + 1");

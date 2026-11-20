@@ -1,5 +1,6 @@
 // Observation policy, independent of rendering and account state.
-// One business-day grace covers the hours before the 06:00 SV sweep.
+// Strict: a reading is fresh only if observed on today's SV date; before
+// the ~06:00 SV sweep the previous day's data already shows as stale.
 const PWData = (() => {
   const DAY = 864e5;
   const today = () => new Date(Date.now() - 6 * 3600e3)
@@ -16,11 +17,7 @@ const PWData = (() => {
     if (!isoDay(observed) || !isoDay(source) || !isoDay(now)) return "unknown";
     const age = (Date.parse(now) - Date.parse(observed)) / DAY;
     if (age < 0) return "unknown";
-    const sv = new Date(Date.now() - 6 * 3600e3);
-    const grace = sv.toISOString().slice(0, 10) === now
-      && sv.getUTCHours() < 6;
-    return observed === source && (age === 0 || (age === 1 && grace))
-      ? "fresh" : "stale";
+    return observed === source && age === 0 ? "fresh" : "stale";
   };
   const cents = n => Number.isSafeInteger(n) && n > 0 ? n : null;
   const stock = x => x === true || x === 1 ? "available"
