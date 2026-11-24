@@ -1,6 +1,6 @@
 {
  "meta": {
-  "note": "volcado post-fase-2 (frescura estricta + veredicto estatico en agg, schema 3). now = epoch ms de Date.now congelado antes del boot; expected = salidas reales de PWData/state.js; agg calculado por verdicts.py"
+  "note": "volcado post-fase-2 (frescura contra la fecha del sweep, 1 dia de atraso tolerado + veredicto estatico en agg, schema 3). now = epoch ms de Date.now congelado antes del boot; expected = salidas reales de PWData/state.js; agg calculado por verdicts.py"
  },
  "cases": [
   {
@@ -96,12 +96,14 @@
    "expected": {
     "product": {
      "state": "available",
+     "why": "",
      "observedAt": "2026-11-12",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
     },
     "product_club": {
      "state": "unknown",
+     "why": "",
      "observedAt": "",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
@@ -215,30 +217,34 @@
    "stored": {},
    "expected": {
     "product": {
-     "state": "stale",
+     "state": "available",
+     "why": "",
      "observedAt": "2026-11-11",
      "sourceDate": "2026-11-11",
      "priceCents": 1000
     },
     "product_club": {
      "state": "unknown",
+     "why": "",
      "observedAt": "",
      "sourceDate": "2026-11-11",
      "priceCents": 1000
     },
-    "buyable": false,
+    "buyable": true,
     "buyable_club": false,
-    "score": 0,
-    "atMin": false,
+    "score": 0.5,
+    "atMin": true,
     "dealOK": {
      "letrero": false,
-     "silenciosa": false,
+     "silenciosa": true,
      "real": false,
-     "min": false,
-     "bajo": false,
-     "all": false
+     "min": true,
+     "bajo": true,
+     "all": true
     },
-    "DEALS": []
+    "DEALS": [
+     "111"
+    ]
    }
   },
   {
@@ -325,30 +331,34 @@
    "stored": {},
    "expected": {
     "product": {
-     "state": "stale",
+     "state": "available",
+     "why": "",
      "observedAt": "2026-11-11",
      "sourceDate": "2026-11-11",
      "priceCents": 1000
     },
     "product_club": {
      "state": "unknown",
+     "why": "",
      "observedAt": "",
      "sourceDate": "2026-11-11",
      "priceCents": 1000
     },
-    "buyable": false,
+    "buyable": true,
     "buyable_club": false,
-    "score": 0,
-    "atMin": false,
+    "score": 0.5,
+    "atMin": true,
     "dealOK": {
      "letrero": false,
-     "silenciosa": false,
+     "silenciosa": true,
      "real": false,
-     "min": false,
-     "bajo": false,
-     "all": false
+     "min": true,
+     "bajo": true,
+     "all": true
     },
-    "DEALS": []
+    "DEALS": [
+     "111"
+    ]
    }
   },
   {
@@ -436,12 +446,14 @@
    "expected": {
     "product": {
      "state": "stale",
+     "why": "lag",
      "observedAt": "2026-11-10",
      "sourceDate": "2026-11-10",
      "priceCents": 1000
     },
     "product_club": {
      "state": "unknown",
+     "why": "",
      "observedAt": "",
      "sourceDate": "2026-11-10",
      "priceCents": 1000
@@ -547,12 +559,14 @@
    "expected": {
     "product": {
      "state": "unknown",
+     "why": "",
      "observedAt": "2026-11-12",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
     },
     "product_club": {
      "state": "unknown",
+     "why": "",
      "observedAt": "",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
@@ -658,12 +672,14 @@
    "expected": {
     "product": {
      "state": "stale",
+     "why": "delisted",
      "observedAt": "2026-11-12",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
     },
     "product_club": {
      "state": "unknown",
+     "why": "",
      "observedAt": "",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
@@ -768,12 +784,14 @@
    "expected": {
     "product": {
      "state": "unavailable",
+     "why": "",
      "observedAt": "2026-11-12",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
     },
     "product_club": {
      "state": "unknown",
+     "why": "",
      "observedAt": "",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
@@ -877,12 +895,14 @@
    "expected": {
     "product": {
      "state": "available",
+     "why": "",
      "observedAt": "2026-11-12",
      "sourceDate": "2026-11-12",
      "priceCents": null
     },
     "product_club": {
      "state": "unknown",
+     "why": "",
      "observedAt": "",
      "sourceDate": "2026-11-12",
      "priceCents": null
@@ -986,12 +1006,14 @@
    "expected": {
     "product": {
      "state": "available",
+     "why": "",
      "observedAt": "2026-11-12",
      "sourceDate": "2026-11-12",
      "priceCents": null
     },
     "product_club": {
      "state": "unknown",
+     "why": "",
      "observedAt": "",
      "sourceDate": "2026-11-12",
      "priceCents": null
@@ -1096,12 +1118,14 @@
    "expected": {
     "product": {
      "state": "available",
+     "why": "",
      "observedAt": "2026-11-12",
      "sourceDate": "2026-11-12",
      "priceCents": 1500
     },
     "product_club": {
      "state": "unknown",
+     "why": "",
      "observedAt": "",
      "sourceDate": "2026-11-12",
      "priceCents": 1500
@@ -1208,12 +1232,14 @@
    "expected": {
     "product": {
      "state": "stale",
+     "why": "missed",
      "observedAt": "2026-11-04",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
     },
     "product_club": {
      "state": "unknown",
+     "why": "",
      "observedAt": "",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
@@ -1318,12 +1344,14 @@
    "expected": {
     "product": {
      "state": "unknown",
+     "why": "",
      "observedAt": "2026-11-13",
      "sourceDate": "2026-11-13",
      "priceCents": 1000
     },
     "product_club": {
      "state": "unknown",
+     "why": "",
      "observedAt": "",
      "sourceDate": "2026-11-13",
      "priceCents": 1000
@@ -1436,12 +1464,14 @@
    "expected": {
     "product": {
      "state": "available",
+     "why": "",
      "observedAt": "2026-11-12",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
     },
     "product_club": {
      "state": "available",
+     "why": "",
      "observedAt": "2026-11-12",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
@@ -1556,12 +1586,14 @@
    "expected": {
     "product": {
      "state": "available",
+     "why": "",
      "observedAt": "2026-11-12",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
     },
     "product_club": {
      "state": "stale",
+     "why": "missed",
      "observedAt": "2026-11-11",
      "sourceDate": "2026-11-12",
      "priceCents": 1000
@@ -1666,12 +1698,14 @@
    "expected": {
     "product": {
      "state": "available",
+     "why": "",
      "observedAt": "2026-11-12",
      "sourceDate": "2026-11-12",
      "priceCents": 1500
     },
     "product_club": {
      "state": "unknown",
+     "why": "",
      "observedAt": "",
      "sourceDate": "2026-11-12",
      "priceCents": 1500

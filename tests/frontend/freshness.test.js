@@ -1,8 +1,9 @@
 "use strict";
 // freshness.test.js — fase 2: las etiquetas de accion dependen de la
 // observacion vigente (PWData). Reloj congelado por contexto via
-// Date.now ANTES de boot: el corte estricto a medianoche SV, las fuentes con fecha
-// propia y el precio valido mandan; un dato viejo/invalido/futuro
+// Date.now ANTES de boot: la frescura se mide contra la fecha del
+// ultimo sweep (se tolera 1 dia de atraso del cron), las fuentes con
+// fecha propia y el precio valido mandan; un dato viejo/invalido/futuro
 // confiesa en vez de proclamar stock, ganga, objetivo o resurtido.
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
@@ -212,32 +213,29 @@ test("frescura: alertas Siman exigen metadata propia vigente + precio", () => {
   assert.equal(run(bad, "simanAlerts().length"), 0, "quality false");
 });
 
-test("frescura: el corte es medianoche SV — fecha estricta, sin gracia", () => {
-  // 05:59:59 SV del 12: ayer 11 ya vencio (sin gracia pre-sweep)
-  const pre = startup({ data: fx({ gen: YEST, obs: YEST }) },
-                      Date.parse("2026-11-12T11:59:59Z"));
-  assert.equal(run(pre, 'PWData.product("111").state'), "stale");
-  // 06:00:00 SV del 12 => ayer sigue vencido
-  const post = startup({ data: fx({ gen: YEST, obs: YEST }) },
-                       Date.parse("2026-11-12T12:00:00Z"));
-  assert.equal(run(post, 'PWData.product("111").state'), "stale");
-  // 23:59:59 SV del 11 = 05:59:59 UTC del 12: ultimo segundo en que
-  // la lectura del 11 aun es de su dia SV => vigente
-  const lastSec = startup({ data: fx({ gen: YEST, obs: YEST }) },
-                          Date.parse("2026-11-12T05:59:59Z"));
-  assert.equal(run(lastSec, 'PWData.product("111").state'),
-               "available");
-  // 00:00:00 SV del 12 = 06:00 UTC: medianoche SV vence la lectura
-  const midnight = startup({ data: fx({ gen: YEST, obs: YEST }) },
-                           Date.parse("2026-11-12T06:00:00Z"));
-  assert.equal(run(midnight, 'PWData.product("111").state'), "stale");
+test("frescura: la vara es el ultimo sweep — 1 dia de atraso tolerado, 2 no", () => {
+  // reloj SV del 12 con sweep del 11 (atraso 1): vigente a cualquier
+  // hora del dia, pre o post sweep
+  for (const iso of ["2026-11-12T11:59:59Z",  // 05:59:59 SV del 12
+                     "2026-11-12T12:00:00Z",  // 06:00:00 SV del 12
+                     "2026-11-12T06:00:00Z",  // 00:00:00 SV del 12
+                     "2026-11-12T05:59:59Z"]) // 23:59:59 SV del 11
+    assert.equal(
+      run(startup({ data: fx({ gen: YEST, obs: YEST }) },
+                  Date.parse(iso)),
+          'PWData.product("111").state'), "available", iso);
+  // atraso 2 (reloj del 13, sweep del 11): la lectura ya vencio
+  const lag2 = startup({ data: fx({ gen: YEST, obs: YEST }) },
+                       Date.parse("2026-11-13T12:00:00Z"));
+  assert.equal(run(lag2, 'PWData.product("111").state'), "stale");
+  assert.equal(run(lag2, 'PWData.product("111").why'), "lag");
   // observacion futura => desconocida, no fresca
   const fut = startup({ data: fx({ gen: "2026-11-13",
                                    obs: "2026-11-13" }) });
   assert.equal(run(fut, 'PWData.product("111").state'), "unknown");
 });
 
-test("frescura: el timer del corte repinta lo que medianoche SV vencio", () => {
+test("frescura: el timer del corte repinta lo que el atraso del sweep vencio", () => {
   // boot 23:59:59 SV del 11: la lectura del 11 aun es de su dia
   const ctx = makeCtx({ data: fx({ gen: YEST, obs: YEST,
                                    ofertas: OF_SEED }),
@@ -261,10 +259,10 @@ test("frescura: el timer del corte repinta lo que medianoche SV vencio", () => {
   const want = run(ctx, "Date.parse(PWData.nextSweep()) - Date.now() + 1");
   const cutoff = timers.find(t => t.ms === want);
   assert.ok(cutoff, "timeout del corte de frescura registrado");
-  // avanza el reloj a 06:00:00 SV del 12: hace horas que medianoche
-  // SV vencio la lectura; el timer del barrido es quien repinta
+  // avanza el reloj al 13: el sweep del 11 ya va con 2 dias de atraso
+  // y la lectura vencio; el timer del barrido es quien repinta
   vm.runInContext("Date.now = () => "
-    + Date.parse("2026-11-12T12:00:00Z"), ctx);
+    + Date.parse("2026-11-13T12:00:00Z"), ctx);
   // disparar el timer repinta SOLO — ningun render manual
   cutoff.fn();
   assert.ok(!doc.getElementById("g-ini-deals").innerHTML
@@ -277,10 +275,10 @@ test("frescura: el timer del corte repinta lo que medianoche SV vencio", () => {
       .includes("Sin gangas"), "Gangas reevalua DEALS al pintar");
 });
 
-test("frescura: ficha abierta se repinta al corte sin pisar inputs", () => {
+test("frescura: ficha abierta se repinta al vencer sin pisar inputs", () => {
   // ficha abierta 23:59:59 SV con lectura del mismo dia SV (el 11),
-  // club propio observado el 11 — al repintar ya vencio todo, SIN
-  // reabrir el dialogo
+  // club propio observado el 11 — al repintar 2 dias despues ya
+  // vencio todo, SIN reabrir el dialogo
   const ctx = makeCtx({ data: fx({ gen: YEST, obs: YEST,
       clubs: { "111": { "Club X": { in_stock: true,
                                      observed_at: YEST, qty: 3 } } } }),
@@ -305,7 +303,7 @@ test("frescura: ficha abierta se repinta al corte sin pisar inputs", () => {
   const cutoff = timers.find(t => t.ms === want);
   assert.ok(cutoff, "timeout del corte registrado");
   vm.runInContext("Date.now = () => "
-    + Date.parse("2026-11-12T12:00:00Z"), ctx);
+    + Date.parse("2026-11-13T12:00:00Z"), ctx);
   cutoff.fn();
   assert.ok(doc.getElementById("dobs").textContent.includes("vencido"),
     "dobs confiesa lectura vencida tras el corte");
@@ -330,4 +328,130 @@ test("frescura: evento oferta historico conserva datos pero confiesa lectura", (
   assert.ok(html.includes("ahorro observado"), html);
   assert.ok(html.includes("sin verificación reciente"),
     "tag explicita de lectura vencida: " + html);
+});
+
+test("frescura: reloj al dia siguiente del sweep sigue vigente (atraso 1)", () => {
+  // sweep del 12, reloj SV ya en el 13: el cron va un dia atrasado y
+  // se tolera — la lectura del sweep cuenta como vigente
+  const ctx = startup({ data: fx({ ofertas: OF_SEED }),
+                        stored: STORED },
+                      Date.parse("2026-11-13T14:00:00Z"));
+  const p = run(ctx, 'PWData.product("111")');
+  assert.equal(p.state, "available");
+  assert.equal(p.why, "");
+  assert.equal(run(ctx, "PWData.sweepLag()"), 1);
+  assert.ok(run(ctx, 'PWData.buyable("111")'));
+  const v = run(ctx, 'verdict("111")');
+  assert.notEqual(v.label, "sin verificación reciente", v.label);
+});
+
+test("frescura: reloj 2 dias tras el sweep es 'lag' y la franja lo confiesa", () => {
+  const ctx = startup({ data: fx() },
+                      Date.parse("2026-11-14T14:00:00Z"));
+  const p = run(ctx, 'PWData.product("111")');
+  assert.equal(p.state, "stale");
+  assert.equal(p.why, "lag");
+  assert.equal(run(ctx, "PWData.sweepLag()"), 2);
+  assert.ok(!run(ctx, 'PWData.buyable("111")'));
+  const v = run(ctx, 'verdict("111")');
+  assert.equal(v.label, "sin verificación reciente");
+  assert.match(v.tip, /datos al 12 nov/, v.tip);
+  const strip = ctx.__doc.getElementById("ds-text").textContent;
+  assert.match(strip, /Datos sin actualizar desde el 12 nov/);
+  assert.ok(!strip.includes("sweep"), "lenguaje llano, sin jerga");
+  // jerga interna jamas llega al usuario: ni el tip ni la card
+  assert.ok(!v.tip.toLowerCase().includes("sweep"), v.tip);
+  assert.ok(!run(ctx, 'favCard("111")').toLowerCase().includes("sweep"));
+});
+
+test("frescura: con atraso 0 o 1 la franja no avisa datos sin actualizar", () => {
+  for (const now of [FREEZE, Date.parse("2026-11-13T14:00:00Z")]) {
+    const ctx = startup({ data: fx() }, now);
+    assert.ok(!ctx.__doc.getElementById("ds-text").textContent
+        .includes("Datos sin actualizar"), `now=${now} sin aviso`);
+  }
+});
+
+test("frescura: descatalogado (current:false) es 'delisted' con etiqueta propia", () => {
+  const d = fx();
+  d.products["111"].current = false;
+  const ctx = startup({ data: d, stored: { "pw-favs": '["111"]' } });
+  const p = run(ctx, 'PWData.product("111")');
+  assert.equal(p.state, "stale");
+  assert.equal(p.why, "delisted");
+  const v = run(ctx, 'verdict("111")');
+  assert.equal(v.rank, 9);
+  assert.equal(v.label, "fuera de inventario");
+  // en favs promete el aviso si regresa; fuera de favs no
+  assert.match(v.tip, /si vuelve, te avisamos/, v.tip);
+  assert.match(run(ctx, 'observationText(PWData.product("111"))'),
+    /fuera de inventario/);
+  const ctx2 = startup({ data: fx(), stored: {} });
+  run(ctx2, 'D.products["111"].current = false');
+  const v2 = run(ctx2, 'verdict("111")');
+  assert.equal(v2.label, "fuera de inventario");
+  assert.ok(!v2.tip.includes("avisamos"), v2.tip);
+});
+
+test("frescura: favorito sin meta ni serie es 'nodata' y la card no explota", () => {
+  const ctx = startup({ data: fx(), stored: { "pw-favs": '["999"]' } });
+  const p = run(ctx, 'PWData.product("999")');
+  assert.equal(p.state, "unknown");
+  assert.equal(p.why, "nodata");
+  const v = run(ctx, 'verdict("999")');
+  assert.equal(v.rank, 9);
+  assert.equal(v.label, "sin datos todavía");
+  const html = run(ctx, 'favCard("999")');
+  assert.ok(html.includes("sin datos todavía"), html);
+  assert.ok(html.includes("SKU 999"), "titulo de respaldo: " + html);
+});
+
+test("frescura: fav con meta pero sin serie sigue 'nodata' y muestra titulo", () => {
+  // opcion B: el fav descatalogado viaja en products con su meta pero
+  // sin lectura de precio — es 'nodata' y la card conserva el titulo
+  const d = fx();
+  delete d.series["111"];
+  d.products["111"].observed_at = "";
+  d.clubs = { "111": { "Club X": { in_stock: false,
+                                   observed_at: OBS, qty: 0 } } };
+  const ctx = startup({ data: d, stored: { "pw-favs": '["111"]' } });
+  const p = run(ctx, 'PWData.product("111")');
+  assert.equal(p.state, "unknown");
+  assert.equal(p.why, "nodata");
+  const v = run(ctx, 'verdict("111")');
+  assert.equal(v.label, "fuera de inventario");
+  const html = run(ctx, 'favCard("111")');
+  assert.ok(html.includes("Prod Uno"), "titulo, no sku: " + html);
+  assert.ok(!html.includes("SKU 111"), html);
+});
+
+test("frescura: nodata con datos de club dice 'fuera de inventario' con fecha", () => {
+  const d = fx();
+  d.clubs = { "999": { "Club X": { in_stock: false,
+                                   observed_at: "2026-11-10", qty: 0 },
+                       "Club Y": { in_stock: true,
+                                   observed_at: "2026-11-11", qty: 2 } } };
+  const ctx = startup({ data: d, stored: { "pw-favs": '["999"]' } });
+  const v = run(ctx, 'verdict("999")');
+  assert.equal(v.rank, 9);
+  assert.equal(v.label, "fuera de inventario");
+  // la fecha que se cita es la revision de club mas reciente
+  assert.match(v.tip, /última revisión 2026-11-11/, v.tip);
+  assert.match(v.tip, /te avisamos/, v.tip);
+  assert.match(v.tip, /quítalo de tu lista/, v.tip);
+  // sin fav: mismo diagnostico, sin la promesa del aviso
+  const ctx2 = startup({ data: d, stored: {} });
+  const v2 = run(ctx2, 'verdict("999")');
+  assert.equal(v2.label, "fuera de inventario");
+  assert.ok(!v2.tip.includes("avisamos"), v2.tip);
+});
+
+test("frescura: observacion anterior al sweep con current true es 'missed'", () => {
+  const ctx = startup({ data: fx({ gen: OBS, obs: OLD }) });
+  const p = run(ctx, 'PWData.product("111")');
+  assert.equal(p.state, "stale");
+  assert.equal(p.why, "missed");
+  const v = run(ctx, 'verdict("111")');
+  assert.equal(v.label, "sin verificación reciente");
+  assert.match(v.tip, /última lectura 2026-11-04/, v.tip);
 });

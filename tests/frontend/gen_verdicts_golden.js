@@ -46,8 +46,8 @@ const CASES = [
   { name: "fresco_con_oferta",
     data: fx({ ofertas: OF_SEED }), now: NOW_0800 },
   { name: "vencido_1_dia_en_gracia",
-    // 05:59 SV: con la gracia vieja era vigente; con fecha estricta
-    // ya vencio (diff del paso B, fijado a proposito)
+    // 05:59 SV del dia siguiente al sweep: atraso 1 tolerado =>
+    // vigente (la frescura se mide contra la fecha del sweep)
     data: fx({ gen: YEST, obs: YEST, ofertas:
       [{ sku: "111", price: 1000, saving: 500,
          date: YEST, title: "Prod Uno" }] }),
@@ -146,7 +146,8 @@ const EVAL = `JSON.stringify({
 })`;
 
 const out = { meta: {
-  note: ("volcado post-fase-2 (frescura estricta + veredicto estatico "
+  note: ("volcado post-fase-2 (frescura contra la fecha del sweep, "
+         + "1 dia de atraso tolerado + veredicto estatico "
          + "en agg, schema 3). now = epoch ms de Date.now congelado "
          + "antes del boot; expected = salidas reales de "
          + "PWData/state.js; agg calculado por verdicts.py"),

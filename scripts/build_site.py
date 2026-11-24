@@ -199,6 +199,7 @@ def build_site(root_dir=ROOT):
     series = defaultdict(list)
     clubs = defaultdict(dict)
     clubh = defaultdict(lambda: defaultdict(list))
+    fav_seen = {}
     if os.path.exists(db):
         conn = sqlite3.connect(db)
         conn.row_factory = sqlite3.Row
@@ -247,6 +248,14 @@ def build_site(root_dir=ROOT):
                     [r["date"], r["qty"]])
         except sqlite3.OperationalError:
             pass  # tabla aun no existe
+        # lista del usuario vista por el chequeo de clubes: un fav
+        # descatalogado conserva su meta mientras el chequeo siga fresco
+        try:
+            fav_seen = {r["sku"]: r["last_seen"]
+                        for r in conn.execute(
+                            "SELECT sku, last_seen FROM fav_skus")}
+        except sqlite3.OperationalError:
+            fav_seen = {}   # tabla aun no existe
         conn.close()
 
     events = [e for e in read_events(events_path) if e.get("sku")][-200:]
@@ -268,6 +277,7 @@ def build_site(root_dir=ROOT):
     # de muertos.
     gen = max((r[0] for s in series.values() for r in s), default="")
     coverage = {}
+    fav_keep = set()
     if gen:
         current_snapshot = os.path.join(snap_dir, gen + ".json")
         if os.path.exists(current_snapshot):
@@ -281,6 +291,11 @@ def build_site(root_dir=ROOT):
         cutoff = (date.fromisoformat(gen) - timedelta(days=45)).isoformat()
         keep = {s for s, ser in series.items() if ser[-1][0] >= cutoff}
         keep |= {e["sku"] for e in events}
+        # favorito chequeado en los ultimos 14 dias: entra al payload
+        # aunque su ultima lectura de precio ya paso el corte de 45d
+        fcut = (date.fromisoformat(gen) - timedelta(days=14)).isoformat()
+        fav_keep = {s for s, ls in fav_seen.items() if (ls or "") >= fcut}
+        keep |= fav_keep
         series = {s: v for s, v in series.items() if s in keep}
         products = {s: p for s, p in products.items() if s in keep}
 
@@ -308,8 +323,15 @@ def build_site(root_dir=ROOT):
     # y asi el payload deja de crecer sin tope dia a dia
     if gen:
         scut = (date.fromisoformat(gen) - timedelta(days=90)).isoformat()
-        series = {s: [r for r in v if r[0] >= scut]
-                  for s, v in series.items()}
+        trimmed = {}
+        for s, v in series.items():
+            t = [r for r in v if r[0] >= scut]
+            # el favorito conserva su ultima lectura aunque ya salio
+            # del corte: sin ella su card queda sin precio ni fecha
+            if not t and s in fav_keep:
+                t = v[-1:]
+            trimmed[s] = t
+        series = trimmed
 
     # payload liviano: "sku" es redundante (ya es la llave del objeto) y
     # >90% de los puntos llevan ahorro 0 — el front lee r[3] || 0

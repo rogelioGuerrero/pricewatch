@@ -371,20 +371,63 @@ def club_stock_diff(date, skus, products):
     return events
 
 
-def fetch_club_stock(skus, date):
+def _ensure_products_table(conn):
+    """Tabla products (meta por sku): mismo DDL para record_history
+    (snapshot del catalogo) y para la meta de favoritos que siembra
+    fetch_club_stock."""
+    conn.execute("""CREATE TABLE IF NOT EXISTS products (
+        sku TEXT PRIMARY KEY, title TEXT, brand TEXT, category TEXT,
+        slug TEXT, image TEXT)""")
+    try:
+        conn.execute("ALTER TABLE products ADD COLUMN image TEXT")
+    except sqlite3.OperationalError:
+        pass  # columna ya existe
+
+
+def _fav_product_meta(prod, variant):
+    """Fila `products` para un favorito que ya no sale en el listado:
+    title/brand/category/slug salen del getProduct; image queda NULL.
+    Devuelve None si no hay titulo usable — sin el no se inserta."""
+    cur = prod["masterData"]["current"]
+    title = cur.get("name")
+    if not isinstance(title, str) or not title:
+        return None
+    mv = (variant.get("masterVariant") or cur.get("masterVariant")
+          or variant)
+    attrs = mv.get("attributesRaw") or []
+    brand = next((a.get("value") for a in attrs
+                  if isinstance(a, dict) and a.get("name") == "brand"),
+                 "")
+    if not isinstance(brand, str):
+        brand = ""
+    cats = cur.get("categories") or []
+    category = (cats[0].get("name") or "") \
+        if cats and isinstance(cats[0], dict) else ""
+    return (variant["sku"], title, brand, category,
+            cur.get("slug"), None)
+
+
+def fetch_club_stock(skus, date, favs=None):
     """Nivel 2: stock por club SV para los skus dados (batch de 50).
     Guarda en club_stock(sku,date,club,nombre,en_stock,qty).
+    Con `favs` (lista del usuario) ademas anota fav_skus.last_seen y
+    siembra la meta en `products` cuando el sku aun no tiene fila —
+    un favorito descatalogado conserva titulo/marca/ultimo precio.
     Devuelve cuantos lotes fallaron (0 = todos respondieron)."""
     skus = sorted(skus)
     if not skus:
         return 0
+    favs = favs or set()
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""CREATE TABLE IF NOT EXISTS club_stock (
         sku TEXT, date TEXT, club TEXT, club_name TEXT,
         in_stock INT, qty INT, PRIMARY KEY (sku, date, club))""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_club_stock_date "
                  "ON club_stock(date)")
-    rows = []
+    conn.execute("""CREATE TABLE IF NOT EXISTS fav_skus (
+        sku TEXT PRIMARY KEY, last_seen TEXT)""")
+    _ensure_products_table(conn)
+    rows, fav_seen, fav_meta = [], [], []
     n_batches = (len(skus) + 49) // 50
     n_failed = 0
     for i in range(0, len(skus), 50):
@@ -413,9 +456,23 @@ def fetch_club_stock(skus, date):
                     rows.append((v["sku"], date, key, name,
                                  int(a["isOnStock"]),
                                  a["availableQuantity"]))
+            if v.get("sku") in favs:
+                fav_seen.append((v["sku"], date))
+                try:
+                    m = _fav_product_meta(prod, v)
+                    if m:
+                        fav_meta.append(m)
+                except Exception:
+                    pass   # meta incompleta no rompe el lote
         time.sleep(SLEEP)
     conn.executemany(
         "INSERT OR REPLACE INTO club_stock VALUES (?,?,?,?,?,?)", rows)
+    conn.executemany(
+        "INSERT OR REPLACE INTO fav_skus VALUES (?,?)", fav_seen)
+    # el listado Bloomreach manda: solo se siembra la meta cuando el
+    # sku aun no tiene fila en products (INSERT OR IGNORE, jamas pisa)
+    conn.executemany(
+        "INSERT OR IGNORE INTO products VALUES (?,?,?,?,?,?)", fav_meta)
     # poda: club_stock crecia ~2000 filas/dia sin tope. Quedan 90 dias
     # + las 2 fechas mas recientes (la penultima es la linea base del
     # diff: sin ella el proximo run no tendria con que comparar)
@@ -443,13 +500,7 @@ def record_history(products, date, skip=None):
     conn.execute("""CREATE TABLE IF NOT EXISTS prices (
         sku TEXT, date TEXT, price INT, sign_price INT, saving REAL,
         in_stock INT, PRIMARY KEY (sku, date))""")
-    conn.execute("""CREATE TABLE IF NOT EXISTS products (
-        sku TEXT PRIMARY KEY, title TEXT, brand TEXT, category TEXT,
-        slug TEXT, image TEXT)""")
-    try:
-        conn.execute("ALTER TABLE products ADD COLUMN image TEXT")
-    except sqlite3.OperationalError:
-        pass  # columna ya existe
+    _ensure_products_table(conn)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_prices_date "
                  "ON prices(date)")
     items = [(sku, p) for sku, p in products.items()
@@ -551,10 +602,11 @@ def main():
         # sin barrer el catalogo. Detecta velocidad de venta (se_agota).
         prev_name, prev_full = load_previous_snapshot()
         cur = prev_full["products"] if prev_full else {}
-        cands = stock_candidates(today, cur, favs_remote())
+        favs = favs_remote()
+        cands = stock_candidates(today, cur, favs)
         print(f"[{today}] Stock-check: {len(cands)} candidatos "
               f"(ofertas + lista + eventos recientes)")
-        fetch_club_stock(cands, today)
+        fetch_club_stock(cands, today, favs=favs)
         events = club_stock_diff(today, cands, cur)
         print(f"Transiciones/velocidad: {len(events)}")
         for e in events[:15]:
@@ -657,13 +709,14 @@ def main():
     if "--dry" not in sys.argv:
         # stock_candidates debe ver los eventos de HOY ya anexados:
         # una sola lectura del log, post-append
-        cands = stock_candidates(today, cur, favs_remote(),
+        favs = favs_remote()
+        cands = stock_candidates(today, cur, favs,
                                  events=read_events(EVENTS_LOG)) \
             - set(inherited)
         if cands:
             print(f"Detalle por club para {len(cands)} productos "
                   "(ofertas + lista + eventos recientes)…")
-            fetch_club_stock(cands, today)
+            fetch_club_stock(cands, today, favs=favs)
             club_ev = club_stock_diff(today, cands, cur)
             if club_ev:
                 print(f"Transiciones por club: {len(club_ev)}")

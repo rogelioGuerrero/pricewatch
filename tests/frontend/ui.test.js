@@ -273,7 +273,9 @@ test("tap en la card abre la ficha; estrella y carrito no", () => {
 });
 
 test("datastrip: solo excepciones; oculto cuando todo va bien", () => {
-  const ctx = startup();
+  // generated de hoy SV: con el sweep al dia el strip no avisa atraso
+  const hoy = new Date(Date.now() - 6 * 3600e3).toISOString().slice(0, 10);
+  const ctx = startup({ data: { ...DEMO_D, generated: hoy } });
   const doc = ctx.__doc;
   assert.equal(doc.getElementById("datastrip").style.display, "none",
     "sin novedades el strip queda oculto");
@@ -305,7 +307,7 @@ test("datastrip: solo excepciones; oculto cuando todo va bien", () => {
   // guest sin datos propios: el strip queda vacio (quality explicita:
   // el ctx de arriba le escribe .stale al DEMO_D compartido)
   const ctx4 = startup({ appwrite: APPWRITE_STUB,
-    data: { ...DEMO_D, quality: { sources:
+    data: { ...DEMO_D, generated: hoy, quality: { sources:
       { siman: { ok: true, stale: false } } } } });
   assert.equal(ctx4.__doc.getElementById("ds-text").textContent, "");
 });

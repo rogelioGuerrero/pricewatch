@@ -225,3 +225,89 @@ def test_build_site_db_sin_tablas_no_explota(tmp_path):
     sqlite3.connect(root / "data" / "prices.db").close()
     d = bs.build_site(str(root))
     assert d["generated"] == "" and d["products"] == {}
+
+
+# ---------- fav_skus: favoritos descatalogados conservan meta ----------
+
+def _mk_fav_db(root):
+    """prices.db con el producto fresco H (fija `gen` en 2026-10-14)
+    y la tabla fav_skus vacia."""
+    con = sqlite3.connect(root / "data" / "prices.db")
+    con.execute("""create table products (sku text primary key,
+        title text, brand text, category text, slug text, image text)""")
+    con.execute("""create table prices (sku text, date text, price int,
+                   sign_price int, saving real, in_stock int)""")
+    con.execute("create table fav_skus "
+                "(sku text primary key, last_seen text)")
+    con.execute("insert into products values ('H','Fresco','B','C','h','i')")
+    con.execute("insert into prices values ('H','2026-10-14',1000,1000,0,1)")
+    con.commit()
+    con.close()
+
+
+def _ins(root, sql, rows):
+    con = sqlite3.connect(root / "data" / "prices.db")
+    con.executemany(sql, rows)
+    con.commit()
+    con.close()
+
+
+def test_build_fav_descatalogado_conserva_meta_y_ultima_fila(tmp_path):
+    """Fav chequeado por club hace <14d: su ultima lectura de precio
+    (>100d) ya no lo saca del payload — viajan meta + ultima fila."""
+    root = _root(tmp_path)
+    _mk_fav_db(root)
+    _ins(root, "insert into products values (?,?,?,?,?,?)", [
+        ("F", "Fav Viejo", "Marca", "Cat", "f", None)])
+    _ins(root, "insert into prices values (?,?,?,?,?,?)", [
+        ("F", "2026-05-01", 800, 800, 0, 1),
+        ("F", "2026-06-01", 700, 700, 0, 1)])
+    _ins(root, "insert into fav_skus values (?,?)", [("F", "2026-10-13")])
+    d = bs.build_site(str(root))
+    assert d["generated"] == "2026-10-14"
+    assert d["products"]["F"]["title"] == "Fav Viejo"
+    assert d["products"]["F"]["current"] is False
+    assert d["products"]["F"]["observed_at"] == "2026-06-01"
+    assert d["series"]["F"] == [["2026-06-01", 700, 1]]
+
+
+def test_build_fav_con_chequeo_viejo_no_aparece(tmp_path):
+    """fav_skus.last_seen >14d: el favorito salio del radar — se
+    comporta como cualquier muerto (fuera del payload)."""
+    root = _root(tmp_path)
+    _mk_fav_db(root)
+    _ins(root, "insert into products values (?,?,?,?,?,?)", [
+        ("F", "Fav Viejo", "M", "C", "f", None)])
+    _ins(root, "insert into prices values (?,?,?,?,?,?)", [
+        ("F", "2026-06-01", 700, 700, 0, 1)])
+    _ins(root, "insert into fav_skus values (?,?)", [("F", "2026-09-01")])
+    d = bs.build_site(str(root))
+    assert "F" not in d["products"] and "F" not in d["series"]
+
+
+def test_build_no_fav_viejo_sigue_fuera(tmp_path):
+    """Sin entrada en fav_skus: >45d sin lectura = fuera del payload
+    (comportamiento de siempre, intacto)."""
+    root = _root(tmp_path)
+    _mk_fav_db(root)
+    _ins(root, "insert into products values (?,?,?,?,?,?)", [
+        ("N", "No Fav", "M", "C", "n", None)])
+    _ins(root, "insert into prices values (?,?,?,?,?,?)", [
+        ("N", "2026-08-01", 500, 500, 0, 1)])
+    d = bs.build_site(str(root))
+    assert "N" not in d["products"] and "N" not in d["series"]
+
+
+def test_build_fav_sin_precios_exporta_meta(tmp_path):
+    """Fav con meta pero sin ninguna fila en prices: viaja en
+    products sin romper el build (series simplemente no lo tiene)."""
+    root = _root(tmp_path)
+    _mk_fav_db(root)
+    _ins(root, "insert into products values (?,?,?,?,?,?)", [
+        ("M", "Sin Precios", "Marca", "Cat", "m", None)])
+    _ins(root, "insert into fav_skus values (?,?)", [("M", "2026-10-13")])
+    d = bs.build_site(str(root))
+    assert d["products"]["M"]["title"] == "Sin Precios"
+    assert d["products"]["M"]["current"] is False
+    assert d["products"]["M"]["observed_at"] == ""
+    assert "M" not in d["series"]

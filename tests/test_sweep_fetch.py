@@ -6,6 +6,7 @@ deben convertirse en datos; cada categoria que cae queda en `failed`
 sin resultado parcial.
 """
 
+import sqlite3
 from types import SimpleNamespace
 
 import pytest
@@ -169,3 +170,93 @@ def test_sweep_marca_categoria_caida_sin_resultado_parcial(http,
     products, failed = sweep.sweep()
     assert failed == {"Alimentos"}
     assert list(products) == ["OK1"], "la categoria caida no retiene docs"
+
+
+# ---------- fetch_club_stock: meta de favoritos (fav_skus) ----------
+
+def _getproduct(*prods):
+    return Resp({"data": {"products": {"results": list(prods)}}})
+
+
+def _prod(sku, name="Fav Prod", brand="Marca", cat="Cat", slug="p-fav",
+          stock=True, qty=5):
+    """Respuesta ct/getProduct minima: una variante con un canal SV."""
+    return {"masterData": {"current": {
+        "name": name, "slug": slug,
+        "categories": [{"name": cat}] if cat else [],
+        "allVariants": [{
+            "sku": sku,
+            "attributesRaw": [{"name": "brand", "value": brand}],
+            "availability": {"channels": {"results": [{
+                "channel": {"key": "6701",
+                            "nameAllLocales": [{"value": "Santa Ana"}]},
+                "availability": {"isOnStock": stock,
+                                 "availableQuantity": qty}}]}}}]}}}
+
+
+def _leer(db, sql):
+    con = sqlite3.connect(str(db))
+    rows = con.execute(sql).fetchall()
+    con.close()
+    return rows
+
+
+def test_club_stock_siembra_meta_del_fav(http, tmp_path, monkeypatch):
+    """Favorito con fila en products: se siembra la meta del
+    getProduct (imagen NULL) y fav_skus anota la fecha."""
+    db = tmp_path / "prices.db"
+    monkeypatch.setattr(sweep, "DB_PATH", str(db))
+    http[0].queue = [_getproduct(_prod("A"))]
+    sweep.fetch_club_stock({"A"}, "2026-10-14", favs={"A"})
+    assert _leer(db, "select sku, last_seen from fav_skus") == [
+        ("A", "2026-10-14")]
+    assert _leer(db, "select sku, title, brand, category, slug, image "
+                     "from products") == [
+        ("A", "Fav Prod", "Marca", "Cat", "p-fav", None)]
+    # el stock por club se escribe igual que siempre
+    assert _leer(db, "select sku, in_stock, qty from club_stock") == [
+        ("A", 1, 5)]
+
+
+def test_club_stock_no_pisa_meta_del_listado(http, tmp_path, monkeypatch):
+    """La fila del listado Bloomreach manda: INSERT OR IGNORE jamas
+    sobrescribe title/imagen ya grabados."""
+    db = tmp_path / "prices.db"
+    con = sqlite3.connect(str(db))
+    con.execute("""create table products (sku text primary key,
+        title text, brand text, category text, slug text, image text)""")
+    con.execute("insert into products values "
+                "('A','Del Listado','B','C','s','img')")
+    con.commit()
+    con.close()
+    monkeypatch.setattr(sweep, "DB_PATH", str(db))
+    http[0].queue = [_getproduct(_prod("A", name="Otro"))]
+    sweep.fetch_club_stock({"A"}, "2026-10-14", favs={"A"})
+    assert _leer(db, "select title, image from products") == [
+        ("Del Listado", "img")]
+    # el visto-bueno del fav si se anota aunque la meta no haga falta
+    assert _leer(db, "select last_seen from fav_skus") == [("2026-10-14",)]
+
+
+def test_club_stock_no_fav_no_toca_products(http, tmp_path, monkeypatch):
+    """Sku fuera de la lista del usuario: ni meta ni fav_skus."""
+    db = tmp_path / "prices.db"
+    monkeypatch.setattr(sweep, "DB_PATH", str(db))
+    http[0].queue = [_getproduct(_prod("B"))]
+    sweep.fetch_club_stock({"B"}, "2026-10-14", favs={"Z"})
+    assert _leer(db, "select * from products") == []
+    assert _leer(db, "select * from fav_skus") == []
+    assert _leer(db, "select sku from club_stock") == [("B",)]
+
+
+def test_club_stock_sin_favs_como_antes(http, tmp_path, monkeypatch):
+    """favs=None: comportamiento identico al anterior — solo
+    club_stock, sin meta ni fav_skus."""
+    db = tmp_path / "prices.db"
+    monkeypatch.setattr(sweep, "DB_PATH", str(db))
+    http[0].queue = [_getproduct(_prod("B"))]
+    sweep.fetch_club_stock({"B"}, "2026-10-14")
+    assert _leer(db, "select sku, in_stock, qty from club_stock") == [
+        ("B", 1, 5)]
+    assert _leer(db, "select * from products") == []
+    assert _leer(db, "select * from fav_skus") == []

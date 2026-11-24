@@ -309,7 +309,7 @@ def _main_env(tmp_path, monkeypatch, cur_products, prev_products=None):
     monkeypatch.setattr(sweep, "today_sv", lambda: "2026-10-14")
     monkeypatch.setattr(sweep, "sweep", lambda: (dict(cur_products), set()))
     monkeypatch.setattr(sweep, "favs_remote", lambda: set())
-    monkeypatch.setattr(sweep, "fetch_club_stock", lambda *a: 0)
+    monkeypatch.setattr(sweep, "fetch_club_stock", lambda *a, **kw: 0)
     monkeypatch.setattr(sweep.sys, "argv", ["sweep.py"])
     return {"snap": snap_dir / "2026-10-14.json", "log": log, "db": db}
 

@@ -657,7 +657,8 @@ let lastFocus = null;
 // la observacion va con SU fecha — jamas "hoy" sobre dato viejo
 const observationText = pf =>
   `última lectura ${pf.observedAt || "sin fecha"}`
-  + (pf.state === "stale" ? " — dato vencido"
+  + (pf.why === "delisted" ? " — fuera de inventario"
+    : pf.state === "stale" ? " — dato vencido"
     : pf.state === "unknown" ? " — sin verificar" : "");
 // estado por club via PWData: una lectura vencida dice
 // "sin verificacion" con su fecha — jamas afirma stock/agotado

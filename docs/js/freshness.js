@@ -1,8 +1,11 @@
 // Observation policy, independent of rendering and account state.
-// Strict: a reading is fresh only if observed on today's SV date; before
-// the ~06:00 SV sweep the previous day's data already shows as stale.
+// A reading is fresh when observed on the last sweep's date and the
+// sweep itself lags the SV clock by at most LAG_OK days — the GH
+// Actions cron runs hours late, so freshness is measured against the
+// sweep date, never against "today".
 const PWData = (() => {
   const DAY = 864e5;
+  const LAG_OK = 1;
   const today = () => new Date(Date.now() - 6 * 3600e3)
     .toISOString().slice(0, 10);
   const isoDay = x => {
@@ -15,9 +18,17 @@ const PWData = (() => {
     : D.quality?.sources?.pricesmart?.observed_at || D.generated || "";
   const freshness = (observed, source, now = today()) => {
     if (!isoDay(observed) || !isoDay(source) || !isoDay(now)) return "unknown";
-    const age = (Date.parse(now) - Date.parse(observed)) / DAY;
-    if (age < 0) return "unknown";
-    return observed === source && age === 0 ? "fresh" : "stale";
+    if (Date.parse(now) < Date.parse(observed)
+        || Date.parse(now) < Date.parse(source)) return "unknown";
+    const lag = (Date.parse(now) - Date.parse(source)) / DAY;
+    return observed === source && lag <= LAG_OK ? "fresh" : "stale";
+  };
+  // dias enteros entre la fecha del sweep y el reloj SV — el atraso
+  // del cron, no la edad de la lectura
+  const sweepLag = (source = "pricesmart", now = today()) => {
+    const s = sourceDate(source);
+    if (!isoDay(s) || !isoDay(now)) return null;
+    return (Date.parse(now) - Date.parse(s)) / DAY;
   };
   const cents = n => Number.isSafeInteger(n) && n > 0 ? n : null;
   const stock = x => x === true || x === 1 ? "available"
@@ -35,9 +46,16 @@ const PWData = (() => {
       current = true; // A direct club observation has its own provenance.
     }
     const f = freshness(observed, source, now);
-    return { state: D.quality?.sources?.pricesmart?.ok === false ? "unknown"
-      : f === "fresh" ? (current ? stock(value) : "stale") : f,
-      observedAt: observed, sourceDate: source, priceCents: cents(row?.[1]) };
+    const state = D.quality?.sources?.pricesmart?.ok === false ? "unknown"
+      : f === "fresh" ? (current ? stock(value) : "stale") : f;
+    const why = !club && state === "stale" && meta.current === false
+      ? "delisted"
+      : !club && state === "unknown" && !observed
+        ? "nodata"
+      : state === "stale" ? (observed === source ? "lag" : "missed")
+      : "";
+    return { state, why, observedAt: observed, sourceDate: source,
+             priceCents: cents(row?.[1]) };
   };
   const siman = (item, now = today()) => {
     const source = sourceDate("siman"), observed = item.last || "";
@@ -94,6 +112,6 @@ const PWData = (() => {
     }
     return result;
   };
-  return { today, sourceDate, freshness, product, siman, buyable, score,
-    nextSweep, parseMoney, purchaseRows };
+  return { today, sourceDate, freshness, sweepLag, product, siman,
+    buyable, score, nextSweep, parseMoney, purchaseRows, LAG_OK };
 })();

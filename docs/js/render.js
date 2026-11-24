@@ -229,6 +229,8 @@ function render(){
     if (typeof navigator !== "undefined"
         && navigator.onLine === false) parts.push("Sin conexión");
     if (window.DATA_FROM_CACHE) parts.push("Mostrando datos guardados");
+    if (PWData.sweepLag() > 1)
+      parts.push(`Datos sin actualizar desde el ${+_d} ${MESES[+_m-1]}`);
     if (D.quality?.sources?.siman?.stale)
       parts.push("Siman sin actualizar hoy");
     if (typeof syncLine === "function") parts.push(syncLine());
@@ -521,7 +523,7 @@ function favCard(sku){
       onclick="cartToggle(${jsArg(sku)},this.checked,${PWStore.currentEpoch()})">`:star(sku)}
     ${img(sku)?`<img src="${esc(img(sku))}" alt="" loading="lazy" onerror="this.remove()">`:""}
     <div style="flex:1;min-width:0">
-      <h3 class="t">${esc(p.title||sku)}</h3>
+      <h3 class="t">${esc(p.title || "SKU " + sku)}</h3>
       <div><span class="pr">${l?fmt(l[1]):"—"}</span>
         <span class="tag ${v.cls}">${v.label}</span>
         ${l&&l[3]>0&&PWData.buyable(sku)

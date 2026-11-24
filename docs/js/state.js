@@ -376,12 +376,34 @@ function verdict(sku){
   // afirmar nada sobre el precio/stock de hoy — y nunca se le llama
   // "hoy" a un dato viejo; siempre va su fecha
   const pf = PWData.product(sku);
+  if (pf.why === "delisted")
+    return {rank:9, cls:"salio_del_catalogo", label:"fuera de inventario",
+            tip:`última lectura ${pf.observedAt || "sin fecha"}`
+              + (FAV.has(sku) ? " · si vuelve, te avisamos" : "")};
+  if (pf.why === "nodata") {
+    const cds = Object.values(D.clubs[sku] || {})
+      .map(c => c && c.observed_at).filter(Boolean).sort();
+    return cds.length
+      ? {rank:9, cls:"salio_del_catalogo", label:"fuera de inventario",
+         tip:`PriceSmart ya no lo tiene (última revisión ${cds.at(-1)}).`
+           + (FAV.has(sku)
+              ? " Si vuelve, te avisamos; si ya no lo quieres,"
+                + " quítalo de tu lista." : "")}
+      : {rank:9, cls:"salio_del_catalogo", label:"sin datos todavía",
+         tip:"aún no hay información de este producto — puede tardar"
+           + " hasta el próximo día de actualización"};
+  }
   if (pf.state === "unknown")
     return {rank:9, cls:"agotado", label:"sin dato verificado",
             tip:"la fuente no confirmó una lectura vigente"};
-  if (pf.state === "stale")
+  if (pf.state === "stale") {
+    const sm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(pf.sourceDate || "");
     return {rank:9, cls:"agotado", label:"sin verificación reciente",
-            tip:`última lectura ${pf.observedAt || "sin fecha"}`};
+            tip: pf.why === "lag"
+              ? `datos al ${sm ? `${+sm[3]} ${MESES[+sm[2]-1]}`
+                              : pf.sourceDate}`
+              : `última lectura ${pf.observedAt || "sin fecha"}`};
+  }
   if (pf.state === "unavailable")
     return {rank:8, cls:"agotado", label:"sin stock",
             tip:(a.d_out||0) >= s.length
