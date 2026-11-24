@@ -11,7 +11,8 @@ cookie: vsf-locale=es-sv; vsf-currency=USD; vsf-country=sv; vsf-store=SV; vsf-ch
 ```
 
 - Sin autenticación real: basta con las cookies `vsf-*` (valores fijos para SV).
-- **Batch**: `skus` es array — devuelve solo los productos disponibles en el canal SV.
+- **Batch**: `skus` es array (hasta 20) — devuelve solo los productos disponibles en el canal SV.
+- **Tope: 20 productos por llamada** (verificado 2026-11-24: pedir 21, 30 o 39 devuelve 20; `total` = pedidos que matchean, `count` = devueltos). Un lote mayor pierde productos sin error; el sweep usaba lotes de 50 y solo recibia ~40% del stock por club.
 - Backend: commercetools (estructura masterData/allVariants/centPrecision).
 - Respuesta ~220KB por producto (verbose, trae todos los países/clubes).
 
@@ -75,7 +76,7 @@ cookie: vsf-* (mismas fijas)
 ## Implicaciones de escala
 
 - Watchlist ~150 productos: 2-3 llamadas batch/día — trivial.
-- Catálogo completo: ~330 llamadas batch de 50 SKUs o vía listados por categoría — viable pero genera ~200KB×16K de payload; almacenar difs, no raw.
+- Catálogo completo: (cientos de llamadas) batch de 20 SKUs o vía listados por categoría — viable pero genera ~200KB×16K de payload; almacenar difs, no raw.
 - No requiere Playwright en producción: curl/requests puro.
 - robots.txt: productos no prohibidos para crawlers generales; ser educados (rate bajo).
 

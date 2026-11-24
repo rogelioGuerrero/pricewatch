@@ -41,6 +41,10 @@ DB_PATH = os.path.join(DATA_DIR, "prices.db")
 API = "https://www.pricesmart.com/api/br_discovery/getProductsByKeyword"
 API_PRODUCT = "https://www.pricesmart.com/api/ct/getProduct"
 CHANNEL = "1bad5650-9b56-4490-b3c5-2d50f86c6716"
+# getProduct devuelve max 20 productos por llamada (verificado
+# 2026-11-24: total>count si se pide mas); un lote mayor pierde
+# productos en silencio
+PRODUCT_BATCH = 20
 COOKIE = (
     "vsf-locale=es-sv; vsf-currency=USD; vsf-country=sv; "
     f"vsf-store=SV; vsf-channel={CHANNEL}"
@@ -411,7 +415,8 @@ def _fav_product_meta(prod, variant):
 
 
 def fetch_club_stock(skus, date, favs=None):
-    """Nivel 2: stock por club SV para los skus dados (batch de 50).
+    """Nivel 2: stock por club SV para los skus dados (lotes de
+    PRODUCT_BATCH).
     Guarda en club_stock(sku,date,club,nombre,en_stock,qty).
     Con `favs` (lista del usuario) ademas anota fav_skus.last_seen y
     siembra la meta en `products` cuando el sku aun no tiene fila —
@@ -436,20 +441,32 @@ def fetch_club_stock(skus, date, favs=None):
     # va a anotaciones publicas y al resumen del run
     fav_req = favs & set(skus)
     fav_back, fav_rows = set(), set()
-    n_batches = (len(skus) + 49) // 50
-    n_failed = 0
-    for i in range(0, len(skus), 50):
-        batch = skus[i:i + 50]
+    n_batches = (len(skus) + PRODUCT_BATCH - 1) // PRODUCT_BATCH
+    n_failed = n_trunc = 0
+    for i in range(0, len(skus), PRODUCT_BATCH):
+        batch = skus[i:i + PRODUCT_BATCH]
         body = [{"skus": batch},
                 {"products": "getProductBySKU",
                  "metadata": {"channelId": CHANNEL}}]
         try:
-            res = SESSION.post(API_PRODUCT, json=body, headers=PS_HEADERS,
-                               timeout=60).json()["data"]["products"]["results"]
+            prods = SESSION.post(API_PRODUCT, json=body,
+                                 headers=PS_HEADERS,
+                                 timeout=60).json()["data"]["products"]
+            res = prods["results"]
         except Exception as e:
             n_failed += 1
             print(f"  ! club_stock batch {i}: fallo ({e})")
             continue
+        tot = prods.get("total")
+        if isinstance(tot, int) and tot > len(res):
+            # guardia: si el tope por llamada baja (o el lote crece),
+            # el resto del lote se pierde sin error — que se vea
+            n_trunc += 1
+            print(f"  ! getProduct lote {i}: {len(res)} de {tot} "
+                  "productos (truncado)")
+            gh_warning("getProduct",
+                       f"respuesta truncada: {len(res)} de {tot} "
+                       f"en el lote {i}")
         for prod in res:
             for v in prod["masterData"]["current"]["allVariants"]:
                 chans = (v.get("availability") or {}).get("channels", {}) \
@@ -510,10 +527,10 @@ def fetch_club_stock(skus, date, favs=None):
                 f"sin_canales={len(fav_nochan)} "
                 f"no_devueltos={len(fav_missing)} "
                 f"lotes_fallidos={n_failed}/{n_batches} "
-                f"candidatos={len(skus)}")
+                f"candidatos={len(skus)} truncados={n_trunc}")
         print(line)
         gh_summary("### Favoritos / stock por club\n- " + line)
-        if len(fav_rows) < len(favs) or n_failed:
+        if len(fav_rows) < len(favs) or n_failed or n_trunc:
             extra = ""
             if fav_nochan:
                 extra += " sin_canales=[" + ",".join(fav_nochan[:8]) + "]"

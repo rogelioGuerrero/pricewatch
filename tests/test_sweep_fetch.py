@@ -319,3 +319,54 @@ def test_club_stock_sin_favs_sin_diagnostico(http, tmp_path, monkeypatch,
     assert not summ.exists() or "Favoritos" not in \
         summ.read_text(encoding="utf-8")
     assert _leer(db, "select sku from club_stock") == [("B",)]
+
+
+# ---------- fetch_club_stock: lotes de PRODUCT_BATCH / truncamiento ----------
+
+def test_club_stock_lotes_de_product_batch(http, tmp_path, monkeypatch):
+    """45 skus => 3 POST de 20/20/5 (orden sorted): getProduct devuelve
+    max 20 por llamada y un lote mayor pierde productos en silencio."""
+    db = tmp_path / "prices.db"
+    monkeypatch.setattr(sweep, "DB_PATH", str(db))
+    skus = {f"S{i:02d}" for i in range(45)}
+    http[0].queue = [_getproduct(), _getproduct(), _getproduct()]
+    sweep.fetch_club_stock(skus, "2026-10-14")
+    bodies = [c[1][0]["skus"] for c in http[1]]
+    assert [len(b) for b in bodies] == [20, 20, 5]
+    assert all(len(b) <= sweep.PRODUCT_BATCH for b in bodies)
+    assert [s for b in bodies for s in b] == sorted(skus)
+
+
+def test_club_stock_truncamiento_avisa(http, tmp_path, monkeypatch,
+                                       capsys):
+    """total > len(results): la respuesta vino cortada — anotacion
+    publica de getProduct y contador en la linea de favs."""
+    db = tmp_path / "prices.db"
+    monkeypatch.setattr(sweep, "DB_PATH", str(db))
+    payload = {"data": {"products": {
+        "results": [_prod(f"S{i:02d}") for i in range(20)],
+        "total": 21, "count": 20}}}
+    http[0].queue = [Resp(payload)]
+    sweep.fetch_club_stock({f"S{i:02d}" for i in range(21)},
+                           "2026-10-14", favs={"S00"})
+    out = capsys.readouterr().out
+    assert "::warning title=getProduct::" in out
+    assert "truncada" in out
+    assert "truncados=1" in out
+    assert "::warning title=favs::" in out
+
+
+def test_club_stock_sin_truncamiento_sin_anotacion(http, tmp_path,
+                                                   monkeypatch, capsys):
+    """total == len(results): nada que reportar — sin anotacion de
+    getProduct y truncados=0 en la linea de favs."""
+    db = tmp_path / "prices.db"
+    monkeypatch.setattr(sweep, "DB_PATH", str(db))
+    payload = {"data": {"products": {
+        "results": [_prod("A")], "total": 1, "count": 1}}}
+    http[0].queue = [Resp(payload)]
+    sweep.fetch_club_stock({"A"}, "2026-10-14", favs={"A"})
+    out = capsys.readouterr().out
+    assert "title=getProduct" not in out
+    assert "truncados=0" in out
+    assert "::notice title=favs::" in out
