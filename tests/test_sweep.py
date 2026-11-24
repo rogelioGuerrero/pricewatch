@@ -8,6 +8,7 @@ corrompe el digest y el dashboard sin que nadie lo note.
 import json
 from datetime import datetime, timedelta, timezone
 
+import common
 import sweep
 
 
@@ -381,3 +382,44 @@ def test_main_corrida_normal_mismos_eventos_que_diff(tmp_path, monkeypatch):
     assert sorted(got) == sorted(want) and got
     assert all(e["date"] == "2026-10-14" for e in _log_events(env["log"]))
     assert env["snap"].exists()
+
+
+# ---------- favs_remote: la falla queda en anotacion publica ----------
+
+def test_favs_remote_sin_credenciales_avisa(capsys, monkeypatch):
+    monkeypatch.setattr(sweep, "aw_env", lambda: ("", "", ""))
+    assert sweep.favs_remote() == set()
+    out = capsys.readouterr().out
+    assert "::warning title=favs::" in out
+    assert "Appwrite no configurado" in out
+
+
+def test_favs_remote_lectura_falla_avisa(capsys, monkeypatch):
+    monkeypatch.setattr(sweep, "aw_env", lambda: ("e", "p", "k"))
+
+    def boom(table, **kw):
+        raise common.AppwriteReadError("favs: HTTP 500")
+    monkeypatch.setattr(sweep, "aw_rows", boom)
+    assert sweep.favs_remote() == set()
+    out = capsys.readouterr().out
+    assert "::warning title=favs::" in out
+    assert "lectura de Appwrite fallo" in out
+    assert "AppwriteReadError" in out
+
+
+def test_favs_remote_tabla_vacia_avisa(capsys, monkeypatch):
+    monkeypatch.setattr(sweep, "aw_env", lambda: ("e", "p", "k"))
+    monkeypatch.setattr(sweep, "aw_rows",
+                        lambda t, **kw: [{"$id": "1"}, {"sku": None}])
+    assert sweep.favs_remote() == set()
+    out = capsys.readouterr().out
+    assert "::warning title=favs::" in out
+    assert "0 favoritos" in out
+
+
+def test_favs_remote_ok_sin_anotacion(capsys, monkeypatch):
+    monkeypatch.setattr(sweep, "aw_env", lambda: ("e", "p", "k"))
+    monkeypatch.setattr(sweep, "aw_rows",
+                        lambda t, **kw: [{"sku": 123}, {"sku": "ABC"}])
+    assert sweep.favs_remote() == {"123", "ABC"}
+    assert "::warning title=favs::" not in capsys.readouterr().out

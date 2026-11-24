@@ -23,6 +23,9 @@ from common import (
     aw_env,
     aw_rows,
     gh_error,
+    gh_notice,
+    gh_summary,
+    gh_warning,
     prune_jsonl,
     read_events,
     snapshot_is_synthetic,
@@ -428,6 +431,11 @@ def fetch_club_stock(skus, date, favs=None):
         sku TEXT PRIMARY KEY, last_seen TEXT)""")
     _ensure_products_table(conn)
     rows, fav_seen, fav_meta = [], [], []
+    # cobertura de la lista del usuario: favs pedidos, devueltos por
+    # getProduct y con al menos una fila de club SV — el diagnostico
+    # va a anotaciones publicas y al resumen del run
+    fav_req = favs & set(skus)
+    fav_back, fav_rows = set(), set()
     n_batches = (len(skus) + 49) // 50
     n_failed = 0
     for i in range(0, len(skus), 50):
@@ -446,6 +454,7 @@ def fetch_club_stock(skus, date, favs=None):
             for v in prod["masterData"]["current"]["allVariants"]:
                 chans = (v.get("availability") or {}).get("channels", {}) \
                         .get("results", [])
+                n0 = len(rows)
                 for c in chans:
                     key = c["channel"]["key"]
                     if not key.startswith("67"):
@@ -456,14 +465,18 @@ def fetch_club_stock(skus, date, favs=None):
                     rows.append((v["sku"], date, key, name,
                                  int(a["isOnStock"]),
                                  a["availableQuantity"]))
-            if v.get("sku") in favs:
-                fav_seen.append((v["sku"], date))
-                try:
-                    m = _fav_product_meta(prod, v)
-                    if m:
-                        fav_meta.append(m)
-                except Exception:
-                    pass   # meta incompleta no rompe el lote
+                sku_v = v.get("sku")
+                if sku_v in favs:
+                    fav_back.add(sku_v)
+                    if len(rows) > n0:
+                        fav_rows.add(sku_v)
+                    fav_seen.append((sku_v, date))
+                    try:
+                        m = _fav_product_meta(prod, v)
+                        if m:
+                            fav_meta.append(m)
+                    except Exception:
+                        pass   # meta incompleta no rompe el lote
         time.sleep(SLEEP)
     conn.executemany(
         "INSERT OR REPLACE INTO club_stock VALUES (?,?,?,?,?,?)", rows)
@@ -489,6 +502,27 @@ def fetch_club_stock(skus, date, favs=None):
         # stock por club (antes el 'continue' los tragaba en silencio)
         print(f"::warning::club_stock: {n_failed}/{n_batches} "
               "lotes fallidos")
+    if favs:
+        fav_nochan = sorted(fav_back - fav_rows)
+        fav_missing = sorted(fav_req - fav_back)
+        line = (f"favs: leidos={len(favs)} solicitados={len(fav_req)} "
+                f"devueltos={len(fav_back)} con_stock={len(fav_rows)} "
+                f"sin_canales={len(fav_nochan)} "
+                f"no_devueltos={len(fav_missing)} "
+                f"lotes_fallidos={n_failed}/{n_batches} "
+                f"candidatos={len(skus)}")
+        print(line)
+        gh_summary("### Favoritos / stock por club\n- " + line)
+        if len(fav_rows) < len(favs) or n_failed:
+            extra = ""
+            if fav_nochan:
+                extra += " sin_canales=[" + ",".join(fav_nochan[:8]) + "]"
+            if fav_missing:
+                extra += (" no_devueltos=["
+                          + ",".join(fav_missing[:8]) + "]")
+            gh_warning("favs", line + extra)
+        else:
+            gh_notice("favs", line)
     return n_failed
 
 
@@ -520,14 +554,22 @@ def record_history(products, date, skip=None):
 
 def favs_remote():
     """SKUs de la lista del usuario en Appwrite (si hay API key en env).
-    La tabla es del proyecto personal: una sola usuaria, pocos rows."""
+    La tabla es del proyecto personal: una sola usuaria, pocos rows.
+    Una falla ya no pasa en silencio: ::warning:: publico del run."""
     if not all(aw_env()):
+        gh_warning("favs", "Appwrite no configurado: 0 favoritos")
         return set()
     try:
-        return {str(x.get("sku")) for x in aw_rows("favs") if x.get("sku")}
+        rows = aw_rows("favs", strict=True)
     except Exception as e:
         print(f"  (favs remotos no disponibles: {e})")
+        gh_warning("favs",
+                   f"lectura de Appwrite fallo: {type(e).__name__}: {e}")
         return set()
+    favs = {str(x.get("sku")) for x in rows if x.get("sku")}
+    if not favs:
+        gh_warning("favs", "tabla favs sin filas legibles (0 favoritos)")
+    return favs
 
 
 def _priority_watch(pri, rest, cap):

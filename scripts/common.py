@@ -136,13 +136,39 @@ def prune_jsonl(path, keep_days=45):
     return len(lines) - len(keep)
 
 
-def gh_error(title, msg):
-    """::error:: workflow command: annotation PUBLICA del run (los logs
-    piden login para leerse). Escapes oficiales: % -> %25, CR -> %0D,
-    LF -> %0A; el mensaje se recorta a 300 chars."""
+def _gh_cmd(level, title, msg):
+    """::{level}:: workflow command: annotation PUBLICA del run (los
+    logs piden login para leerse). Escapes oficiales: % -> %25,
+    CR -> %0D, LF -> %0A; el mensaje se recorta a 300 chars."""
     msg = (str(msg)[:300].replace("%", "%25")
            .replace(chr(13), "%0D").replace(chr(10), "%0A"))
-    print(f"::error title={title}::{msg}")
+    print(f"::{level} title={title}::{msg}")
+
+
+def gh_error(title, msg):
+    _gh_cmd("error", title, msg)
+
+
+def gh_warning(title, msg):
+    _gh_cmd("warning", title, msg)
+
+
+def gh_notice(title, msg):
+    _gh_cmd("notice", title, msg)
+
+
+def gh_summary(line):
+    """Anexa `line` al step summary del run (GITHUB_STEP_SUMMARY, solo
+    existe dentro de Actions); fuera de CI es no-op. Diagnostico para
+    el desarrollador: nunca rompe el caller."""
+    path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not path:
+        return
+    try:
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except Exception:
+        pass  # el resumen jamas tumba el sweep
 
 
 # ---------------- Appwrite (REST server-side, API key) ----------------

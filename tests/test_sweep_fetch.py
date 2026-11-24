@@ -179,8 +179,8 @@ def _getproduct(*prods):
 
 
 def _prod(sku, name="Fav Prod", brand="Marca", cat="Cat", slug="p-fav",
-          stock=True, qty=5):
-    """Respuesta ct/getProduct minima: una variante con un canal SV."""
+          stock=True, qty=5, key="6701"):
+    """Respuesta ct/getProduct minima: una variante con un canal."""
     return {"masterData": {"current": {
         "name": name, "slug": slug,
         "categories": [{"name": cat}] if cat else [],
@@ -188,7 +188,7 @@ def _prod(sku, name="Fav Prod", brand="Marca", cat="Cat", slug="p-fav",
             "sku": sku,
             "attributesRaw": [{"name": "brand", "value": brand}],
             "availability": {"channels": {"results": [{
-                "channel": {"key": "6701",
+                "channel": {"key": key,
                             "nameAllLocales": [{"value": "Santa Ana"}]},
                 "availability": {"isOnStock": stock,
                                  "availableQuantity": qty}}]}}}]}}}
@@ -260,3 +260,62 @@ def test_club_stock_sin_favs_como_antes(http, tmp_path, monkeypatch):
         ("B", 1, 5)]
     assert _leer(db, "select * from products") == []
     assert _leer(db, "select * from fav_skus") == []
+
+
+# ---------- fetch_club_stock: diagnostico de cobertura de favs ----------
+
+def _summary(tmp_path, monkeypatch):
+    f = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(f))
+    return f
+
+
+def test_club_stock_diagnostico_favs(http, tmp_path, monkeypatch, capsys):
+    """Cobertura parcial: la linea cuenta solicitados/devueltos/con_stock
+    y la anotacion publica nombra a los favs que faltaron."""
+    db = tmp_path / "prices.db"
+    monkeypatch.setattr(sweep, "DB_PATH", str(db))
+    summ = _summary(tmp_path, monkeypatch)
+    # A trae canal SV, B viene en la respuesta pero sin canales 67xx,
+    # C ni siquiera aparece en getProduct
+    http[0].queue = [_getproduct(_prod("A"), _prod("B", key="9999"))]
+    sweep.fetch_club_stock({"A", "B", "C"}, "2026-10-14",
+                           favs={"A", "B", "C"})
+    out = capsys.readouterr().out
+    assert ("favs: leidos=3 solicitados=3 devueltos=2 con_stock=1 "
+            "sin_canales=1 no_devueltos=1 lotes_fallidos=0/1 "
+            "candidatos=3") in out
+    assert "::warning title=favs::" in out
+    assert "sin_canales=[B]" in out and "no_devueltos=[C]" in out
+    txt = summ.read_text(encoding="utf-8")
+    assert "### Favoritos / stock por club" in txt
+    assert "- favs: leidos=3" in txt
+
+
+def test_club_stock_cobertura_total_es_notice(http, tmp_path, monkeypatch,
+                                              capsys):
+    """Todos los favs con filas de club => ::notice::, no warning."""
+    db = tmp_path / "prices.db"
+    monkeypatch.setattr(sweep, "DB_PATH", str(db))
+    _summary(tmp_path, monkeypatch)
+    http[0].queue = [_getproduct(_prod("A"))]
+    sweep.fetch_club_stock({"A", "X"}, "2026-10-14", favs={"A"})
+    out = capsys.readouterr().out
+    assert "::notice title=favs::" in out
+    assert "::warning title=favs::" not in out
+    assert "solicitados=1" in out and "con_stock=1" in out
+
+
+def test_club_stock_sin_favs_sin_diagnostico(http, tmp_path, monkeypatch,
+                                             capsys):
+    """favs=None: ni linea ni anotacion ni resumen — club_stock igual."""
+    db = tmp_path / "prices.db"
+    monkeypatch.setattr(sweep, "DB_PATH", str(db))
+    summ = _summary(tmp_path, monkeypatch)
+    http[0].queue = [_getproduct(_prod("B"))]
+    sweep.fetch_club_stock({"B"}, "2026-10-14")
+    out = capsys.readouterr().out
+    assert "favs:" not in out and "title=favs" not in out
+    assert not summ.exists() or "Favoritos" not in \
+        summ.read_text(encoding="utf-8")
+    assert _leer(db, "select sku from club_stock") == [("B",)]

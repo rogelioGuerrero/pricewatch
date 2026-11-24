@@ -104,3 +104,36 @@ def test_sin_config_non_strict_vacio_y_strict_lanza():
         assert common.aw_rows("favs") == []
         with pytest.raises(common.AppwriteReadError):
             common.aw_rows("favs", strict=True)
+
+
+# ---------- gh_* annotations / step summary ----------
+
+def test_gh_niveles_mismo_escape(capsys):
+    """error/warning/notice comparten escape y recorte via _gh_cmd."""
+    msg = "100%" + chr(10) + "x"
+    common.gh_error("T", msg)
+    common.gh_warning("T", msg)
+    common.gh_notice("T", msg)
+    esc = "100%25%0Ax"
+    assert capsys.readouterr().out.splitlines() == [
+        f"::error title=T::{esc}",
+        f"::warning title=T::{esc}",
+        f"::notice title=T::{esc}"]
+
+
+def test_gh_error_trunca_a_300(capsys):
+    common.gh_error("T", "x" * 400)
+    assert capsys.readouterr().out.strip() == \
+        "::error title=T::" + "x" * 300
+
+
+def test_gh_summary_escribe_solo_con_env(monkeypatch, tmp_path):
+    f = tmp_path / "summary.md"
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    common.gh_summary("no-op fuera de CI")  # sin env: no explota ni crea
+    assert not f.exists()
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(f))
+    common.gh_summary("### Titulo\n- linea")
+    common.gh_summary("- otra")
+    assert f.read_text(encoding="utf-8") == \
+        "### Titulo\n- linea\n- otra\n"
