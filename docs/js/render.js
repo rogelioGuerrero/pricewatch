@@ -201,7 +201,12 @@ function render(){
       const unit = ln && ln.unitCents != null ? ln.unitCents
                                               : (l ? l[1] : 0);
       tot += unit * q;
-      if (l && a && a.med != null) { diff += unit - a.med; nd++; }
+      // "vs tipico" con mediana confiable solamente: sin historia
+      // suficiente o con ancla detectada la mediana es ruido o esta
+      // secuestrada por el inflado — mejor no estimar que mentir
+      if (l && a && a.med != null && !a.anch && histOK(D.series[s])) {
+        diff += unit - a.med; nd++;
+      }
     }
     bar.style.display = "flex";
     $("#shop-tot").innerHTML = `🛒 ${CART.size} artículo${CART.size>1?"s":""}`

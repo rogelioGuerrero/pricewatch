@@ -119,10 +119,12 @@ fs.unlinkSync(tmpIn); fs.unlinkSync(tmpOut);
 for (const c of CASES) {
   const a = { ...(AGG[c.name] || {}) };
   // schema 2 = payload viejo: los campos de veredicto NO viajaron
+  // (anch tampoco existia entonces)
   if ((c.data.schema_version || 0) < 3)
     for (const a2 of Object.values(a)) {
       delete a2.at_min;
       delete a2.score;
+      delete a2.anch;
     }
   c.data.agg = a;
 }

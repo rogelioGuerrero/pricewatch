@@ -37,6 +37,19 @@ const safeHttpURL = u => {
 };
 const byType = t => ev.filter(e=>e.type===t);
 const lastOf = s => (D.series[s]||[]).slice(-1)[0];
+// "20 nov" — fecha corta para tips y fichas; ISO invalido pasa tal cual
+const fechaCorta = iso => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  return m ? `${+m[3]} ${MESES[+m[2]-1]}` : (iso || "");
+};
+// historia suficiente para hablar de "habitual": >=5 lecturas validas
+// en >=14d de span — una mediana de 3 lecturas no es habitualidad, es
+// ruido (misma regla que verdicts.price_verdict en el build)
+const histOK = rows => {
+  const v = (rows||[]).filter(r => r[1] > 0);
+  return v.length >= 5
+    && (Date.parse(v[v.length-1][0]) - Date.parse(v[0][0]))/864e5 >= 14;
+};
 // stock observado en una fecha: ultima lectura <= date (series van
 // asc). null = sin dato — no afirmar nada
 const stockOn = (sku, date) => {
@@ -69,7 +82,11 @@ const DEALS = (() => {
   Object.keys(D.agg).forEach(s => {
     if (!okNow(s)) return;
     const a = D.agg[s];
-    if (atMin(s) || (a.vs_med != null && a.vs_med < 0)) m.add(s);
+    // la entrada por vs_med exige mediana confiable: historia
+    // suficiente y cero ancla — la oferta inflada solo entra por
+    // hechos (letrero/minimo) y llega etiquetada por verdict()
+    if (atMin(s) || (!a.anch && a.vs_med != null && a.vs_med < 0
+                     && histOK(D.series[s]))) m.add(s);
   });
   // ganga sin stock o sin lectura vigente no es ganga: el letrero
   // de ahorro puede venir de un sku agotado o de un dato viejo —
@@ -83,7 +100,8 @@ const dealOK = (s, f) => {
   if (f === "silenciosa") return atMin(s) && sv <= 0;
   if (f === "real")       return sv > 0 && atMin(s);
   if (f === "min")        return atMin(s);
-  if (f === "bajo")       return a.vs_med != null && a.vs_med < 0;
+  if (f === "bajo")       return !a.anch && a.vs_med != null
+    && a.vs_med < 0 && histOK(D.series[s]);
   return true;
 };
 // fuerza del deal: ranking comparativo en PWData.score — % de ahorro
@@ -414,6 +432,25 @@ function verdict(sku){
             tip:"la lectura no incluye un precio positivo válido"};
   const save = l[3]||0, prev = s.length>=2 ? s[s.length-2][1] : null;
   const chg = prev!=null && prev ? Math.round((l[1]-prev)/prev*1000)/10 : 0;
+  // ancla inflada: la bajada viene de un inflado de pocos dias — el
+  // "-N%" se mide contra un precio que nunca fue real. Fake (hoy >=
+  // pre): el ahorro no existe y el veredicto malo le gana a cualquier
+  // framing positivo. Exagerada (hoy < pre): hay ahorro real pero es
+  // menor que el maquillado — se reporta el honesto
+  const an = a.anch;
+  if (an && an.pre > 0) {
+    const real = Math.round((an.pre - l[1]) / an.pre * 1000) / 10;
+    if (l[1] >= an.pre)
+      return {rank:7, cls:"subio", label:"oferta inflada",
+              tip:`subió ${an.pct}% el ${fechaCorta(an.rose)} y aguantó ${an.d}d; `
+                + `antes costaba ${fmt(an.pre)} — `
+                + (l[1] > an.pre
+                   ? `hoy está $${((l[1]-an.pre)/100).toFixed(2)} más caro`
+                   : "hoy está igual — el ahorro es cero")};
+    return {rank:4, cls:"oferta", label:"descuento exagerado",
+            tip:`ahorro real ${real}% vs antes de la subida (${fmt(an.pre)})`
+              + " — el resto es maquillaje"};
+  }
   if (save>0 && s.length>=3 && a.pct_min!=null && a.pct_min<=0)
     return {rank:0, cls:"real", label:"buen momento",
             tip:`oferta real: ahorra $${(+save).toFixed(2)} y está en su mínimo`};
@@ -428,9 +465,7 @@ function verdict(sku){
   // "habitual" solo se afirma con historia suficiente: una mediana de
   // 3 lecturas no es habitualidad, es ruido. Con historia corta cae al
   // veredicto del ultimo movimiento (subio/bajo/precio normal)
-  const span = s.length>=2
-    ? (Date.parse(s[s.length-1][0])-Date.parse(s[0][0]))/864e5 : 0;
-  if (a.vs_med!=null && a.vs_med<0 && s.length>=5 && span>=14)
+  if (a.vs_med!=null && a.vs_med<0 && histOK(s))
     return {rank:3, cls:"bajo",
             label: chg>0 ? "sigue barato" : "bajo lo habitual",
             tip:`${a.vs_med}% vs su precio habitual`+ofTip(a)};
@@ -441,7 +476,7 @@ function verdict(sku){
   // defensivo: "hoy no es buen dia". Maduro = claramente arriba del
   // habitual; inmaduro = sentado en su techo registrado. Ambos peores
   // que "precio normal" pero menos graves que sin stock
-  if (a.vs_med!=null && a.vs_med>=10 && s.length>=5 && span>=14)
+  if (a.vs_med!=null && a.vs_med>=10 && histOK(s))
     return {rank:7, cls:"subio", label:"arriba de lo habitual",
             tip:`+${a.vs_med}% vs su precio habitual — si no urge, espera`+ofTip(a)};
   if (a.max!=null && l[1]>=a.max && (a.n_ch||0)>=1 && (a.pct_min||0)>=10)

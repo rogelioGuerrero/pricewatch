@@ -117,7 +117,7 @@
      "silenciosa": true,
      "real": false,
      "min": true,
-     "bajo": true,
+     "bajo": false,
      "all": true
     },
     "DEALS": [
@@ -239,7 +239,7 @@
      "silenciosa": true,
      "real": false,
      "min": true,
-     "bajo": true,
+     "bajo": false,
      "all": true
     },
     "DEALS": [
@@ -353,7 +353,7 @@
      "silenciosa": true,
      "real": false,
      "min": true,
-     "bajo": true,
+     "bajo": false,
      "all": true
     },
     "DEALS": [
@@ -1139,7 +1139,7 @@
      "silenciosa": true,
      "real": false,
      "min": true,
-     "bajo": true,
+     "bajo": false,
      "all": true
     },
     "DEALS": [
@@ -1485,7 +1485,7 @@
      "silenciosa": true,
      "real": false,
      "min": true,
-     "bajo": true,
+     "bajo": false,
      "all": true
     },
     "DEALS": [
@@ -1607,7 +1607,7 @@
      "silenciosa": true,
      "real": false,
      "min": true,
-     "bajo": true,
+     "bajo": false,
      "all": true
     },
     "DEALS": [

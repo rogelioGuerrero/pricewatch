@@ -9,7 +9,63 @@ saltos a/desde None, in_stock con fecha de hoy, historia completa).
 """
 
 import statistics
-from datetime import date
+from datetime import date, timedelta
+
+# Detector de ancla inflada: la estafa pre-Black-Friday de subir el
+# precio unos dias para que la bajada posterior luzca como descuento.
+# Lo corto de la maniobra es justamente lo que la delata.
+ANCHOR_RISE_MIN = 5.0     # subida minima (%) para sospechar ancla
+ANCHOR_SPIKE_MAX_D = 14   # techo de duracion del inflado (dias)
+ANCHOR_DROP_MAX_D = 30    # la bajada deja de ser "oferta" tras 30d
+ANCHOR_BASE_D = 30        # ventana de referencia previa al inflado
+
+
+def detect_anchor(rows):
+    """Ancla inflada (oferta falsa): subida fuerte sostenida POCOS
+    dias seguida de bajada presentada como descuento. `rows`:
+    [(date, price)] asc, solo precios validos (>0).
+
+    La referencia honesta es el MAXIMO de los ANCHOR_BASE_D dias
+    previos al inflado, no el tramo inmediatamente anterior: el ciclo
+    genuino de oferta (normal -> oferta -> vuelve a normal) no
+    dispara porque la "subida" solo regresa a un nivel ya visto en la
+    ventana. Limitacion v1: inflados en escalera (varios pasos
+    ascendentes) se detectan pero `pre` queda un paso arriba del
+    verdadero; bajadas en varios pasos no se detectan.
+    Devuelve {pre, pct, d, rose} — solo hechos con fechas: la
+    gravedad la evalua el front comparando pre vs el precio actual."""
+    if len(rows) < 3:
+        return None
+    runs = []  # [price, start, end] por tramo de precio constante
+    for d, p in rows:
+        if runs and runs[-1][0] == p:
+            runs[-1][2] = d
+        else:
+            runs.append([p, d, d])
+    if len(runs) < 2:
+        return None
+    cur, spike = runs[-1], runs[-2]
+    if cur[0] >= spike[0]:
+        return None  # el tramo actual no es una bajada
+    def days(r):
+        return (date.fromisoformat(r[2])
+                - date.fromisoformat(r[1])).days + 1
+    if days(spike) > ANCHOR_SPIKE_MAX_D:
+        return None  # aguanto demasiado: ya era su precio real
+    if days(cur) > ANCHOR_DROP_MAX_D:
+        return None  # la bajada es vieja: ya es el precio normal
+    spike_start = date.fromisoformat(spike[1])
+    cut = spike_start - timedelta(days=ANCHOR_BASE_D)
+    base = [p for d, p in rows
+            if cut <= date.fromisoformat(d) < spike_start]
+    if not base:
+        return None  # nacio dentro del inflado: sin referencia honesta
+    pre = max(base)
+    if spike[0] < pre * (1 + ANCHOR_RISE_MIN / 100):
+        return None  # no supera lo ya visto: no hay inflado que anclar
+    return {"pre": pre,
+            "pct": round((spike[0] - pre) / pre * 100, 1),
+            "d": days(spike), "rose": spike[1]}
 
 
 def series_stats(rows):
@@ -106,6 +162,12 @@ def compute_agg(series, latest):
                           - date.fromisoformat(s[0][0])).days < 60)
                     or None,
         }
+        # ancla inflada: solo viaja cuando se detecta (es rara y el
+        # objeto cuesta bytes por sku — misma dieta que saving=0)
+        anch = detect_anchor([(r[0], r[1]) for r in s
+                              if r[1] is not None and r[1] > 0])
+        if anch:
+            agg[sku]["anch"] = anch
     return agg
 
 
@@ -117,7 +179,13 @@ def price_verdict(agg_entry, series_rows, generated):
       filas y ultimo cambio a <=30d de `generated` — misma regla que
       atMin() sobre D.agg/D.series/D.generated.
     - score: max(0, ahorro_declarado%, vs_max%, -vs_med/100) con los
-      mismos numeros que PWData.score, redondeado a 4 decimales.
+      mismos numeros que PWData.score, redondeado a 4 decimales —
+      salvo dos correcciones anti-ancla: con `anch` detectada el max y
+      la mediana pueden ser el propio inflado (y el letrero es parte
+      de la maniobra), asi que solo cuenta el ahorro REAL vs el
+      pre-subida; y -vs_med exige la misma historia suficiente del
+      front (>=5 lecturas validas en >=14d) porque una mediana de 3
+      lecturas no es habitualidad, es ruido.
     Devuelve dict solo con las claves verdaderas (omitidas ahorran
     bytes) o None si no hay nada que publicar."""
     a = agg_entry or {}
@@ -136,11 +204,33 @@ def price_verdict(agg_entry, series_rows, generated):
     # mismo criterio que cents(): entero positivo o no hay score
     if isinstance(price, int) and not isinstance(price, bool) \
             and price > 0:
-        saved = max(0, last[3] or 0) * 100 if len(last) > 3 else 0
-        advertised = saved / (price + saved)
-        mx = a.get("max")
-        from_max = (mx - price) / mx if mx and mx > 0 else 0
-        sc = max(0, advertised, from_max, -(a.get("vs_med") or 0) / 100)
+        anch = a.get("anch") or {}
+        pre = anch.get("pre")
+        if isinstance(pre, int) and not isinstance(pre, bool) \
+                and pre > 0:
+            # ancla: solo el ahorro real contra el pre-subida — si el
+            # "descuento" no le gana ni a eso, score 0 y la ganga
+            # inflada desaparece del ranking
+            sc = max(0.0, (pre - price) / pre)
+        else:
+            saved = max(0, last[3] or 0) * 100 if len(last) > 3 else 0
+            advertised = saved / (price + saved)
+            mx = a.get("max")
+            from_max = (mx - price) / mx if mx and mx > 0 else 0
+            vm = a.get("vs_med") or 0
+            if vm < 0:
+                # misma regla de suficiencia del front: >=5 lecturas
+                # validas y >=14 dias de span (sobre la serie
+                # exportada, como D.series — paridad deliberada)
+                val = [r for r in series_rows
+                       if len(r) > 1 and isinstance(r[1], int)
+                       and not isinstance(r[1], bool) and r[1] > 0]
+                span = ((date.fromisoformat(val[-1][0])
+                         - date.fromisoformat(val[0][0])).days
+                        if len(val) >= 2 else 0)
+                if len(val) < 5 or span < 14:
+                    vm = 0
+            sc = max(0, advertised, from_max, -vm / 100)
         if sc:
             out["score"] = round(sc, 4)
     return out or None

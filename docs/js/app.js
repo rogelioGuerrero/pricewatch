@@ -710,9 +710,18 @@ function openProd(sku){
     toggleFav(sku, {stopPropagation(){}}) || openProd(sku);
   };
   const dvs = $("#dvs"), dagg = D.agg[sku]||{};
-  dvs.innerHTML = (dagg.vs_med != null
-    ? `<span style="color:${dagg.vs_med<=0?"var(--down)":"var(--up)"}">${dagg.vs_med>0?"+":""}${dagg.vs_med}% vs precio habitual (${fmt(dagg.med)})</span>`
-    : "")
+  // con ancla la mediana es sospechosa por construccion: la ficha
+  // muestra los hechos del inflado en vez del "habitual". Y sin
+  // historia suficiente la mediana no se pronuncia en absoluto —
+  // una de 3 lecturas no es habitualidad, es ruido (misma regla
+  // que el veredicto)
+  const dan = dagg.anch;
+  const vsline = dan && dan.pre > 0
+    ? `<span style="color:var(--up)">subió ${dan.pct}% el ${fechaCorta(dan.rose)} y aguantó ${dan.d}d — antes costaba ${fmt(dan.pre)}</span>`
+    : (dagg.vs_med != null && histOK(s)
+       ? `<span style="color:${dagg.vs_med<=0?"var(--down)":"var(--up)"}">${dagg.vs_med>0?"+":""}${dagg.vs_med}% vs precio habitual (${fmt(dagg.med)})</span>`
+       : "");
+  dvs.innerHTML = vsline
     + (dagg.of_every ? ` <span class="meta">· en oferta cada ~${dagg.of_every}d${dagg.of_save?` (ahorra ~$${(+dagg.of_save).toFixed(2)})`:""}</span>` : "")
     + rotTag(sku);
   const db = $("#dbuy");
